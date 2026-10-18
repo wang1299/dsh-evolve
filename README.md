@@ -17,7 +17,7 @@
 - DSH：固定0.2.0-rc.2，真实官方服务探针通过；真实模型回合和官方Web/Desktop安装尚未验证。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性和泄漏检查已实现；真实Agent效果实验未运行。
-- 验证：设计、核心、DSH适配和面板已分别通过验收并合并；Windows/Ubuntu面板分支13项通过。当前新增评价后的15项等待当前提交CI，见[本轮记录](docs/development/status.md)。
+- 验证：评价PR #14及实际安装探针PR #16均已通过15项两平台CI和独立评审并合并。当前Codex执行器24项本地检查通过，等待当前头CI与独立映射；见[本轮记录](docs/development/status.md)。
 - GitHub：公开仓库已建立，任务Issue与聚焦PR正在依次推进。
 - npm、GitHub Release、线上部署：未发布。
 
@@ -54,3 +54,9 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 本机没有npm时，可在临时目录使用npm官方分发包；这不是产品依赖。MIT许可，尚未向npm或GitHub Release发布。
 
 首版选择、反馈更新、数据需求和研究取舍见[方法说明](docs/methods.md)。
+
+## 可选Codex实验执行器
+
+本地Codex CLI复用已有登录，以只读分析、结构化修复、宿主受限写入和外部pytest检查经验闭环。`codex-demo -- --live`显式开启真实模型，最多三次调用；显式续跑另计，默认及CI不调用模型。
+
+历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。本轮交付没有重新调用模型或上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合；三组v2机制另行交付。
