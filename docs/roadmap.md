@@ -4,11 +4,11 @@
 |---|---|---|---|
 | T001 需求、架构、ADR、验收和开发基线 | 无 | 已合并PR #2，Issue #1关闭 | codex/t001-baseline |
 | T002 数据、来源验证、经验选择和生命周期 | T001 | 9项测试两平台CI和必要复审通过，已合并PR #9，Issue #3关闭 | codex/t002-core |
-| T003 DSH 固定版本工具与正常会话兼容探针 | T002 | 官方服务/manifest通过，新增别名隔离已本地验证；11项待当前CI | codex/t003-dsh |
-| T004 最小面板及完整合成开发案例 | T002,T003 | 计划 | codex/mvp-panel |
+| T003 DSH 固定版本工具与正常会话兼容探针 | T002 | 11项两平台CI和独立评审通过，PR #10已合并 | codex/t003-dsh |
+| T004 最小面板及完整合成开发案例 | T002,T003 | 已带入面板并发修复；13项待当前CI及发布映射 | codex/t004-panel |
 | T005 三组评价驱动与结果完整性检查 | T002 | 计划 | 待创建 |
 | T006 真实 Agent 实验、安装包与发布候选验证 | T003,T004,T005 | 计划 | 待创建 |
 
-远端：公开仓库wang1299/dsh-evolve。设计PR #2与核心PR #9已squash合并。当前DSH适配PR需等待Windows/Linux CI及发布头评审。发布：无。
+远端：公开仓库wang1299/dsh-evolve。设计PR #2、核心PR #9和DSH适配PR #10已squash合并。面板当前PR待Windows/Linux CI及发布头映射。发布：无。
 
 没有配置真实模型执行器与未见任务集，真实Agent效果实验未运行。GitHub main当前无保护及ruleset，未修改权限，也没有伪造正式Review；仍按验收、必要CI与AI独立评审的流程条件合并。

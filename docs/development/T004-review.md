@@ -6,4 +6,6 @@
 
 修复：预期版本传入服务，在SQLite事务内比较并写入，冲突统一RevisionConflict并返回409。新增两个Store实例共享同一SQLite的回归测试，验证旧disable/restore不会改动较新版本。原顺序HTTP测试保留。
 
-实际检查：面板2项HTTP/共享DB测试通过，类型、ESLint通过。必要独立复审待新提交。GitHub Issue/PR/CI/合并仍缺少远端。
+实际检查：面板2项HTTP/共享DB测试通过，类型、ESLint通过。必要独立复审目标b29c055b60d71b062bc80446f308e4cccc446465，对比018462f6e7b45045077c6ec91959c42b220c34b4，原独立评审者确认P2闭合，没有新阻塞。
+
+发布分支codex/t004-panel基于已合并DSH适配，面板及其核心并发修复按已审查提交重放；Issue #5，当前头CI及发布映射见PR。不是GitHub正式批准。
