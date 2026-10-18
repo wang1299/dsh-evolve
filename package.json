@@ -18,7 +18,9 @@
     ".": "./dist/src/dsh.js",
     "./core": "./dist/src/service.js"
   },
-  "bin": { "dsh-evolve": "./dist/src/cli.js" },
+  "bin": {
+    "dsh-evolve": "./dist/src/cli.js"
+  },
   "dsh": {
     "bundle": {
       "patch": "cordis.patch.yml"
@@ -33,7 +35,8 @@
     "compat": "tsc && node --test dist/test/dsh.test.js dist/test/bundle.test.js",
     "demo": "tsc && node dist/scripts/demo.js",
     "panel": "node dist/src/cli.js panel",
-    "prepack": "tsc"
+    "prepack": "tsc",
+    "install-probe": "tsc && node dist/scripts/install-probe.js"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
@@ -52,7 +55,8 @@
     "@types/node": "24.10.1",
     "eslint": "10.13.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.71.2"
+    "typescript-eslint": "8.71.2",
+    "@deepseek-ai/dsh-plugin-manager": "0.2.0-rc.2"
   },
   "dependencies": {
     "zod": "4.1.12"

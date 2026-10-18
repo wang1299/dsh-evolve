@@ -26,3 +26,11 @@ jobs:
       - run: npm run compat
       - run: npm run demo
       - run: npm pack --dry-run
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.25.0'
+          run_install: false
+      - run: >-
+          node -e "require('node:fs').mkdirSync('.probe-work', { recursive: true })"
+      - run: npm pack --pack-destination .probe-work
+      - run: npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
