@@ -21,7 +21,9 @@ export function safeFile(root: string, input: string): string {
 const dependencyFiles = ['pyproject.toml', 'requirements.txt', 'requirements-dev.txt', 'poetry.lock', 'uv.lock', 'Pipfile.lock'];
 export function snapshot(root: string, requiredFiles: string[] = []): { scope: Scope; commit: string; root: string } {
   const actualRoot = realpathSync(git(root, ['rev-parse', '--show-toplevel']));
-  if (realpathSync(root) !== actualRoot) throw new Error('Configure the exact Git repository root');
+  // Windows' legacy realpath can retain an 8.3 alias while Git returns the long name.
+  // Native resolution compares the same directory without changing persisted repository IDs.
+  if (realpathSync.native(root) !== realpathSync.native(actualRoot)) throw new Error('Configure the exact Git repository root');
   const dependencyParts = dependencyFiles.filter((p) => existsSync(join(root, p)))
     .map((p) => `${p}:${digest(readFileSync(safeFile(root, p)))}`);
   const files = Object.fromEntries(requiredFiles.map((p) => [p, digest(readFileSync(safeFile(root, p)))]));
