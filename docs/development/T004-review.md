@@ -9,3 +9,5 @@
 实际检查：面板2项HTTP/共享DB测试通过，类型、ESLint通过。必要独立复审目标b29c055b60d71b062bc80446f308e4cccc446465，对比018462f6e7b45045077c6ec91959c42b220c34b4，原独立评审者确认P2闭合，没有新阻塞。
 
 发布分支codex/t004-panel基于已合并DSH适配，面板及其核心并发修复按已审查提交重放；Issue #5，当前头CI及发布映射见PR。不是GitHub正式批准。
+
+发布头4cbd3c5d0ed3d39b7edbd98092bf5d72bf7200bf，对比fc028d3d5d15304dced61a850f56f4e22cbb2dd5，独立映射确认无遗漏；CI run39121374569两平台13项/兼容/demo/pack通过，PR #11已squash合并。

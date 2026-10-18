@@ -11,8 +11,8 @@
     "dist/src",
     "cordis.patch.yml",
     "README.md",
-    "docs/product.md",
-    "docs/compatibility.md"
+    "CONTRIBUTING.md",
+    "docs"
   ],
   "exports": {
     ".": "./dist/src/dsh.js",
@@ -27,9 +27,9 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src test",
+    "lint": "eslint src test scripts",
     "test": "tsc && node --test dist/test/*.test.js",
-    "check": "tsc --noEmit && eslint src test && tsc && node --test dist/test/*.test.js",
+    "check": "tsc --noEmit && eslint src test scripts && tsc && node --test dist/test/*.test.js",
     "compat": "tsc && node --test dist/test/dsh.test.js dist/test/bundle.test.js",
     "demo": "tsc && node dist/scripts/demo.js",
     "panel": "node dist/src/cli.js panel",

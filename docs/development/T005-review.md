@@ -1,0 +1,16 @@
+# T005 独立只读评审与修复
+
+评审者：AI Agent `mvp_independent_review`，只读稳定提交及合成格式反例；不是正式GitHub批准。
+
+初审目标3d3cacb91a0a63c8fdd7be07b5bcadd360aae546，基线b29c055b60d71b062bc80446f308e4cccc446465。无P0/P1，两个成立的P2按阻塞处理：
+
+1. `src/evaluation.ts`的比较契约没有冻结基础提示和共同Agent配置，同模型、任务和预算仍可能比较不同Agent。
+2. 经验记录只有来源任务，没有实际经验ID和revision，不能核对错误经验应用与修订后的行为。
+
+修复提交3241f0996261a45f50d98bd2c4932f9416fa3dee：冻结basePromptDigest、agentConfigDigest、experienceBankDigest，各组policyDigest在组内不变；经验引用记录id/revision/sourceTaskId，baseline禁止经验引用；旧草稿缺少必填信息时拒绝处理。增加提示和Agent配置不一致的专项反例；经验库与版本引用当前由输入契约和实现检查，没有分别增加专项反例。
+
+必要复审：目标3241f0996261a45f50d98bd2c4932f9416fa3dee，对比3d3cacb91a0a63c8fdd7be07b5bcadd360aae546。两项P2闭合，修复范围未发现新阻塞。评价测试2项通过；随后完整类型、ESLint、构建及13项测试通过。
+
+限制：这些检查验证结果记录的一致性，不能证明实际执行真实性；合成测试不是Agent收益实验。GitHub Issue/PR/CI/正式Review尚未执行。
+
+最终文档窄范围审查：aff32028ae4db3381a193383e904cd1b0348a304对比3241f0996261a45f50d98bd2c4932f9416fa3dee，发现上述文案曾夸大专项测试范围，已收窄为实际断言；没有为了满足文案增加重复测试。
