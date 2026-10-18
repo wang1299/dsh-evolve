@@ -50,9 +50,9 @@
     "@deepseek-ai/dsh-system-prompt": "0.2.0-rc.2",
     "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
     "@types/node": "24.10.1",
-    "eslint": "9.39.1",
+    "eslint": "10.13.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.46.4"
+    "typescript-eslint": "8.71.2"
   },
   "dependencies": {
     "zod": "4.1.12"
