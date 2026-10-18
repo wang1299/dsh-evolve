@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { digest, type Verification } from '../src/domain.js';
 import { evaluateExperiment } from '../src/evaluation.js';
-import { arms, evaluatePairedExperiment, experienceBankDigest, policyDigests, requireExperienceExposure, reservePairedRun,
+import { arms, evaluatePairedExperiment, experienceBankDigest, legacyPolicyDigests, policyDigests, requireExperienceExposure, reservePairedRun,
   selectComparisonExperience, type PairedExperiment } from '../src/paired-evaluation.js';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
@@ -59,6 +59,21 @@ test('v2 counts all invocations, failed attempts and unknown outcomes; unfinishe
   const hostFailure = sample(); hostFailure.runs[0]!.runtime = null; hostFailure.runs[0]!.callStarted = false;
   const hostReport = JSON.parse(JSON.stringify(evaluatePairedExperiment(hostFailure)));
   assert.equal(hostReport.groups.baseline.attempts, 0); assert.equal(hostReport.groups.baseline.acceptedPerAttempt, null);
+});
+
+test('historical retrieval policies remain evaluable but an arm cannot mix policies across replicates', () => {
+  const legacy = sample();
+  for (const plan of legacy.manifest.plans) plan.policyDigest = legacyPolicyDigests[plan.arm];
+  assert.doesNotThrow(() => evaluatePairedExperiment(legacy));
+  const current = sample();
+  for (const plan of [...current.manifest.plans]) {
+    const next = { ...plan, runId: randomUUID(), replicate: 1, policyDigest: legacyPolicyDigests[plan.arm] };
+    current.manifest.plans.push(next);
+    current.runs.push({ ...current.runs.find((r) => r.runId === plan.runId)!, runId: next.runId });
+  }
+  assert.throws(() => evaluatePairedExperiment(current), /Mixed policies/);
+  const unknown = sample(); unknown.manifest.plans[1]!.policyDigest = hash('arbitrary-new-method');
+  assert.throws(() => evaluatePairedExperiment(unknown), /Unrecognized/);
 });
 
 test('a comparison with abstention is labeled honestly and the live recipe refuses it before any model call', () => {
@@ -141,7 +156,7 @@ test('retrieval uses only text while evolve requires verified source; evaluation
   const service = new EvolveService(store, f.repo, { trusted: true, python: process.env.EVOLVE_PYTHON ?? 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 15000 });
   try {
     const source = service.begin('source', 'rollback'); await f.fix();
-    const known = service.propose(source.id, { title: 'rollback', strategy: 'restore state on exception', observedFacts: ['state changed before error'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
+    const known = service.propose(source.id, { title: 'transaction rollback', strategy: 'restore state on exception', observedFacts: ['state changed before error'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
     const verified = await service.verify(known.id); service.finish(source.id);
     const unsupported = service.propose(source.id, { title: 'rollback transaction', strategy: 'transaction', observedFacts: ['not yet verified'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
     const task = service.begin('target', 'rollback transaction'); const frozen = experienceBankDigest(store);

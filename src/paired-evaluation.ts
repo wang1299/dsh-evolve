@@ -3,9 +3,10 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { codexControlSchema, type ExperienceContext } from './codex-runner.js';
 import { digest, hashSchema, idSchema, shaSchema, verificationSchema } from './domain.js';
-import { similarity, type EvolveService } from './service.js';
+import type { EvolveService } from './service.js';
 import type { Store } from './store.js';
 import { passes, verifiedCases } from './verification.js';
+import { rankText, retrievalPolicyDigest } from './retrieval.js';
 
 export const arms = ['baseline', 'retrieval', 'evolve'] as const;
 export type Arm = typeof arms[number];
@@ -59,10 +60,15 @@ export function requireExperienceExposure(plans: PairedPlan[]): void {
   if (plans.some((p) => p.arm !== 'baseline' && p.experienceRefs.length === 0)) throw new Error('experience_exposure_missing');
 }
 
-export const policyDigests: Record<Arm, string> = {
+export const legacyPolicyDigests: Record<Arm, string> = {
   baseline: digest('baseline/v1: no experience'),
   retrieval: digest('retrieval/v1: lexical coverage >= 0.15; top 1; ID tie break; no source/scope/utility filter'),
   evolve: digest('evolve/v1: EvolveService.select; verified source + scope + 0.7 similarity + 0.3 smoothed feedback; top 1'),
+};
+export const policyDigests: Record<Arm, string> = {
+  baseline: legacyPolicyDigests.baseline,
+  retrieval: digest('retrieval/v2: ' + retrievalPolicyDigest + '; top 1; ID tie break; no source/scope/utility filter'),
+  evolve: digest('evolve/v2: ' + retrievalPolicyDigest + '; verified source + scope before indexing + 0.7 text + 0.3 smoothed feedback; top 1'),
 };
 
 /** Freeze all inputs affecting selection, excluding new applications that have no feedback. */
@@ -84,10 +90,10 @@ export function selectComparisonExperience(service: EvolveService, taskId: strin
   if (arm === 'evolve') {
     const result = service.select(taskId); selected = result.experience; reasons = result.reasons;
   } else {
-    const ranked = service.store.experiences().map((e) => ({ e, score: similarity(task.summary, e.title + ' ' + e.strategy) }))
-      .filter((r) => r.score >= 0.15).sort((a, b) => b.score - a.score || a.e.id.localeCompare(b.e.id));
-    selected = ranked[0]?.e;
-    reasons = [selected ? 'text_similarity_only=' + ranked[0]!.score.toFixed(3) : 'no_text_match'];
+    const experiences = service.store.experiences();
+    const ranked = rankText(task.summary, experiences).filter((r) => r.reason === null);
+    selected = experiences.find((e) => e.id === ranked[0]?.id);
+    reasons = [selected ? 'bm25-v1:text_only=' + ranked[0]!.score.toFixed(3) : 'no_text_match'];
   }
   return { context: selected ? { id: selected.id, revision: selected.revision, sourceTaskId: selected.sourceTaskId,
     title: selected.title, strategy: selected.strategy } : null, reasons };
@@ -111,10 +117,13 @@ export function evaluatePairedExperiment(input: unknown): object {
   const bank = new Map(m.bank.map((r) => [r.id + ':' + r.revision, r]));
   if (bank.size !== m.bank.length || m.bank.some((r) => !accumulation.has(r.sourceTaskId))) throw new Error('Bank duplicates or evaluation leakage');
   const plans = new Map<string, PairedPlan>(); const groups = new Map<string, Set<Arm>>();
+  const armPolicies = new Map<Arm, string>();
   for (const p of m.plans) {
     if (plans.has(p.runId)) throw new Error('Duplicate planned runId'); plans.set(p.runId, p);
     if (!tasks.has(p.taskId)) throw new Error('Plan uses unknown task');
-    if (p.policyDigest !== policyDigests[p.arm]) throw new Error('Unrecognized arm policy');
+    if (![policyDigests[p.arm], legacyPolicyDigests[p.arm]].includes(p.policyDigest)) throw new Error('Unrecognized arm policy');
+    if (armPolicies.has(p.arm) && armPolicies.get(p.arm) !== p.policyDigest) throw new Error('Mixed policies within an arm');
+    armPolicies.set(p.arm, p.policyDigest);
     if (p.arm === 'baseline' && p.experienceRefs.length) throw new Error('Baseline must not receive experience');
     const basePrompt = tasks.get(p.taskId)!.basePromptDigest;
     if ((p.experienceRefs.length === 0) !== (p.promptDigest === basePrompt)) throw new Error('Prompt exposure contradicts experience references');

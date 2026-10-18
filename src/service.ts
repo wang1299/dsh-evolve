@@ -5,6 +5,7 @@ import { applicability, snapshot } from './repository.js';
 import { candidateSchema, feedbackSchema, idSchema, redact, textSchema, RevisionConflict,
   type Application, type Candidate, type Experience, type Feedback, type Scope, type Task } from './domain.js';
 import { verifyRepair, type VerificationPolicy } from './verification.js';
+import { rankText, retrievalPolicy } from './retrieval.js';
 
 function cleanCandidate(value: unknown): Candidate {
   const item = candidateSchema.parse(value);
@@ -83,7 +84,8 @@ export class EvolveService {
     const task = this.requireTask(taskId); if (task.state !== 'open') throw new Error('Task is closed');
     if (this.store.applications().some((a) => a.taskId === task.id)) return { application: null, experience: null, reasons: ['already_applied_one_experience'] };
     const reasons: string[] = [];
-    const ranked: { experience: Experience; score: number; scope: Scope }[] = [];
+    const eligible = new Map<string, { experience: Experience; scope: Scope }>();
+    const ranked: { experience: Experience; score: number; textScore: number; utility: number; anchors: number; scope: Scope }[] = [];
     for (const experience of this.store.experiences()) {
       if (experience.sourceTaskId === task.id) { reasons.push(experience.id + ':source_task'); continue; }
       if (experience.status !== 'source_verified') { reasons.push(experience.id + ':' + experience.status); continue; }
@@ -96,20 +98,23 @@ export class EvolveService {
       catch { reasons.push(experience.id + ':missing_code_condition'); continue; }
       const mismatch = applicability(experience.scope, current.scope);
       if (mismatch) { reasons.push(experience.id + ':' + mismatch); continue; }
-      const match = similarity(task.summary, experience.title + ' ' + experience.strategy);
-      if (match < 0.15) { reasons.push(experience.id + ':low_similarity'); continue; }
+      eligible.set(experience.id, { experience, scope: current.scope });
+    }
+    for (const match of rankText(task.summary, [...eligible.values()].map((e) => e.experience))) {
+      if (match.reason) { reasons.push(match.id + ':' + match.reason); continue; }
+      const { experience, scope } = eligible.get(match.id)!;
       const uses = new Set(this.store.applications().filter((a) => a.experienceId === experience.id && a.revision === experience.revision).map((a) => a.id));
       const latest = new Map<string, Feedback>();
       for (const feedback of this.store.feedback()) if (uses.has(feedback.applicationId) && feedback.outcome !== 'unknown') latest.set(feedback.applicationId, feedback);
       const feedback = [...latest.values()];
       const utility = (feedback.filter((f) => f.outcome === 'accepted').length + 1) / (feedback.length + 2);
-      ranked.push({ experience, score: 0.7 * match + 0.3 * utility, scope: current.scope });
+      ranked.push({ experience, score: 0.7 * match.score + 0.3 * utility, textScore: match.score, utility, anchors: match.anchors, scope });
     }
     ranked.sort((a, b) => b.score - a.score || a.experience.id.localeCompare(b.experience.id));
     const selected = ranked[0];
     if (!selected) return { application: null, experience: null, reasons: reasons.length ? reasons : ['no_experiences'] };
     const application: Application = { id: randomUUID(), taskId: task.id, experienceId: selected.experience.id,
-      revision: selected.experience.revision, reason: `Applicable code/dependency scope; similarity/utility score=${selected.score.toFixed(3)}`, createdAt: new Date().toISOString() };
+      revision: selected.experience.revision, reason: `Applicable code/dependency scope; ${retrievalPolicy.version}; text=${selected.textScore.toFixed(3)}; utility=${selected.utility.toFixed(3)}; anchors=${selected.anchors}; combined=${selected.score.toFixed(3)}`, createdAt: new Date().toISOString() };
     this.store.putApplication(application);
     return { application, experience: selected.experience, reasons: [application.reason] };
   }
