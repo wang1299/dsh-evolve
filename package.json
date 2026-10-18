@@ -9,18 +9,23 @@
   },
   "files": [
     "dist/src",
+    "cordis.patch.yml",
     "README.md",
-    "docs/product.md"
+    "docs/product.md",
+    "docs/compatibility.md"
   ],
   "exports": {
+    ".": "./dist/src/dsh.js",
     "./core": "./dist/src/service.js"
   },
+  "dsh": { "bundle": { "patch": "cordis.patch.yml" } },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test",
     "test": "tsc && node --test dist/test/*.test.js",
     "check": "tsc --noEmit && eslint src test && tsc && node --test dist/test/*.test.js",
+    "compat": "tsc && node --test dist/test/dsh.test.js",
     "prepack": "tsc"
   },
   "peerDependencies": {
