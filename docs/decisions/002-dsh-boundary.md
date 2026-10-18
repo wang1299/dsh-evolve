@@ -16,6 +16,8 @@
 
 经验共享默认关闭，用户显式配置shareWithModel后，begin工具结果才提供一条经验；不绕过DSH权限，不直接改模型请求。配置按启动时固定的单仓库生效，工具检查session.header.cwd，其他仓库会话拒绝操作。模型没有写入正反馈或修改执行信任配置的工具。
 
+安装层补充：官方include中id/name是覆盖语法；新bundle必须用insert加入条目。固定app-boot组合真实manifest的回归必须保留，实际tgz安装组件探针另见Issue #7。
+
 来源：
 - https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/session.md
 - https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/tools.md
