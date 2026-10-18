@@ -1,0 +1,11 @@
+# T006a 交付：实际tgz安装组件验证
+
+关联Issue #7；基于T005已合并头309ebbf2079ee8061987680b7bdb144fd09992a6，分支codex/t006a-install-probe。用户已恢复GitHub开发。
+
+manifest insert及轻量组合回归已随T003合并；本PR不重复修复。交付`scripts/install-probe.ts`、固定plugin-manager开发依赖、打包安装脚本和两平台CI配方，源码／CI与原已审3684e30完全相同。新增依赖图从当前main lock重建，不回退已合并的静态工具更新。
+
+探针使用新的隔离profile，实际执行官方共享安装操作、app-boot配置组合和Loader，检查五个工具／提示区及合成begin。执行信任和模型共享均关闭，不修改已有用户profile。pnpm固定11.25.0，action不自动安装项目依赖。
+
+当前锁定安装审计0；类型／静态／构建及15项检查通过。当前提交实际tgz安装、当前远端CI及独立交付映射需在PR记录，旧包摘要不冒称新包验证。
+
+原独立逻辑评审670d2eb5e037689d446e423cff049965a34506cb及1a225f3整合映射已通过。当前范围重点核对映射、锁图、新CI和实际包边界，不重复旧逻辑审查。peer服务仍由源码工作区提供，不是完整CLI/Web/Desktop发行应用安装，也不是真实Agent会话或收益实验。未发布或部署。

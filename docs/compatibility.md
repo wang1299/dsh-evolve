@@ -8,17 +8,28 @@
 
 Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描述为真实模型端到端成功。
 
-manifest使用官方insert语义加入唯一插件条目；由固定app-boot解析真实YAML并组合空配置做回归。直接注册服务不能替代安装配置检查。
+`npm run install-probe -- <local.tgz>`：实际调用官方plugin-manager共享安装操作，装到新的隔离profile，用app-boot读取/组合bundle并经真实Loader加载安装包，检查五个工具和提示区，执行合成开始任务。peer服务由源码工作区提供，不等于完整DSH发行应用的安装；无模型调用。它已发现并修复原manifest没有insert导致组合为空的问题。
 
 ## 未验证
 
 - 真实DSH模型会话中的自主调用、候选提取质量和经验收益。
-- 官方Web/Desktop安装器、实际完整UI加载与跨版本兼容。
-- Linux运行：已配置CI，未远端执行。
+- 完整官方CLI/Web/Desktop发行应用安装器、实际完整UI加载与跨版本兼容。
+- T005的15项已通过Ubuntu/Windows CI；本PR新增实际安装组件配方尚待当前头两平台执行。历史面板13项结果不代替新安装验证。
 
 ## 本地接入（待安装验证）
 
 构建安装包后，通过固定DSH版本将本地tgz装到测试profile；仅在确认安装探针通过后才推荐正式profile。当前包未发布到npm。
+
+源码工作区的可复现安装组件探针（另需pnpm）：
+
+```sh
+npm run build
+# 先创建本地 .probe-work 目录，然后打包
+npm pack --pack-destination .probe-work
+npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
+```
+
+报告和测试profile保存在`.probe-work/install-probe-*`，不会修改已有用户profile。只读验收运行器与真实Agent实验仍另行实现。
 
 插件读取可选环境变量 `DSH_EVOLVE_CONFIG` 指向本地JSON配置，或由Cordis传入Config。未配置时以进程cwd为单仓库，关闭执行信任和模型共享。
 
