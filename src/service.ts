@@ -87,6 +87,10 @@ export class EvolveService {
     for (const experience of this.store.experiences()) {
       if (experience.sourceTaskId === task.id) { reasons.push(experience.id + ':source_task'); continue; }
       if (experience.status !== 'source_verified') { reasons.push(experience.id + ':' + experience.status); continue; }
+      const proof = experience.verificationId ? this.store.verification(experience.verificationId) : null;
+      if (!proof?.verified || proof.sourceTaskId !== experience.sourceTaskId || proof.repoId !== experience.scope.repoId) {
+        reasons.push(experience.id + ':missing_or_invalid_source_evidence'); continue;
+      }
       let current;
       try { current = snapshot(this.root, Object.keys(experience.scope.requiredFiles)); }
       catch { reasons.push(experience.id + ':missing_code_condition'); continue; }

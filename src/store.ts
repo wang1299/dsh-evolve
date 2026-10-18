@@ -12,7 +12,10 @@ export class Store {
     this.db = new DatabaseSync(path);
     this.db.exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
     const version = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (version !== 0 && version !== 1) { this.db.close(); throw new Error('Unsupported database schema version'); }
+    if (version !== 0 && version !== 1 && version !== 2) { this.db.close(); throw new Error('Unsupported database schema version'); }
+    if (version === 1) {
+      try { this.migrateV1(); } catch (error) { this.db.close(); throw error; }
+    }
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS experiences(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, body TEXT NOT NULL);
@@ -21,8 +24,30 @@ export class Store {
       CREATE TABLE IF NOT EXISTS applications(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS feedback(id TEXT PRIMARY KEY, application_id TEXT NOT NULL, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY, task_id TEXT NOT NULL, created_at TEXT NOT NULL, body TEXT NOT NULL);
-      PRAGMA user_version=1;
+      PRAGMA user_version=2;
     `);
+  }
+  private migrateV1(): void {
+    this.transaction(() => {
+      this.db.exec(`CREATE TABLE feedback_v2(id TEXT PRIMARY KEY, application_id TEXT NOT NULL, body TEXT NOT NULL);
+        INSERT INTO feedback_v2 SELECT id, application_id, body FROM feedback;
+        DROP TABLE feedback; ALTER TABLE feedback_v2 RENAME TO feedback;`);
+      for (const row of this.db.prepare('SELECT id,body FROM verifications').all()) {
+        const raw = z.record(z.string(), z.unknown()).parse(JSON.parse(String(row.body)));
+        const run = (key: string): unknown => ({ ...z.record(z.string(), z.unknown()).parse(raw[key]), cases: [] });
+        const migrated = verificationSchema.parse({ ...raw, schemaVersion: 2,
+          base: run('base'), fixed: run('fixed'), regression: run('regression'), verified: false,
+          reason: 'Migrated legacy evidence without test identity; revalidation required' });
+        this.db.prepare('UPDATE verifications SET body=? WHERE id=?').run(JSON.stringify(migrated), String(row.id));
+      }
+      for (const row of this.db.prepare('SELECT body FROM experiences').all()) {
+        const current = experienceSchema.parse(JSON.parse(String(row.body)));
+        if (current.status !== 'source_verified') continue;
+        this.putExperience({ ...current, revision: current.revision + 1, status: 'candidate',
+          reason: 'Legacy verification migrated; original failing test identities require revalidation', createdAt: new Date().toISOString() });
+      }
+      this.db.exec('PRAGMA user_version=2');
+    });
   }
   private parse<T>(schema: z.ZodType<T>, row: Record<string, unknown> | undefined): T | null {
     return row ? schema.parse(JSON.parse(String(row.body))) : null;

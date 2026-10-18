@@ -55,7 +55,7 @@ export const runSchema = z.object({
 }).strict();
 export type TestRun = z.infer<typeof runSchema>;
 export const verificationSchema = z.object({
-  schemaVersion: z.literal(1), id: idSchema, sourceTaskId: idSchema, repoId: hashSchema,
+  schemaVersion: z.literal(2), id: idSchema, sourceTaskId: idSchema, repoId: hashSchema,
   baseCommit: shaSchema, fixCommit: shaSchema, acceptanceDigest: hashSchema,
   acceptanceFiles: z.array(z.object({ path: relativePath, content: z.string().max(65536) }).strict()).min(1).max(100),
   environment: z.record(z.string(), z.string()), commands: z.array(z.array(z.string())),

@@ -4,7 +4,7 @@
 
 DSH 会话／工具事件 → 最小化采集 → 任务记录 → 隔离验证 → 候选经验 → 条件过滤与排序 → DSH 上下文 → 使用记录与反馈 → 新版本／停用。
 
-TypeScript/Node.js 实现插件和核心，Python＋pytest 只作为目标仓库及验证场景。核心与 DSH 薄适配层分离。Node 24 的 SQLite 存储本地数据，事务维护当前版本与不可变历史，公开格式 `schemaVersion: 1`。
+TypeScript/Node.js 实现插件和核心，Python＋pytest 只作为目标仓库及验证场景。核心与 DSH 薄适配层分离。Node 24 的 SQLite 存储本地数据，事务维护当前版本与不可变历史。任务／经验格式 `schemaVersion: 1`，验证报告与 SQLite user_version 为2，迁移见 ADR-003。
 
 ## 模块
 

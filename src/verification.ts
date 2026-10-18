@@ -139,7 +139,7 @@ export async function verifyRepair(
       platform: process.platform, dependencyDigest: current.scope.dependencyDigest,
     };
     return verificationSchema.parse({
-      schemaVersion: 1, id: randomUUID(), sourceTaskId: taskId, repoId: current.scope.repoId, baseCommit, fixCommit, acceptanceDigest,
+      schemaVersion: 2, id: randomUUID(), sourceTaskId: taskId, repoId: current.scope.repoId, baseCommit, fixCommit, acceptanceDigest,
       acceptanceFiles: files.map((file) => ({ path: file.path, content: file.bytes.toString('utf8') })),
       environment, commands: [
         [policy.python, '-m', 'pytest', '<independent-acceptance>', '-q', '--import-mode=importlib'],
