@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { Store } from './store.js';
 import { applicability, snapshot } from './repository.js';
-import { candidateSchema, feedbackSchema, idSchema, redact, textSchema,
+import { candidateSchema, feedbackSchema, idSchema, redact, textSchema, RevisionConflict,
   type Application, type Candidate, type Experience, type Feedback, type Scope, type Task } from './domain.js';
 import { verifyRepair, type VerificationPolicy } from './verification.js';
 
@@ -127,7 +127,7 @@ export class EvolveService {
   }
   revise(id: string, expectedRevision: number, input: unknown, reason: string): Experience {
     const previous = this.requireExperience(id);
-    if (previous.revision !== expectedRevision) throw new Error('Stale experience revision');
+    if (previous.revision !== expectedRevision) throw new RevisionConflict();
     const item = cleanCandidate(input);
     const current = snapshot(this.root, item.requiredFiles);
     const result: Experience = { ...previous, ...item, scope: current.scope,
@@ -137,17 +137,23 @@ export class EvolveService {
     const { requiredFiles: _selectors, ...persisted } = result as Experience & { requiredFiles?: string[] };
     this.store.putExperience(persisted); return persisted;
   }
-  disable(id: string, reason: string): Experience {
+  disable(id: string, reason: string, expectedRevision?: number): Experience {
+    return this.store.transaction(() => {
     const previous = this.requireExperience(id);
+    if (expectedRevision !== undefined && previous.revision !== expectedRevision) throw new RevisionConflict();
     const next: Experience = { ...previous, revision: previous.revision + 1, status: 'disabled',
       reason: redact(textSchema.parse(reason)), createdAt: new Date().toISOString() };
     this.store.putExperience(next); return next;
+    });
   }
-  restore(id: string, revision: number, reason: string): Experience {
+  restore(id: string, revision: number, reason: string, expectedRevision?: number): Experience {
+    return this.store.transaction(() => {
     const previous = this.requireExperience(id); const old = this.store.history(id).find((r) => r.revision === revision);
+    if (expectedRevision !== undefined && previous.revision !== expectedRevision) throw new RevisionConflict();
     if (!old) throw new Error('Unknown historical revision');
     const next: Experience = { ...old, revision: previous.revision + 1, status: 'candidate', verificationId: null,
       reason: redact(textSchema.parse(reason)), createdAt: new Date().toISOString() };
     this.store.putExperience(next); return next;
+    });
   }
 }

@@ -24,4 +24,5 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check
       - run: npm run compat
+      - run: npm run demo
       - run: npm pack --dry-run
