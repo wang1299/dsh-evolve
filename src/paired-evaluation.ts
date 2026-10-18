@@ -135,6 +135,8 @@ export function evaluatePairedExperiment(input: unknown): object {
     if (group.has(p.arm)) throw new Error('Duplicate task/replicate/arm'); group.add(p.arm); groups.set(key, group);
   }
   if ([...tasks.keys()].some((id) => !m.plans.some((p) => p.taskId === id)) || [...groups.values()].some((g) => g.size !== 3)) throw new Error('Missing comparison arm');
+  if ((armPolicies.get('retrieval') === legacyPolicyDigests.retrieval)
+    !== (armPolicies.get('evolve') === legacyPolicyDigests.evolve)) throw new Error('Mixed retrieval generations across arms');
   const ids = new Set<string>();
   for (const r of experiment.runs) {
     if (ids.has(r.runId)) throw new Error('Duplicate actual runId'); ids.add(r.runId);

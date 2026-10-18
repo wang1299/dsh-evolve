@@ -17,7 +17,8 @@
 - DSH：固定0.2.0-rc.2，真实官方服务探针通过；真实模型回合和官方Web/Desktop安装尚未验证。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
-- 验证：当前32项本地检查通过；此前评价／安装PR #14/#16的15项及Codex PR #17的24项两平台CI、独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
+- 检索：T008a加入长任务BM25、弱匹配拒绝和版本化策略；普通检索对照使用同一算法。36条预先冻结合成查询的召回/误选/漏选与成本全部保留，尚不能证明Agent收益。见[离线诊断](docs/evaluation/retrieval-v1.md)。
+- 验证：T008a当前37项本地检查通过；此前PR #18的32项两平台CI、实际安装和独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
 - GitHub：公开仓库已建立，任务Issue与聚焦PR正在依次推进。
 - npm、GitHub Release、线上部署：未发布。
 

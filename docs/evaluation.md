@@ -2,6 +2,8 @@
 
 三组：baseline（同一Agent不提供经验）、retrieval（只按相似度召回）、evolve（来源验证＋作用域＋效用排序＋反馈更新）。
 
+T008a起retrieval/evolve均使用同一BM25文本策略（普通检索不做来源/作用域/效用），并更新policyDigest；历史v1覆盖策略记录继续可评价，组内不可混用。离线四种消融、36条合成查询和全部错误见[检索诊断](evaluation/retrieval-v1.md)，不是新的Agent三组收益结果。本次没有追加模型调用。
+
 以时间或任务族拆分经验积累任务和未见任务。冻结模型、版本、提示、任务集、每任务预算、随机种子、环境、验收脚本摘要。优化与选择不能查看未见验收答案。三组从相同干净代码快照运行，独立验收在 Agent 不可修改目录中；不能仅依靠提示词要求 Agent 不修改测试。
 
 逐条记录：taskId、split、arm、model、budget、environmentDigest、acceptanceDigest、accepted、sameErrorRecurred、humanRework、wrongExperienceApplied、extraCost、experienceIds、runId。缺失项为 unknown，不补零。成本必须含经验提取、验证、检索和模型使用，不只看最终执行。

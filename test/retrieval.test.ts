@@ -1,12 +1,31 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { EvolveService } from '../src/service.js';
 import { Store } from '../src/store.js';
 import { fixture } from './fixture.js';
 import { rankText, retrievalTokens } from '../src/retrieval.js';
+
+test('frozen diagnostic reproduces every selection on both splits while retaining wrong and missed results', async () => {
+  for (const split of ['development', 'holdout']) {
+    const actual = JSON.parse(execFileSync(process.execPath, [fileURLToPath(new URL('../scripts/retrieval-benchmark.js', import.meta.url)), split], { encoding: 'utf8', windowsHide: true }));
+    const frozen = JSON.parse(await readFile(new URL(`../../docs/evaluation/retrieval-v1-${split}.json`, import.meta.url), 'utf8'));
+    assert.equal(actual.dataDigest, frozen.dataDigest); assert.equal(actual.policyDigest, frozen.policyDigest);
+    for (const key of Object.keys(frozen.groups)) {
+      const a = actual.groups[key]; const b = frozen.groups[key];
+      assert.deepEqual(a.rows, b.rows, 'rerun selections must match the preserved report');
+      assert.equal(a.correct + a.wrong + a.abstained, a.queries);
+      assert.ok(a.wrong > 0, 'known intent errors cannot be dropped from the report');
+      assert.equal(a.cost.modelCalls, 0);
+      for (const field of ['queries', 'positives', 'negatives', 'correct', 'wrong', 'abstained', 'positiveRecall', 'wrongInjectionRate', 'negativeInjectionRate', 'abstentionRate']) assert.equal(a[field], b[field]);
+      assert.equal(a.cost.scoredPairs, b.cost.scoredPairs); assert.equal(a.cost.offeredBytes, b.cost.offeredBytes);
+    }
+  }
+});
 
 test('BM25 ignores nonmatching query suffixes and repetitions, bounds scores and abstains on weak anchors', () => {
   const bank = [{ id: 'rollback', title: 'transaction rollback exception', strategy: 'Restore the balance before raising an exception.' },

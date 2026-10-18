@@ -74,6 +74,8 @@ test('historical retrieval policies remain evaluable but an arm cannot mix polic
   assert.throws(() => evaluatePairedExperiment(current), /Mixed policies/);
   const unknown = sample(); unknown.manifest.plans[1]!.policyDigest = hash('arbitrary-new-method');
   assert.throws(() => evaluatePairedExperiment(unknown), /Unrecognized/);
+  const mixed = sample(); mixed.manifest.plans[1]!.policyDigest = legacyPolicyDigests.retrieval;
+  assert.throws(() => evaluatePairedExperiment(mixed), /Mixed retrieval generations/);
 });
 
 test('a comparison with abstention is labeled honestly and the live recipe refuses it before any model call', () => {
