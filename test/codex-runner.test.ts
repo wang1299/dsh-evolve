@@ -73,6 +73,19 @@ test('Malformed or unknown item events cannot bypass a zero-tool budget', async 
   }
 });
 
+test('Paired runtime pins requested model/reasoning and provider retries; common prompt excludes injected experience', async () => {
+  const { root } = await setup();
+  const base = await prepareCodexTask(root, 'Fix x', ['module.py'], null, { candidate: 'none' });
+  const augmented = await prepareCodexTask(root, 'Fix x', ['module.py'], { id: 'x', revision: 1, sourceTaskId: 'y', title: 'x', strategy: 'use 2' }, { candidate: 'none' });
+  assert.equal(base.basePromptDigest, augmented.basePromptDigest); assert.equal(base.taskDigest, augmented.taskDigest);
+  assert.notEqual(base.promptDigest, augmented.promptDigest);
+  const run = await runCodex(root, base, { ...options('controls'), model: 'gpt-6.1-sol', reasoningEffort: 'low', providerRetries: 0, maxToolCalls: 0 });
+  assert.equal(run.status, 'completed'); assert.equal(run.controls.model, 'gpt-6.1-sol'); assert.equal(run.controls.providerRetries, 0);
+  assert.equal((await runCodex(root, base, { ...options('tool-limit'), maxToolCalls: 0 })).reason, 'tool_limit');
+  await assert.rejects(runCodex(root, base, { ...options('success'), model: 'invalid\nmodel' }));
+  await assert.rejects(runCodex(root, base, { transport: 'default', providerRetries: 0 }));
+});
+
 test('A parent exit with inherited descendant pipes cannot extend the deadline indefinitely', async () => {
   const { root, prepared } = await setup(); const start = Date.now();
   const run = await runCodex(root, prepared, { ...options('exit-with-open-pipe'), timeoutMs: 200 });

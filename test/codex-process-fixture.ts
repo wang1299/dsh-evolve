@@ -36,5 +36,7 @@ process.stdin.on('end', () => {
   if (!prompt.includes('rememberedExperience') || !process.argv.includes('read-only') || !process.argv.includes('--ignore-user-config')
     || !['apps', 'plugins', 'hooks', 'remote_plugin'].every((name) => process.argv.includes(name))) process.exitCode = 9;
   if (!process.argv.includes('model_providers.evolve-https.supports_websockets=false')) process.exitCode = 9;
+  if (mode === 'controls' && (!['gpt-6.1-sol', 'model_reasoning_effort="low"', 'model_providers.evolve-https.request_max_retries=0',
+    'model_providers.evolve-https.stream_max_retries=0'].every((arg) => process.argv.includes(arg)) || !prompt.includes('Set candidate to null'))) process.exitCode = 9;
   if (mode === 'nonzero') process.exitCode = 1;
 });

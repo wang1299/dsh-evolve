@@ -15,4 +15,25 @@
 - GEPA：https://github.com/gepa-ai/gepa，借鉴轨迹反馈、候选与独立评价；首版先采用简单可解释统计。
 - ExpeL：https://arxiv.org/abs/2308.10144，经验提炼与召回已存在；项目贡献需由可执行验证、版本作用域、反例处理及实验体现。
 
-当前真实 Agent 三组实验：**未运行**。
+当前真实仓库任务集的 Agent 收益实验：**未运行**。
+
+T006b另有真实Codex的合成接入结果，见[验收记录](development/T006b-acceptance.md)：来源与baseline通过，evolve经两次显式续跑后通过；失败保留、预算不等，底层模型身份未冻结。它不作为本协议的三组数据，也不证明经验收益。
+
+## T006c 初步三组执行（v2）
+
+设计见[ADR-008](decisions/008-paired-codex-evaluation.md)。`scripts/paired-evaluation.ts`复用带SHA256的可信本地合成来源报告，在新仓库重放修复、重新验证并生成新经验；保留原始任务、经验和证明的映射。新任务为库存预留的异常回滚，外部验收不进入提示。三组从同一提交开始，冻结经验库，期间不学习或写入反馈。
+
+固定请求`gpt-6.1-sol`／`low`、CLI `0.163.0-alpha.10.2`、每组1次调用／90秒／工具上限0、宿主提供提示32KiB和CLI输出1MiB上限；调用级provider重试为0。提示上限不含CLI自身添加的内部上下文。观察到工具事件即拒绝输出；事件到达前工具可能已启动，不宣称恶意代码强隔离。模型只提交源码提案，宿主受限写入和独立pytest后决定验收。retrieval只做文本匹配，evolve复用验证、作用域和效用筛选。
+
+服务端模型revision、温度、sampling seed、token和金额硬上限均不可确认，明确保存null；replicate只是重复编号。调用、时间及工具策略相同不等于实际token和金额相同。资格在调用前原子保留，崩溃保留running/unknown，不自动补跑。单组CLI失败不取消其他组；验收未运行保持unknown，同时计入尝试分母。
+
+`evaluate`同时接受原v1和新v2，见`src/paired-evaluation.ts`。v2保留完整计划和运行、控制／任务／经验库／提示摘要、精确经验版本、独立证明、usage与未知项；拒绝泄漏、缺组、重复、基线注入及失败冒称通过。检验的是记录一致性，不能证明输入文件来自真实CLI；运行证据需与执行器、原始本地报告和提交一起审计。
+
+运行（会调用已登录的Codex模型，仅发送生成的合成代码）：
+
+```sh
+npm run paired-evaluation -- --live --source-evidence <本地合成来源报告> --source-digest <该报告SHA256>
+node dist/src/cli.js evaluate --input <输出目录>/experiment.json
+```
+
+实现检查已通过32项测试。首轮真实运行三组均通过，但retrieval和evolve都因低相似度未注入经验，三组提示完全相同；因此只验证执行链路，不能评价经验收益。原始3次调用保留，未追加重跑。报告新增`experienceComparison`与各组`experienceOfferedAttempts`，计划引用数单列`plannedExperienceGroups`；尚未启动经验组为`no_treatment_attempts`，不能冒称提供过经验。提供次数表示携带经验参数的宿主调用尝试，不证明模型收到、读取或采用了它。相同配方后续未提供经验时，在调用前保留未开始计划并停止，不消耗模型调用。来源验证、实际结果、摘要与限制见[T006c验收](development/T006c-acceptance.md)，评审见[T006c评审](development/T006c-review.md)。一个手写任务、固定组顺序、一次重复始终标为preliminary，不用于普遍收益或算法优越性宣称。
