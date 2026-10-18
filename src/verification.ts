@@ -59,6 +59,11 @@ async function acceptanceFiles(root: string, sub = ''): Promise<{ path: string; 
   if (files.length > 100) throw new Error('Too many acceptance files');
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
+/** Share the source verifier's complete file-set policy with preflight checks. */
+export async function acceptanceDigest(root: string): Promise<string> {
+  const files = await acceptanceFiles(await realpath(root));
+  return digest(files.map((file) => `${file.path}:${digest(file.bytes)}`).join('\n'));
+}
 async function materialize(root: string, commit: string, target: string): Promise<void> {
   const entries = git(root, ['ls-tree', '-r', '-z', '--full-tree', commit]).split('\0').filter(Boolean);
   if (entries.length > 5000) throw new Error('MVP snapshot limit: 5000 tracked files');

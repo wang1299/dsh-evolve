@@ -15,6 +15,7 @@ TypeScript/Node.js 实现插件和核心，Python＋pytest 只作为目标仓库
 - dsh：官方工具、事件观察、prompt section；所有事件按 session/task 显式绑定，工具结果仅观察。
 - panel：本地面板；绑定 loopback，凭据保护写操作、检查来源，不开放任意命令或文件读取。
 - evaluation：基线、普通检索、完整机制三组结果格式，冻结评价任务、模型和预算，报告原始结果。
+- codex-runner：可选只读CLI模型实验、最小JSONL元数据、受限结构化修复、宿主路径／摘要校验及独立pytest；见ADR-007。它复用经验核心，不替代DSH入口或正式收益评价。
 
 ## 关键约束
 

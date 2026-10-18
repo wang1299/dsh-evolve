@@ -36,7 +36,9 @@
     "demo": "tsc && node dist/scripts/demo.js",
     "panel": "node dist/src/cli.js panel",
     "prepack": "tsc",
-    "install-probe": "tsc && node dist/scripts/install-probe.js"
+    "install-probe": "tsc && node dist/scripts/install-probe.js",
+    "codex-demo": "tsc && node dist/scripts/codex-demo.js",
+    "codex-retry": "tsc && node dist/scripts/codex-retry.js"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
