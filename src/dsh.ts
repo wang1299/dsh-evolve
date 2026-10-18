@@ -20,7 +20,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     if (disposed) throw new Error('DSH-Evolve is unloading');
     if (!exec.agent) throw new Error('A session-backed Agent is required');
     const session = ctx.sessions.get(exec.agent.id);
-    if (!session?.header.cwd || realpathSync(session.header.cwd) !== realpathSync(service.root)) throw new Error('Session is outside configured repository');
+    if (!session?.header.cwd || realpathSync.native(session.header.cwd) !== realpathSync.native(service.root)) throw new Error('Session is outside configured repository');
     return String(session.id);
   };
   ctx.effect(() => async () => {
