@@ -1,5 +1,7 @@
 # T006b 独立只读评审
 
+恢复交付映射已通过：远端目标25b5f976c2fffe83ec972344376d6394cffdbaf9，基线9a63443efe6edfb8db823b23584da072243d24e5，与本地检查头e2f5756完整树999c891bc167492163fdce9dd4472387d6fa8d5a相同；六文件与已审3caf90b一致、五项修复完整、无阻塞。当前头run39149439238的两平台24项及实际安装／Loader通过，PR #17按授权squash为7f056f625b6733ae99897af5fee756acf1e2edbe。以下保留原本地逻辑及模型证据的审查历史，父Issue #8仍open。
+
 评审者：`/root/mvp_independent_review`，AI只读评审，不是GitHub正式批准。全程没有调用真实模型、修改文件、操作远端或联系参考仓库。
 
 ## 稳定提交和范围

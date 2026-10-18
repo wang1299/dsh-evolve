@@ -16,8 +16,8 @@
 - 核心功能：已实现来源验证、候选与作用域选择、反馈及经验版本，含旧数据非破坏迁移。
 - DSH：固定0.2.0-rc.2，真实官方服务探针通过；真实模型回合和官方Web/Desktop安装尚未验证。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
-- 评价：三组结果一致性和泄漏检查已实现；真实Agent效果实验未运行。
-- 验证：评价PR #14及实际安装探针PR #16均已通过15项两平台CI和独立评审并合并。当前Codex执行器24项本地检查通过，等待当前头CI与独立映射；见[本轮记录](docs/development/status.md)。
+- 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
+- 验证：当前32项本地检查通过；此前评价／安装PR #14/#16的15项及Codex PR #17的24项两平台CI、独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
 - GitHub：公开仓库已建立，任务Issue与聚焦PR正在依次推进。
 - npm、GitHub Release、线上部署：未发布。
 
@@ -59,4 +59,6 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 
 本地Codex CLI复用已有登录，以只读分析、结构化修复、宿主受限写入和外部pytest检查经验闭环。`codex-demo -- --live`显式开启真实模型，最多三次调用；显式续跑另计，默认及CI不调用模型。
 
-历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。本轮交付没有重新调用模型或上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合；三组v2机制另行交付。
+历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。本轮交付没有重新调用模型或上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合。
+
+新增`paired-evaluation -- --live --source-evidence <本地合成来源报告> --source-digest <SHA256>`配方：固定请求模型／推理／CLI版本，每组一次调用、失败不重试。v2记录原子资格、冻结经验库、精确引用及独立验收；温度／seed／服务端权重及token／金额硬限未知，不补造控制。历史首轮没有经验暴露，结果保留；后续同一配方缺少经验时，在调用前停止。检索漏选由[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)跟进。

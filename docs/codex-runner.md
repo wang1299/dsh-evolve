@@ -51,3 +51,9 @@ npm run codex-retry -- --live --evidence <原失败evidence.json> --repo <本轮
 ```
 
 脚本核对仓库身份、起始提交、原经验版本、提示摘要和完整验收文件集合，随后按原证据摘要原子登记单次资格；同parent重复/并发拒绝，失败不自动释放资格。复用原应用记录，另存`codex-retry-*`报告；不改写原失败证据或恢复旧CLI会话。新增一次evolve调用后两组预算不同，结果只能验证接入和验收，不能用于等预算收益比较。历史实际结果及资格修复前两次续跑的登记见[T006b验收](development/T006b-acceptance.md)。
+
+## T006c 三组实验配方
+
+另有`paired-evaluation -- --live --source-evidence <本地合成来源报告> --source-digest <SHA256>`。显式固定请求模型／推理／CLI版本，每组1次90秒、零工具、调用级重试0，重放来源后在另一任务分三组执行。没有支持的温度、seed或token／金额硬限，不补造控制值。v2报告保留所有计划、失败和未知；原v1继续可读。
+
+首轮3次真实运行均通过，但两种经验策略均未选入经验，不能解释为收益对照。原始结果保留；补充报告显示`no_experience_exposure`，相同配方后续缺少经验时在模型调用前终止。详见[评价协议](evaluation.md)和[T006c验收](development/T006c-acceptance.md)。不自动重试，不把正常产品允许的拒绝注入改成强制注入。

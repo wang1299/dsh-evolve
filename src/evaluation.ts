@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { hashSchema, idSchema } from './domain.js';
+import { evaluatePairedExperiment } from './paired-evaluation.js';
 
 const name = z.string().min(1).max(200);
 const nullableBoolean = z.boolean().nullable();
@@ -20,6 +21,7 @@ export const experimentSchema = z.object({
 }).strict();
 export type Experiment = z.infer<typeof experimentSchema>;
 export function evaluateExperiment(input: unknown): object {
+  if (typeof input === 'object' && input !== null && 'schemaVersion' in input && input.schemaVersion === 2) return evaluatePairedExperiment(input);
   const experiment = experimentSchema.parse(input);
   const accumulation = new Set(experiment.accumulationTaskIds); const evaluation = new Set(experiment.evaluationTaskIds);
   if (accumulation.size !== experiment.accumulationTaskIds.length || evaluation.size !== experiment.evaluationTaskIds.length) throw new Error('Duplicate task identifiers');

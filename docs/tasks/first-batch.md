@@ -1,6 +1,7 @@
 # 第一批任务
 
 Codex执行器子任务见[T006b](T006b-codex-runner.md)。用户已恢复GitHub开发，当前任务仍按聚焦交付和条件合并推进。
+三组执行见[T006c](T006c-paired-evaluation.md)，检索覆盖见[T008／Issue #15](T008-retrieval-coverage.md)；有效经验对照仍未完成。
 
 这些是本地任务编号，不是 GitHub Issue 编号。远端就绪后逐项创建 Issue 并填写链接。
 
