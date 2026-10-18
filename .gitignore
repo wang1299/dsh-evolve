@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.tools/
+.evolve/
+.probe-work/
+coverage/
+*.tgz
+__pycache__/
+.pytest_cache/
+.venv/
+*.log
+.env
+.env.*
+!.env.example
