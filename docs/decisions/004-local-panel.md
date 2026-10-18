@@ -9,3 +9,5 @@ GET `/` 只返回静态界面骨架。所有 `/api/` 读写都需随机Bearer to
 GET `/api/state` 提供最小任务、经验、来源报告、版本、应用与反馈。POST `/api/experience/<id>/{revise,disable,restore}` 要求当前revision和原因，反馈按新事件追加。POST `/api/cleanup` 仅删除超过30天的事件摘要。不提供执行命令、上传文件或读取任意路径的HTTP端点。
 
 Config读取是本地owner行为；HTTP/模型不能修改executionTrusted、shareWithModel或验证路径。CLI的panel读取配置并显示本地地址；未额外授权不发布或部署。
+
+共享SQLite的并发边界：disable/restore须把expectedRevision检查和新版本写入放在同一事务，不能只在HTTP层先检查。冲突返回409；用户刷新后再决定，旧页面不能修改并发产生的新版本。

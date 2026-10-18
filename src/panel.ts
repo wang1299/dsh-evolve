@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { EvolveService } from './service.js';
-import { idSchema, redact, textSchema, feedbackSchema } from './domain.js';
+import { idSchema, redact, textSchema, feedbackSchema, RevisionConflict } from './domain.js';
 
 const revisionBody = z.object({ revision: z.number().int().positive(), reason: textSchema }).strict();
 async function body(request: IncomingMessage): Promise<unknown> {
@@ -90,11 +90,11 @@ export async function startPanel(service: EvolveService): Promise<{ url: string;
         send(200, service.revise(id, input.revision, input.candidate, input.reason));
       } else if (match[2] === 'restore') {
         const input = revisionBody.extend({ targetRevision: z.number().int().positive() }).parse(value);
-        send(200, service.restore(id, input.targetRevision, input.reason));
+        send(200, service.restore(id, input.targetRevision, input.reason, input.revision));
       } else {
-        const input = revisionBody.parse(value); send(200, service.disable(id, input.reason));
+        const input = revisionBody.parse(value); send(200, service.disable(id, input.reason, input.revision));
       }
-    } catch (error) { send(400, { error: redact(error instanceof Error ? error.message : 'Invalid request', 1000) }); }
+    } catch (error) { send(error instanceof RevisionConflict ? 409 : 400, { error: redact(error instanceof Error ? error.message : 'Invalid request', 1000) }); }
   }
   await new Promise<void>((resolveStart, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolveStart); });
   const address = server.address(); if (!address || typeof address === 'string') throw new Error('Missing local address');

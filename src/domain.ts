@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createHash } from 'node:crypto';
 
 export const digest = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex');
+export class RevisionConflict extends Error { constructor() { super('Stale experience revision'); } }
 export const idSchema = z.string().uuid();
 export const shaSchema = z.string().regex(/^[a-f0-9]{40}$/);
 export const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);

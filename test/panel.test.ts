@@ -4,6 +4,7 @@ import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { startPanel } from '../src/panel.js';
 import { fixture } from './fixture.js';
+import { join } from 'node:path';
 
 test('local panel authenticates data, rejects cross-site writes and preserves experience revisions', async () => {
   const f = await fixture(); const store = new Store(':memory:');
@@ -30,4 +31,20 @@ test('local panel authenticates data, rejects cross-site writes and preserves ex
     assert.equal((await fetch(panel.origin + '/api/cleanup', { method: 'POST', headers, body: '{}' })).status, 200);
     assert.ok(store.task(task.id)); assert.equal(store.history(experience.id).length, 3);
   } finally { await panel.close(); store.close(); }
+});
+
+test('shared database stale disable and restore cannot affect a newer revision', async () => {
+  const f = await fixture(); const path = join(f.home, 'shared.sqlite');
+  const first = new Store(path); const second = new Store(path);
+  const policy = { trusted: false, python: 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 10000 };
+  const a = new EvolveService(first, f.repo, policy); const b = new EvolveService(second, f.repo, policy);
+  try {
+    const task = a.begin('owner', 'rollback');
+    const exp = a.propose(task.id, { title: 'rollback', strategy: 'restore balance', observedFacts: ['state changed'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
+    const observedRevision = exp.revision;
+    b.disable(exp.id, 'Concurrent owner update', observedRevision);
+    assert.throws(() => a.disable(exp.id, 'Stale panel action', observedRevision), /Stale/);
+    assert.throws(() => a.restore(exp.id, 1, 'Stale restore', observedRevision), /Stale/);
+    assert.equal(first.experience(exp.id)?.revision, 2);
+  } finally { first.close(); second.close(); }
 });

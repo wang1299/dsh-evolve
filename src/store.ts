@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { z } from 'zod';
-import { applicationSchema, experienceSchema, feedbackSchema, taskSchema, verificationSchema,
+import { applicationSchema, experienceSchema, feedbackSchema, taskSchema, verificationSchema, RevisionConflict,
   type Application, type Experience, type Feedback, type Task, type Verification } from './domain.js';
 
 export class Store {
@@ -64,7 +64,7 @@ export class Store {
     const item = experienceSchema.parse(experience);
     this.transaction(() => {
       const current = this.experience(item.id);
-      if (item.revision !== (current?.revision ?? 0) + 1) throw new Error('Stale experience revision');
+      if (item.revision !== (current?.revision ?? 0) + 1) throw new RevisionConflict();
       this.db.prepare('INSERT INTO revisions VALUES(?,?,?)').run(item.id, item.revision, JSON.stringify(item));
       this.db.prepare('INSERT INTO experiences VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,body=excluded.body')
         .run(item.id, item.revision, JSON.stringify(item));
