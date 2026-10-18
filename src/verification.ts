@@ -19,14 +19,29 @@ export function parsePytest(exitCode: number | null, xml: string, durationMs: nu
     const value = suite?.match(new RegExp(`\\b${key}="([0-9]+)"`))?.[1];
     return value === undefined ? 0 : Number(value);
   };
-  return { exitCode, tests: count('tests'), failures: count('failures'), errors: count('errors'),
+  const cases: TestRun['cases'] = [];
+  for (const match of xml.matchAll(/<testcase\b([^>]*?)(?:\/>|>([\s\S]*?)<\/testcase>)/g)) {
+    const attributes = match[1]!; const body = match[2] ?? '';
+    const name = attributes.match(/\bname="([^"]+)"/)?.[1];
+    const group = attributes.match(/\bclassname="([^"]*)"/)?.[1] ?? '';
+    if (!name) continue;
+    cases.push({ id: group + '::' + name, status: /<failure\b/.test(body) ? 'failed' : /<error\b/.test(body) ? 'error' : /<skipped\b/.test(body) ? 'skipped' : 'passed' });
+  }
+  return { exitCode, tests: count('tests'), failures: count('failures'), errors: count('errors'), cases,
     skipped: count('skipped'), durationMs, timedOut, summary: redact(output, 2000) };
 }
 export function passes(run: TestRun): boolean {
-  return !run.timedOut && run.exitCode === 0 && run.tests > run.skipped && run.failures === 0 && run.errors === 0;
+  return !run.timedOut && run.exitCode === 0 && run.tests > run.skipped && run.failures === 0 && run.errors === 0 && run.cases.length === run.tests;
 }
 export function reproduces(run: TestRun): boolean {
-  return !run.timedOut && run.exitCode === 1 && run.tests > run.skipped && run.failures > 0 && run.errors === 0;
+  return !run.timedOut && run.exitCode === 1 && run.tests > run.skipped && run.failures > 0 && run.errors === 0 && run.cases.length === run.tests;
+}
+export function verifiedCases(base: TestRun, fixed: TestRun): boolean {
+  if (!reproduces(base) || !passes(fixed)) return false;
+  const fixedCases = new Map(fixed.cases.map((item) => [item.id, item.status]));
+  return new Set(base.cases.map((item) => item.id)).size === base.cases.length
+    && fixedCases.size === fixed.cases.length && base.cases.length === fixed.cases.length
+    && base.cases.every((item) => fixedCases.has(item.id) && (item.status !== 'failed' || fixedCases.get(item.id) === 'passed'));
 }
 async function acceptanceFiles(root: string, sub = ''): Promise<{ path: string; bytes: Buffer }[]> {
   const files: { path: string; bytes: Buffer }[] = [];
@@ -116,7 +131,7 @@ export async function verifyRepair(
     const regression = await runPytest(policy.python, regressionArgs, fixDir, join(workspace, 'regression.xml'), policy.timeoutMs, signal);
     const after = await acceptanceFiles(testsDir);
     if (digest(after.map((f) => `${f.path}:${digest(f.bytes)}`).join('\n')) !== acceptanceDigest) throw new Error('Acceptance evidence changed during verification');
-    const verified = reproduces(base) && passes(fixed) && passes(regression);
+    const verified = verifiedCases(base, fixed) && passes(regression);
     const environment = {
       node: process.version,
       python: execFileSync(policy.python, ['--version'], { encoding: 'utf8', windowsHide: true }).trim(),

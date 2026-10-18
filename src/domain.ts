@@ -51,6 +51,7 @@ export const runSchema = z.object({
   failures: z.number().int().nonnegative(), errors: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(), durationMs: z.number().nonnegative(),
   timedOut: z.boolean(), summary: z.string().max(2000),
+  cases: z.array(z.object({ id: z.string().min(1).max(2000), status: z.enum(['passed', 'failed', 'error', 'skipped']) }).strict()).max(10000),
 }).strict();
 export type TestRun = z.infer<typeof runSchema>;
 export const verificationSchema = z.object({

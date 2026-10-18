@@ -7,16 +7,24 @@ import { redact, relativePath } from '../src/domain.js';
 import { applicability, snapshot } from '../src/repository.js';
 import { EvolveService, similarity } from '../src/service.js';
 import { Store } from '../src/store.js';
-import { parsePytest, passes, reproduces } from '../src/verification.js';
+import { parsePytest, passes, reproduces, verifiedCases } from '../src/verification.js';
 import { fixture } from './fixture.js';
 
 test('pytest failure must be a real failing test; infrastructure, no collection and skips do not verify', () => {
-  const xml = '<testsuites><testsuite tests="1" failures="1" errors="0" skipped="0"></testsuite></testsuites>';
+  const xml = '<testsuites><testsuite tests="1" failures="1" errors="0" skipped="0"><testcase classname="acceptance" name="broken"><failure/></testcase></testsuite></testsuites>';
   assert.equal(reproduces(parsePytest(1, xml, 1, false, '')), true);
   for (const code of [0, 2, 3, 4, 5, null]) assert.equal(reproduces(parsePytest(code, xml, 1, false, '')), false);
   assert.equal(reproduces(parsePytest(1, xml, 1, true, '')), false);
   assert.equal(passes(parsePytest(0, '', 1, false, '')), false);
   assert.equal(passes(parsePytest(0, '<testsuite tests="1" skipped="1" failures="0" errors="0">', 1, false, '')), false);
+});
+
+test('skipping or removing the originally failing acceptance test cannot verify a repair', () => {
+  const baseline = parsePytest(1, '<testsuite tests="2" failures="1" errors="0" skipped="0"><testcase name="bug"><failure/></testcase><testcase name="smoke"/></testsuite>', 1, false, '');
+  const skipped = parsePytest(0, '<testsuite tests="2" failures="0" errors="0" skipped="1"><testcase name="bug"><skipped/></testcase><testcase name="smoke"/></testsuite>', 1, false, '');
+  const removed = parsePytest(0, '<testsuite tests="1" failures="0" errors="0" skipped="0"><testcase name="smoke"/></testsuite>', 1, false, '');
+  assert.equal(passes(skipped), true);
+  assert.equal(verifiedCases(baseline, skipped), false); assert.equal(verifiedCases(baseline, removed), false);
 });
 
 test('privacy minimization, path validation and low-similarity abstention', () => {
@@ -93,5 +101,23 @@ test('untrusted execution is rejected; unverified candidates cannot be selected'
     const other = service.begin('other', 'database transaction rollback');
     assert.equal(service.select(other.id).application, null);
     assert.throws(() => service.feedback({ id: randomUUID(), applicationId: randomUUID(), outcome: 'accepted', note: 'unbound', extraCost: null, humanRework: null }), /Unknown application/);
+  } finally { store.close(); }
+});
+
+test('feedback can append new evidence and remains bound to the applied experience revision', async () => {
+  const f = await fixture(); const store = new Store(':memory:');
+  const service = new EvolveService(store, f.repo, { trusted: false, python: 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 10000 });
+  try {
+    const task = service.begin('origin', 'rollback');
+    const input = { title: 'rollback', strategy: 'Rollback the balance', observedFacts: ['State changed'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] };
+    const exp = service.propose(task.id, input);
+    const app = { id: randomUUID(), taskId: task.id, experienceId: exp.id, revision: exp.revision, reason: 'Historical application fixture', createdAt: new Date().toISOString() };
+    store.putApplication(app);
+    service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'unknown', note: 'Awaiting acceptance', extraCost: null, humanRework: null });
+    const revised = service.revise(exp.id, 1, { ...input, strategy: 'A revised transaction strategy' }, 'New evidence');
+    service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'counterexample', note: 'A late counterexample for old revision', extraCost: null, humanRework: 1 });
+    assert.equal(store.feedback().length, 2);
+    assert.equal(store.experience(exp.id)?.revision, revised.revision);
+    assert.equal(store.experience(exp.id)?.status, 'candidate');
   } finally { store.close(); }
 });

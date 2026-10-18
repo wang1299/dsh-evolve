@@ -95,7 +95,9 @@ export class EvolveService {
       const match = similarity(task.summary, experience.title + ' ' + experience.strategy);
       if (match < 0.15) { reasons.push(experience.id + ':low_similarity'); continue; }
       const uses = new Set(this.store.applications().filter((a) => a.experienceId === experience.id && a.revision === experience.revision).map((a) => a.id));
-      const feedback = this.store.feedback().filter((f) => uses.has(f.applicationId) && f.outcome !== 'unknown');
+      const latest = new Map<string, Feedback>();
+      for (const feedback of this.store.feedback()) if (uses.has(feedback.applicationId) && feedback.outcome !== 'unknown') latest.set(feedback.applicationId, feedback);
+      const feedback = [...latest.values()];
       const utility = (feedback.filter((f) => f.outcome === 'accepted').length + 1) / (feedback.length + 2);
       ranked.push({ experience, score: 0.7 * match + 0.3 * utility, scope: current.scope });
     }
@@ -114,7 +116,8 @@ export class EvolveService {
     this.requireTask(application.taskId);
     return this.store.transaction(() => {
       const inserted = this.store.putFeedback(value);
-      if (inserted && (value.outcome === 'rejected' || value.outcome === 'counterexample')) this.disable(application.experienceId, value.note);
+      const current = this.requireExperience(application.experienceId);
+      if (inserted && application.revision === current.revision && (value.outcome === 'rejected' || value.outcome === 'counterexample')) this.disable(application.experienceId, value.note);
       return value;
     });
   }

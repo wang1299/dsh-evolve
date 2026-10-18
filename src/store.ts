@@ -19,7 +19,7 @@ export class Store {
       CREATE TABLE IF NOT EXISTS revisions(id TEXT NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL, PRIMARY KEY(id, revision));
       CREATE TABLE IF NOT EXISTS verifications(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS applications(id TEXT PRIMARY KEY, body TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS feedback(id TEXT PRIMARY KEY, application_id TEXT NOT NULL UNIQUE, body TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS feedback(id TEXT PRIMARY KEY, application_id TEXT NOT NULL, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY, task_id TEXT NOT NULL, created_at TEXT NOT NULL, body TEXT NOT NULL);
       PRAGMA user_version=1;
     `);
@@ -50,9 +50,9 @@ export class Store {
   putApplication(v: Application): void { this.db.prepare('INSERT INTO applications VALUES(?,?)').run(v.id, JSON.stringify(applicationSchema.parse(v))); }
   application(id: string): Application | null { return this.parse(applicationSchema, this.db.prepare('SELECT body FROM applications WHERE id=?').get(id)); }
   applications(): Application[] { return this.db.prepare('SELECT body FROM applications').all().map((r) => applicationSchema.parse(JSON.parse(String(r.body)))); }
-  feedback(): Feedback[] { return this.db.prepare('SELECT body FROM feedback').all().map((r) => feedbackSchema.parse(JSON.parse(String(r.body)))); }
+  feedback(): Feedback[] { return this.db.prepare('SELECT body FROM feedback ORDER BY rowid').all().map((r) => feedbackSchema.parse(JSON.parse(String(r.body)))); }
   putFeedback(v: Feedback): boolean {
-    const previous = this.parse(feedbackSchema, this.db.prepare('SELECT body FROM feedback WHERE id=? OR application_id=?').get(v.id, v.applicationId));
+    const previous = this.parse(feedbackSchema, this.db.prepare('SELECT body FROM feedback WHERE id=?').get(v.id));
     if (previous) {
       if (JSON.stringify(previous) === JSON.stringify(v)) return false;
       throw new Error('Feedback already recorded; append evidence through a revision');
