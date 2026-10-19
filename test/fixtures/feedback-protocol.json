@@ -1,0 +1,37 @@
+{
+  "id": "feedback-transfer-v1",
+  "maxCalls": 7,
+  "model": "gpt-6.1-sol",
+  "reasoningEffort": "low",
+  "timeoutMs": 90000,
+  "cliVersion": "codex-cli 0.163.0-alpha.10.2",
+  "sourceDigest": "36ef1b7891d3f2d976f1fc28c3d690448885cb87f6fdeaa663b547fb50961bee",
+  "accumulation": {
+    "id": "stage",
+    "file": "stage.py",
+    "query": "transaction rollback exception: aborted update corrupts entry values; preserve the prior dictionary on rejection. Repair stage_update while preserving successful behavior, the caller dictionary identity, and ValueError behavior.",
+    "code": "def stage_update(entry, changes, reject=False):\n    entry.update(changes)\n    if reject:\n        raise ValueError('rejected')\n    return entry\n",
+    "acceptance": "import pytest\nfrom stage import stage_update\n@pytest.mark.parametrize('entry,changes', [({'price': 5}, {'price': 8, 'new': 1}), ({}, {'new': 1})])\ndef test_rejection_preserves_mapping(entry, changes):\n    before = dict(entry)\n    with pytest.raises(ValueError):\n        stage_update(entry, changes, reject=True)\n    assert entry == before\n",
+    "regression": "from stage import stage_update\ndef test_success():\n    value = {'price': 2, 'label': 'keep'}\n    assert stage_update(value, {'price': 4}) is value\n    assert value == {'price': 4, 'label': 'keep'}\n"
+  },
+  "targets": [
+    {
+      "id": "cart",
+      "file": "cart.py",
+      "order": ["baseline", "retrieval", "evolve"],
+      "query": "Aborted update corrupts entry values; preserve the prior dictionary on rejection. Repair change_price so rejecting a cart edit leaves every original key and value unchanged, while successful edits update price and reset discount. Keep the caller dictionary identity and ValueError behavior; preserve unrelated keys.",
+      "code": "def change_price(cart, price, reject=False):\n    cart['price'] = price\n    cart['discount'] = 0\n    if reject:\n        raise ValueError('cart edit rejected')\n    return cart\n",
+      "acceptance": "import pytest\nfrom cart import change_price\n@pytest.mark.parametrize('cart,price', [({'price': 3, 'label': 'keep'}, 7), ({'price': 8, 'discount': 2}, -1), ({'label': 'keep'}, 0)])\ndef test_rejection_preserves_mapping(cart, price):\n    before = dict(cart)\n    with pytest.raises(ValueError):\n        change_price(cart, price, reject=True)\n    assert cart == before\n",
+      "regression": "from cart import change_price\ndef test_success():\n    cart = {'price': 8, 'discount': 2, 'label': 'keep'}\n    assert change_price(cart, 4) is cart\n    assert cart == {'price': 4, 'discount': 0, 'label': 'keep'}\n"
+    },
+    {
+      "id": "options",
+      "file": "options.py",
+      "order": ["evolve", "retrieval", "baseline"],
+      "query": "Aborted update corrupts entry values; preserve the prior dictionary on rejection. Repair apply_options so rejected configuration edits remove newly introduced keys and restore overwritten entries, while successful edits remain in place. Keep ValueError behavior and the original dictionary object; preserve unrelated nested references.",
+      "code": "def apply_options(options, changes, reject=False):\n    options.update(changes)\n    if reject:\n        raise ValueError('configuration rejected')\n    return options\n",
+      "acceptance": "import pytest\nfrom options import apply_options\n@pytest.mark.parametrize('initial,changes', [({'mode': 'safe'}, {'mode': 'fast', 'debug': True}), ({}, {'mode': 'new'}), ({'mode': None}, {'mode': 0})])\ndef test_rejection_preserves_mapping(initial, changes):\n    nested = []\n    initial['nested'] = nested\n    before = dict(initial)\n    with pytest.raises(ValueError):\n        apply_options(initial, changes, reject=True)\n    assert initial == before\n    assert initial['nested'] is nested\n",
+      "regression": "from options import apply_options\ndef test_success():\n    nested = []\n    options = {'mode': 'safe', 'nested': nested}\n    assert apply_options(options, {'mode': 'fast', 'debug': True}) is options\n    assert options == {'mode': 'fast', 'nested': nested, 'debug': True}\n    assert options['nested'] is nested\n"
+    }
+  ]
+}
