@@ -23,7 +23,7 @@ function sample(): FeedbackExperiment {
   const experience = experienceSchema.parse({ schemaVersion: 1, id: randomUUID(), revision: 2, sourceTaskId: source, title: 'transaction rollback', strategy: 'restore original mapping',
     observedFacts: ['Schema fixture only'], inferences: [], recommendations: [], scope: { repoId: 'a'.repeat(64), dependencyDigest: env.dependencyDigest, requiredFiles: {} },
     status: 'source_verified', reason: 'Schema fixture only', verificationId: sourceProof.id, createdAt: at });
-  const task = taskSchema.parse({ schemaVersion: 1, id: randomUUID(), sessionId: 'fixture', summary: 'transaction rollback: novel payment wording', scope: experience.scope, baseCommit: 'a'.repeat(40), state: 'open', createdAt: at });
+  const task = taskSchema.parse({ schemaVersion: 1, id: randomUUID(), sessionId: 'fixture', summary: 'transaction rollback: novel payment wording', scope: experience.scope, baseCommit: sourceProof.fixCommit, state: 'open', createdAt: at });
   const ref = { id: experience.id, revision: experience.revision, sourceTaskId: source };
   const plan = { runId: randomUUID(), taskId: task.id, replicate: 0, arm: 'evolve' as const, promptDigest: digest('offered'), experienceRefs: [ref], policyDigest: feedbackPolicyDigests.evolve, selectionReasons: ['fixture'] };
   const sourceBank = digest(JSON.stringify({ experiences: [experience], proofs: [sourceProof], feedback: [], applications: [], feedbackTasks: [] }));
@@ -39,12 +39,12 @@ function sample(): FeedbackExperiment {
 function accumulated(e: FeedbackExperiment): void {
   const a = e.accumulation; a.run.status = 'completed'; a.run.callStarted = true;
   a.run.runtime = { status: 'completed', reason: null, controls: { ...feedbackControls }, transport: 'https', toolCalls: 0, durationMs: 10, usage: { inputTokens: 100, cachedInputTokens: 0, outputTokens: 20 } };
-  a.run.verification = proof(a.run.task.id); a.run.accepted = true; a.taskRecord.state = 'closed';
+  a.run.verification = { ...proof(a.run.task.id), baseCommit: a.run.task.baseCommit, fixCommit: 'c'.repeat(40) }; a.run.accepted = true; a.taskRecord.state = 'closed';
   a.feedback = feedbackSchema.parse({ id: randomUUID(), applicationId: a.application.id, outcome: 'accepted', note: 'Schema fixture with verification reference', extraCost: null, humanRework: null, createdAt: at });
 }
 function evaluation(e: FeedbackExperiment): void {
   accumulated(e); const a = e.accumulation; const s = e.source; const ref = { id: s.experience.id, revision: s.experience.revision, sourceTaskId: s.experience.sourceTaskId };
-  const tasks = [0, 1].map((n) => ({ ...a.run.task, id: randomUUID(), taskDigest: digest('target' + n) }));
+  const tasks = [0, 1].map((n) => ({ ...a.run.task, baseCommit: a.run.verification!.fixCommit, id: randomUUID(), taskDigest: digest('target' + n) }));
   const bank = digest(JSON.stringify({ experiences: [s.experience], proofs: [s.verification], feedback: [a.feedback], applications: [a.application], feedbackTasks: [{ id: a.taskRecord.id, summary: a.taskRecord.summary, scope: a.taskRecord.scope }] }));
   const plans = tasks.flatMap((t) => arms.map((arm) => ({ runId: randomUUID(), taskId: t.id, replicate: 0, arm, promptDigest: arm === 'evolve' ? digest('offered') : t.basePromptDigest,
     experienceRefs: arm === 'evolve' ? [ref] : [], policyDigest: feedbackPolicyDigests[arm], selectionReasons: ['fixture'] })));
@@ -87,6 +87,10 @@ test('v3 refuses fabricated acceptance, drift, leakage, extra calls and changed 
     (e) => { e.status = 'completed'; }, (e) => { e.accumulation.run.runtime!.toolCalls = 1; },
     (e) => { e.executionSource = 'prepare-only'; }, (e) => { e.controls.timeoutMs = 1000; },
     (e) => { e.evaluation!.manifest.bank[0]!.contextDigest = digest('changed content'); },
+    (e) => { e.accumulation.run.verification!.fixCommit = 'f'.repeat(40); },
+    (e) => { e.evaluation!.manifest.tasks[0]!.baseCommit = 'f'.repeat(40); },
+    (e) => { e.source.verification.fixCommit = 'f'.repeat(40); },
+    (e) => { e.accumulation.run.task.baseCommit = 'f'.repeat(40); e.accumulation.taskRecord.baseCommit = 'f'.repeat(40); e.accumulation.run.verification!.baseCommit = 'f'.repeat(40); },
   ];
   for (const [i, change] of changes.entries()) { const e = sample(); evaluation(e); change(e); assert.throws(() => evaluateFeedbackExperiment(e), 'invalid mutation ' + i); }
 });

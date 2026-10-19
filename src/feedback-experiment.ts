@@ -50,6 +50,7 @@ export function evaluateFeedbackExperiment(input: unknown): object {
     || s.experience.sourceTaskId !== s.verification.sourceTaskId || s.experience.scope.repoId !== e.repoId) throw new Error('Source experience does not match its proof');
   const ref = { id: s.experience.id, revision: s.experience.revision, sourceTaskId: s.experience.sourceTaskId };
   const r = a.run; const p = a.plan;
+  if (r.task.baseCommit !== s.verification.fixCommit) throw new Error('Accumulation does not start from verified source repair');
   const sourceBank = { experiences: [s.experience], proofs: [s.verification], feedback: [], applications: [], feedbackTasks: [] };
   if (r.runId !== p.runId || r.task.id !== p.taskId || p.arm !== 'evolve' || p.replicate !== 0
     || p.policyDigest !== feedbackPolicyDigests.evolve || !same(p.experienceRefs, [ref]) || !same(r.experienceRefs, p.experienceRefs)
@@ -77,7 +78,8 @@ export function evaluateFeedbackExperiment(input: unknown): object {
     const m = e.evaluation.manifest;
     const bankDigest = digest(JSON.stringify({ ...sourceBank, feedback: [a.feedback], applications: [a.application],
       feedbackTasks: [{ id: a.taskRecord.id, summary: a.taskRecord.summary, scope: a.taskRecord.scope }] }));
-    if (!a.feedback || !same(m.controls, e.controls) || m.repoId !== e.repoId || m.cliVersion !== e.cliVersion || m.environmentDigest !== e.environmentDigest
+    if (!a.feedback || !r.verification || m.tasks.some((task) => task.baseCommit !== r.verification!.fixCommit)
+      || !same(m.controls, e.controls) || m.repoId !== e.repoId || m.cliVersion !== e.cliVersion || m.environmentDigest !== e.environmentDigest
       || !same([...m.accumulationTaskIds].sort(), [ref.sourceTaskId, r.task.id].sort()) || m.tasks.length !== 2 || m.plans.length !== 6
       || m.plans.some((x) => x.replicate !== 0 || !same(x.experienceRefs, x.arm === 'evolve' ? [ref] : []))
       || m.experienceBankDigest !== bankDigest || m.bank.length !== 1 || !same({ id: m.bank[0]!.id, revision: m.bank[0]!.revision, sourceTaskId: m.bank[0]!.sourceTaskId }, ref)
