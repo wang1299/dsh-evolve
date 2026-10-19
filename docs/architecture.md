@@ -8,11 +8,12 @@
 
 | 版本轴 | 当前值 | 约束 |
 |---|---|---|
-| 本文／PRD | v0.2 | 文档细化，不改变运行格式 |
+| 本文／PRD | v0.2 | 文档编号独立于运行格式，格式变化由对应ADR定义 |
 | npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 3 | 新库及v1/v2事务迁移，v3可读；拒绝未知版和旧程序混跑 |
+| SQLite | user_version 4 | v1/v2/v3事务迁移；新增本地Job/Attempt/包与来源保留引用，旧程序拒绝v4 |
+| EvidenceBundle／Job输入 | schemaVersion 1 | ADR022，有界本地材料；ready不提升经验状态 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
 | 实验预算账本 | v1／v2显式策略；v3单次预算 | ADR020/ADR021；v3记录准确金额/1请求/回执版本；t018-standard-tier-v1须回执2，原策略不改、不混开或改写旧预算 |
 | 实验数值回执 | v1默认／v2显式结构诊断 | ADR019/ADR021；新策略身份/有限档位拒绝原因只在v2；仅本实例新预留可写v2，旧读取器拒绝新身份/原因，不回填旧unknown或更改插件数据 |
@@ -86,7 +87,8 @@ flowchart TB
 | evidence.ts | 最小纠正/报告及事实引用→摘要、完整性 | 校验task/repo/index/hash和来源；本地读取 | 出处一致不等于文字蕴含/真值 |
 | repository.ts | Git根／文件选择→快照、条件 | 只读Git及regular file | 非根、越界、缺文件拒绝 |
 | store.ts | 严格对象→当前／历史／查询 | 同步SQLite、SAVEPOINT事务 | 不支持未知版本，revision冲突 |
-| service.ts | 任务／候选／反馈→业务结果 | 编排store、快照、验证、选择 | 无后台自动提炼／耐久Job |
+| service.ts | 任务／候选／反馈→业务结果 | 编排store、快照、验证、选择；finish原子入队 | 无后台自动模型提炼 |
+| evidence-jobs.ts／learning-store.ts | 关闭任务→固定证据包 | 本地Job/Attempt、lease/fencing、受授权pytest、事务发布 | 外部模型调用/提炼未接入；验证中断unknown不重跑 |
 | verification.ts | commit对＋策略→报告 | 临时目录、Python子进程 | 未信任拒绝；基础设施异常可能无报告 |
 | retrieval.ts | 摘要／候选文字→分数及拒绝 | 纯本地BM25 | 无语义理解／训练 |
 | feedback-retrieval.ts | 同版应用反馈→备用表述／精确排除 | 从本地记录派生，不改经验正文 | 错误accepted可污染 |
@@ -146,6 +148,9 @@ flowchart TB
 | events | id；task_id、created_at、body | INSERT OR IGNORE去重；纠正只记evidenceId |
 | evidence | id；task_id、created_at、body | 严格模式，不同载荷同ID拒绝，最小来源不可变 |
 | fact_citations | (experience_id,revision,fact_index,evidence_id)；两个digest | 仅随新经验revision插入；证据ID索引用于清理 |
+| learning_jobs／learning_attempts | 唯一task；(job_id,number)及唯一token | 固定输入，条件领取/续租/fencing，最多3次本地恢复 |
+| learning_job_sources | (job_id,evidence_id)，两侧外键 | queued及历史包固定最小来源，清理不得删除 |
+| evidence_bundles | job_id主键/外键；严格v1 body | 与报告/来源/Job终态同事务一次发布 |
 
 开启`foreign_keys=ON`；新增fact_citations对revisions(id,revision)和evidence(id)声明外键，防止引用清理裂缝。既有表仍未声明外键，task/repo和摘要等完整性依靠服务校验，底层Store是可信内部边界；不声称SQLite阻止所有悬挂引用。
 
@@ -155,16 +160,17 @@ v1→v2迁移保留反馈／历史，移除旧application唯一反馈限制；�
 
 v2→v3只增侧表/索引，不重写旧JSON/历史/报告/应用/反馈；旧source_verified仍表示修复验证，缺事实来源时默认拒绝复用。v1保留上述迁移行为，创建侧表与迁移在同一外层事务，失败回滚，重开幂等。旧SQLite2程序会拒绝v3，不允许混跑/直接降级。详见ADR013。现有实验摘要不含侧表，仅用于固定旧策略；未来evidence-v1实验必须另冻结这些新输入。
 
-### 5.4 当前没有的目标逻辑对象
+### 5.4 后台对象与剩余目标
 
 | 目标对象 | 最小语义 | 实施前必须固定 |
 |---|---|---|
-| LearningJob | 输入摘要、任务边界、状态、调用资格、输出引用、失败原因 | 原子占用、重启与不重试规则、事务发布 |
+| LearningJob／LearningAttempt（T019已实现） | 固定输入/摘要、任务边界、状态、token/lease、effectStarted、阶段/时间/原因 | 当前仅本地证据归并/pytest，不授予LLM调用资格 |
+| EvidenceBundle v1（T019已实现） | Job/输入摘要、验证ID/摘要、ready/incomplete、有限原因 | 输入持有有界版本/来源/事件/diff；ready非学习或语义证明 |
 | ExtractionPort | 经授权的最小证据包→候选及主张引用／拒绝 | DSH官方接口、模型预算、结构化输出与注入防护 |
 | ExperienceContext | 适用条件、策略、必要依据、精确revision／摘要 | DSH字节／token预算、截断顺序、交付回执 |
 | DecisionRecord | 快照／策略摘要、候选与拒绝、交付及后续结果 | 状态定义、幂等与并发提交边界 |
 
-最小Evidence/FactCitation已由T010落地，自动错误尝试归并、更多来源种类和主张语义核对仍属G01/G02。上表其余对象是后续任务的设计方向，**不是当前公开类型**。不能提前向现行工具发送这些字段；严格schema会拒绝未知输入。
+最小Evidence/FactCitation由T010落地，T019增加Job/Attempt/证据包；ExtractionPort、ExperienceContext、DecisionRecord仍为目标，不是现行工具可接收的字段。自动错误尝试理解、更多来源种类和主张语义核对仍属G01/G02，严格schema继续拒绝未知输入。
 
 ## 6. 状态机与生命周期
 
@@ -189,9 +195,11 @@ linkEvidence规范化比较引用集，相同则返回原revision、保留反馈
 
 Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、correction、select需open；propose与verify允许已有closed来源任务。重复begin报错，重复select在已有应用后返回空与`already_applied_one_experience`，不会重发同一上下文。
 
-### 6.2 目标后台状态（未实现）
+### 6.2 当前本地后台状态（T019）
 
-逻辑Job可经历queued→running→succeeded／failed／cancelled／unknown。unknown表示调用可能发生但结果未可靠落库；不能自动当失败重放外部调用。实际枚举、lease、超时及恢复策略由G03设计固定。
+本地Job经历queued→running→succeeded/failed/unknown。finish同事务写closed和唯一task Job；输入固定任务摘要/版本/来源，正常六工具及Task JSON不变。未开始验证的过期lease可重新queued，最多3次attempt；已持久化effectStarted后中断为终态unknown，不能自动重放。随机token/lease条件写入和事务发布拒绝旧worker。报告/来源/包/Job终态原子提交；owner配置backgroundVerification和executionTrusted均true且当前授权/版本仍匹配才允许pytest，没有LLM接口。完整持久化、恢复、保留与界限见[ADR022](decisions/022-task-evidence-jobs.md)。
+
+v4新增learning_jobs、learning_attempts、learning_job_sources、evidence_bundles；后两者外键引用Job及最小Evidence。v2/v3原JSON和历史不重写，v1沿用原迁移；旧程序拒绝v4，不允许混跑/直接降级。Job和包不自动生成经验。面板鉴权状态响应增加learningJobs/evidenceBundles/learningAttempts，owner只能查看，未开放重试/提权HTTP接口；DSH bind及CLI面板启动/关闭worker。
 
 启动调度只依据完整的任务／证据边界。idle可唤醒检查，不能封闭任务、产生事实或授予accepted。缺来源、授权、预算或版本一致性时只产候选／拒绝记录。提取输出不直接授予source_verified。
 
@@ -263,7 +271,7 @@ python -m pytest <target> -q -c <isolated-pytest.ini>
 
 输出和diff脱敏限长。保存验收UTF-8输入、SHA256、用例结果及有限环境；不采集全宿主环境变量。报告形成后在服务事务中重查revision，写报告及下一经验版本。
 
-测试层面未通过可保存verified=false报告和candidate新版本；材料读取／进程基础设施／取消等抛错可能在报告形成前结束，**当前没有耐久Attempt记录**。调用方须保留错误，不能补造报告。
+测试层面未通过可保存verified=false报告和candidate新版本。原前台verify的材料读取／进程基础设施／取消仍可能在报告形成前抛错，不能补造报告；T019后台路径另有耐久Job/Attempt，验证开始后中断保留unknown，不重放或提升经验状态。
 
 ### 8.3 资源与安全边界
 
@@ -484,9 +492,9 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 
 | 缺口 | 问题／目标 | 依赖 | 必须新增的验收证据 |
 |---|---|---|---|
-| G01 任务证据归并 | T010已有显式纠正/验证逐条来源；自动错误尝试归并待实现 | 本基线，协同G07 | 真实任务边界、歧义拒绝、跨session隔离、主张缺证据 |
+| G01 任务证据归并 | T019已自动归并显式关闭任务的最小事件/版本/纠正/pytest；任意错误尝试理解仍待实现 | 本基线，协同G07 | T019负路径/归属/有界省略；真实模型语义另验 |
 | G02 授权自动提炼 | 官方DSH ExtractionPort，最小材料与主张核对 | G01、DSH接口任务设计、G03 | 授权关闭／预算／注入／无来源／重复输入，无模型虚构成功 |
-| G03 耐久协调恢复 | Job／Attempt、外部调用资格、并发去重、未知恢复 | G01，先定持久化ADR | 两进程竞争、关键点中断、重复事件、陈旧发布、无资格重开 |
+| G03 耐久协调恢复 | T019本地Job/Attempt/lease/fencing和unknown边界已实现；LLM调用资格/提炼发布待设计 | G01、ADR022 | T019两进程/中断/重复/陈旧发布；不能外推LLM调用 |
 | G04 上下文与交付 | 最小DTO、硬预算、决策快照和重复回执 | G01/G03、现选择 | 超预算拒绝、版本漂移、返回失败、实际offered与unknown |
 | G05 正常DSH闭环 | T011引导SDK真实运行partial；正常采集/复用/反馈仍缺，#33/#34跟进工具与用量 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
 | G06 可公开收益评估 | 独立重建合成资产＋真实任务族配对重复 | 现v2/v3，G04/G05按评价入口 | 外部只读验收、三组控制、任务隔离、全部失败与人工指标 |

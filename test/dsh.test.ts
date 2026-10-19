@@ -6,6 +6,7 @@ import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt';
 import { ToolRuntime } from '@deepseek-ai/dsh-tools';
 import { ToolCallId } from '@deepseek-ai/dsh-llm';
 import { execFileSync } from 'node:child_process';
+import { setTimeout as pause } from 'node:timers/promises';
 import type { Agent } from '@deepseek-ai/dsh-agent';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
@@ -86,6 +87,11 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   assert.ok(!JSON.stringify(observed).includes('database rollback'));
   const finished = await run('evolve_finish_task', { taskId: task.id });
   assert.equal(finished.isError, false);
+  for (let i = 0; i < 150 && store.learning.forTask(task.id)?.state !== 'succeeded'; i++) await pause(20);
+  const background = store.learning.forTask(task.id)!;
+  assert.equal(background.state, 'succeeded'); assert.equal(background.effectStarted, false);
+  assert.equal(store.learning.bundle(background.id)?.status, 'incomplete');
+  assert.ok(background.input.sources.some(e => e.id === evidence.id));
   if (process.platform === 'win32') {
     const alias = execFileSync(process.env.EVOLVE_PYTHON ?? 'python', ['-c',
       'import ctypes,sys; b=ctypes.create_unicode_buffer(32768); n=ctypes.windll.kernel32.GetShortPathNameW(sys.argv[1],b,len(b)); assert n>0; print(b.value)', f.repo],

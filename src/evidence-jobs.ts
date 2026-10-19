@@ -1,0 +1,117 @@
+import { digest, redact, taskSchema, type Task, type Verification } from './domain.js';
+import { snapshot, git } from './repository.js';
+import { evidenceDigest, verificationEvidence } from './evidence.js';
+import { verifyRepair, type VerificationPolicy } from './verification.js';
+import { evidenceInputSchema, LostJobLease, type EvidenceBundle, type EvidenceInput, type LearningJob } from './learning-domain.js';
+import type { Store } from './store.js';
+
+class InvalidSource extends Error {}
+export class EvidenceJobs {
+  private wake: (() => void) | null = null;
+  private readonly repoId: string;
+  constructor(private readonly store: Store, private readonly root: string, private readonly policy: VerificationPolicy,
+    private readonly backgroundVerification = false, private readonly verifier = verifyRepair) { this.repoId = snapshot(root).scope.repoId; }
+  private policyDigest(): string { return digest(JSON.stringify({ trusted: this.policy.trusted, python: this.policy.python,
+    acceptanceDir: this.policy.acceptanceDir, regressionPath: this.policy.regressionPath, timeoutMs: this.policy.timeoutMs,
+    backgroundVerification: this.backgroundVerification })); }
+  enqueue(task: Task): LearningJob {
+    const old = this.store.learning.forTask(task.id); if (old) return old;
+    const current = snapshot(this.root);
+    let repositoryState: EvidenceInput['repositoryState'] = 'clean'; let diff = ''; let diffTruncated = false;
+    try {
+      repositoryState = git(this.root, ['status', '--porcelain', '--untracked-files=no']) ? 'dirty' : 'clean';
+      const raw = git(this.root, ['diff', '--no-ext-diff', '--no-textconv', task.baseCommit, current.commit, '--', '*.py']);
+      diffTruncated = raw.length > 8000; diff = redact(raw, 8000);
+    } catch { repositoryState = 'unavailable'; }
+    const sources = this.store.taskEvidence(task.id).filter(e => e.repoId === task.scope.repoId);
+    const events = this.store.boundedObservations(task.id);
+    const input: EvidenceInput = { schemaVersion: 1, taskId: task.id, repoId: task.scope.repoId,
+      taskDigest: digest(JSON.stringify(taskSchema.parse(task))), baseCommit: task.baseCommit, fixCommit: current.commit,
+      dependencyDigest: current.scope.dependencyDigest,
+      mode: this.backgroundVerification && this.policy.trusted ? 'verify' : 'collect', policyDigest: this.policyDigest(),
+      repositoryState, diff, diffTruncated, sources: sources.slice(-32).map(e => ({ id: e.id, kind: e.kind, digest: e.digest })),
+      omittedSources: Math.max(0, sources.length - 32), observations: events.observations, omittedObservations: events.omitted };
+    while (Buffer.byteLength(JSON.stringify(input)) > 128 * 1024 && input.observations.length) {
+      input.observations.shift(); input.omittedObservations++;
+    }
+    const job = this.store.learning.enqueue(evidenceInputSchema.parse(input)); this.wake?.(); return job;
+  }
+  private validate(job: LearningJob): Verification[] {
+    if (digest(JSON.stringify(evidenceInputSchema.parse(job.input))) !== job.inputDigest) throw new Error('Invalid frozen input');
+    const task = this.store.task(job.input.taskId);
+    if (!task || task.state !== 'closed' || task.scope.repoId !== job.input.repoId
+      || digest(JSON.stringify(task)) !== job.input.taskDigest) throw new Error('Invalid closed task');
+    const proofs: Verification[] = [];
+    for (const ref of job.input.sources) {
+      const source = this.store.evidence(ref.id);
+      if (!source || source.kind !== ref.kind || source.taskId !== task.id || source.repoId !== job.input.repoId || source.digest !== ref.digest) throw new InvalidSource();
+      const report = source.kind === 'verification' ? this.store.verification(source.verificationId) : null;
+      try { if (evidenceDigest(source, report) !== ref.digest) throw new InvalidSource(); } catch { throw new InvalidSource(); }
+      if (report && report.baseCommit === job.input.baseCommit && report.fixCommit === job.input.fixCommit
+        && report.environment.dependencyDigest === job.input.dependencyDigest) proofs.push(report);
+    }
+    return proofs; // Frozen insertion order; a clock rollback cannot hide a later negative report.
+  }
+  async runNext(signal?: AbortSignal): Promise<boolean> {
+    if (signal?.aborted) return false;
+    const leaseMs = Math.max(30000, this.policy.timeoutMs * 3 + 60000);
+    const job = this.store.learning.claim(this.repoId, Date.now(), leaseMs); if (!job) return false;
+    const controller = new AbortController();
+    const combined = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
+    const heartbeat = setInterval(() => {
+      try { if (!this.store.learning.renew(job.id, job.token!, Date.now(), leaseMs)) controller.abort(); }
+      catch { controller.abort(); }
+    }, Math.min(5000, Math.floor(leaseMs / 3)));
+    heartbeat.unref();
+    try {
+      const input = job.input; const proofs = this.validate(job); let proof = proofs.at(-1) ?? null; let fresh: Verification | null = null;
+      const reasons: EvidenceBundle['reasons'] = [];
+      if (input.baseCommit === input.fixCommit) reasons.push('no_commit_change');
+      if (input.repositoryState === 'dirty') reasons.push('dirty_tree');
+      if (input.repositoryState === 'unavailable') reasons.push('capture_unavailable');
+      if (input.omittedSources) reasons.push('sources_omitted'); if (input.omittedObservations) reasons.push('events_omitted');
+      if (input.diffTruncated) reasons.push('diff_truncated');
+      if (!proof && !reasons.length && input.mode === 'verify') {
+        if (!this.backgroundVerification || !this.policy.trusted || this.policyDigest() !== input.policyDigest) reasons.push('policy_changed');
+        else {
+          const current = snapshot(this.root);
+          if (current.commit !== input.fixCommit || current.scope.dependencyDigest !== input.dependencyDigest
+            || git(this.root, ['status', '--porcelain', '--untracked-files=no'])) reasons.push('repository_changed');
+          else {
+            combined.throwIfAborted(); this.store.learning.beginVerification(job.id, job.token!, Date.now());
+            fresh = await this.verifier(this.root, input.taskId, input.baseCommit, input.fixCommit, this.policy, combined); proof = fresh;
+            if (proof.sourceTaskId !== input.taskId || proof.repoId !== input.repoId || proof.baseCommit !== input.baseCommit
+              || proof.fixCommit !== input.fixCommit || proof.environment.dependencyDigest !== input.dependencyDigest) throw new InvalidSource();
+          }
+        }
+      }
+      if (!proof) { reasons.push('no_source_verification'); if (input.mode === 'collect') reasons.push('execution_disabled'); }
+      else if (!proof.verified) reasons.push('source_not_verified');
+      combined.throwIfAborted(); this.validate(job);
+      const bundle: EvidenceBundle = { schemaVersion: 1, id: job.id, inputDigest: job.inputDigest,
+        verificationId: proof?.id ?? null, verificationDigest: proof ? digest(JSON.stringify(proof)) : null,
+        status: reasons.length ? 'incomplete' : 'ready', reasons, createdAt: new Date().toISOString() };
+      this.store.learning.complete(job.id, job.token!, Date.now(), bundle, () => {
+        this.validate(job); // Recheck provenance while holding the atomic publication write transaction.
+        if (fresh) { this.store.putVerification(fresh); this.store.putEvidence(verificationEvidence(fresh)); }
+        return fresh;
+      });
+    } catch (error) {
+      if (!(error instanceof LostJobLease)) this.store.learning.fail(job.id, job.token!, Date.now(), error instanceof InvalidSource
+        ? 'invalid_source' : combined.aborted ? 'cancelled_local' : this.store.learning.job(job.id)?.effectStarted ? 'verification_error' : 'invalid_input');
+    } finally { clearInterval(heartbeat); }
+    return true;
+  }
+  /** Only adapters start a resident worker; core callers can explicitly runNext. */
+  start(): () => Promise<void> {
+    if (this.wake) throw new Error('Evidence worker already running');
+    const lifetime = new AbortController(); let running: Promise<unknown> | null = null;
+    const tick = (): void => {
+      if (running || lifetime.signal.aborted) return;
+      running = this.runNext(lifetime.signal).catch(() => { /* Fixed job status is the diagnostic; no raw error logging. */ }).finally(() => { running = null; });
+    };
+    this.wake = () => queueMicrotask(tick);
+    const timer = setInterval(tick, 1000); timer.unref(); this.wake();
+    return async () => { lifetime.abort(); clearInterval(timer); this.wake = null; await running; };
+  }
+}
