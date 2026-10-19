@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { z } from 'zod';
-import { analyzeMessagesUsage, snapshotSchema, usageReasons, type UsageReason } from './messages-usage.js';
+import { analyzeMessagesUsage, diagnoseMessagesUsage, snapshotSchema, usageDiagnosticSchema, usageReasons, type UsageReason } from './messages-usage.js';
 
 // Experiment infrastructure, not a plugin setting or a provider billing API.
 export const budgetPolicy = Object.freeze({ budgetMicroCny: 5_000_000, maxCalls: 16,
@@ -22,15 +22,22 @@ const receiptInputSchema = z.object({ reason: z.enum(usageReasons), httpStatus: 
   responseBytes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), snapshots: z.array(snapshotSchema).max(64),
   otherEvents: z.number().int().min(0).max(1024 * 1024), usage: usageSchema.nullable() }).strict()
   .refine((r) => (r.reason === 'complete') === (r.usage !== null), 'Only complete usage can be eligible');
-export const usageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), callId: z.string().uuid(),
-  policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']), model: z.literal('deepseek-flash') });
+const identityShape = { callId: z.string().uuid(), policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']), model: z.literal('deepseek-flash') };
+const legacyUsageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), ...identityShape });
+const diagnosticReceiptInputSchema = receiptInputSchema.safeExtend({ diagnostic: usageDiagnosticSchema.nullable() })
+  .refine(r => (r.reason === 'unsupported_usage') === (r.diagnostic !== null), 'Only unsupported usage has a shape diagnostic');
+const diagnosticUsageReceiptSchema = diagnosticReceiptInputSchema.safeExtend({ schemaVersion: z.literal(2), ...identityShape });
+export const usageReceiptSchema = z.union([legacyUsageReceiptSchema, diagnosticUsageReceiptSchema]);
 
 export class DeepseekBudget {
   readonly state: BudgetState;
   private readonly lock: number;
   private closed = false;
   private poisoned = false;
-  constructor(readonly path: string, readonly policyId: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1') {
+  private readonly freshReservations = new Set<string>();
+  constructor(readonly path: string, readonly policyId: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1',
+    readonly receiptVersion: 1 | 2 = 1) {
+    if (receiptVersion !== 1 && receiptVersion !== 2) throw new Error('Unsupported receipt version');
     mkdirSync(dirname(path), { recursive: true });
     this.lock = openSync(path + '.lock', 'wx');
     try {
@@ -56,8 +63,11 @@ export class DeepseekBudget {
   }
   writeReceipt(id: string, input: unknown): void {
     if (!this.state.calls.some((call) => call.id === id)) throw new Error('Unknown budget call');
-    const receipt = usageReceiptSchema.parse({ ...receiptInputSchema.parse(input), schemaVersion: 1, callId: id,
-      policyId: this.policyId, model: budgetPolicy.model });
+    if (this.receiptVersion === 2 && !this.freshReservations.has(id)) throw new Error('Diagnostics require a new reservation from this instance');
+    const identity = { callId: id, policyId: this.policyId, model: budgetPolicy.model };
+    const receipt = this.receiptVersion === 1
+      ? legacyUsageReceiptSchema.parse({ ...receiptInputSchema.parse(input), schemaVersion: 1, ...identity })
+      : diagnosticUsageReceiptSchema.parse({ ...diagnosticReceiptInputSchema.parse(input), schemaVersion: 2, ...identity });
     this.write(join(this.path + '.receipts', id + '.json'), receipt);
   }
   reserve(): string {
@@ -65,7 +75,7 @@ export class DeepseekBudget {
     if (this.state.calls.length >= budgetPolicy.maxCalls || this.spent + budgetPolicy.reservationMicroCny > budgetPolicy.budgetMicroCny) throw new Error('Budget exhausted');
     const id = randomUUID();
     this.state.calls.push({ id, chargedMicroCny: budgetPolicy.reservationMicroCny, usage: null, createdAt: new Date().toISOString() });
-    this.persist(); return id;
+    this.persist(); this.freshReservations.add(id); return id;
   }
   settle(id: string, input: unknown): void {
     const usage = usageSchema.parse(input); const call = this.state.calls.find((c) => c.id === id);
@@ -93,9 +103,11 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
     let id: string | undefined; let httpStatus: number | null = null; let responseBytes = 0;
     const result: Buffer[] = []; let failure: UsageReason = 'transport_error'; let terminalReceipt = false;
     const receipt = (reason?: UsageReason): z.infer<typeof usageSchema> | null => {
-      const analysis = analyzeMessagesUsage(Buffer.concat(result).toString('utf8'), budgetPolicy, budget.policyId);
+      const body = Buffer.concat(result).toString('utf8');
+      const analysis = budget.receiptVersion === 2 ? diagnoseMessagesUsage(body, budgetPolicy, budget.policyId)
+        : analyzeMessagesUsage(body, budgetPolicy, budget.policyId);
       const usage = reason ? null : analysis.usage;
-      budget.writeReceipt(id!, { ...analysis, ...(reason ? { reason } : {}), usage, httpStatus, responseBytes });
+      budget.writeReceipt(id!, { ...analysis, ...(reason ? { reason, ...('diagnostic' in analysis ? { diagnostic: null } : {}) } : {}), usage, httpStatus, responseBytes });
       terminalReceipt = reason !== 'awaiting_response';
       return usage;
     };
