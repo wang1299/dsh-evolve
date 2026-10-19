@@ -16,4 +16,4 @@ Issue [#45](https://github.com/wang1299/dsh-evolve/issues/45)，依赖T017 / PR 
 
 ## 状态
 
-设计后进入失败用例与实现；实际验证、限制和关联PR见后续T018验收记录。父#34/#8/#15仍open，未发布。
+设计/红用例后实现，本地100项check及31项针对回归、compat2项通过；当前头CI/独立评审/关联PR与限制见[T018验收](../development/T018-acceptance.md)。父#34/#8/#15仍open，未发布。

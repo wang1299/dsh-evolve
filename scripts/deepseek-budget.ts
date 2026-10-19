@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { z } from 'zod';
-import { analyzeMessagesUsage, diagnoseMessagesUsage, snapshotSchema, usageDiagnosticSchema, usageReasons, type UsageReason } from './messages-usage.js';
+import { analyzeMessagesUsage, diagnoseMessagesUsage, snapshotSchema, usageDiagnosticSchema, usagePolicies, usageReasons, type UsagePolicy, type UsageReason } from './messages-usage.js';
 
 // Experiment infrastructure, not a plugin setting or a provider billing API.
 export const budgetPolicy = Object.freeze({ budgetMicroCny: 5_000_000, maxCalls: 16,
@@ -15,8 +15,8 @@ const callSchema = z.object({ id: z.string().uuid(), chargedMicroCny: z.number()
   usage: usageSchema.nullable(), createdAt: z.string().datetime() }).strict();
 const originalStateSchema = z.object({ schemaVersion: z.literal(1), budgetMicroCny: z.literal(5_000_000),
   calls: z.array(callSchema).max(16) }).strict();
-const supplementalStateSchema = originalStateSchema.extend({ schemaVersion: z.literal(2), policyId: z.literal('t015-snapshot-high-water-v1') });
-const singleSampleStateSchema = z.object({ schemaVersion: z.literal(3), policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']),
+const supplementalStateSchema = originalStateSchema.extend({ schemaVersion: z.literal(2), policyId: z.enum(['t015-snapshot-high-water-v1', 't018-standard-tier-v1']) });
+const singleSampleStateSchema = z.object({ schemaVersion: z.literal(3), policyId: z.enum(usagePolicies),
   budgetMicroCny: z.number().int().min(budgetPolicy.reservationMicroCny).max(budgetPolicy.budgetMicroCny),
   maxCalls: z.literal(1), receiptVersion: z.literal(2), calls: z.array(callSchema).max(1) }).strict();
 const stateSchema = z.union([originalStateSchema, supplementalStateSchema, singleSampleStateSchema]);
@@ -26,10 +26,12 @@ const receiptInputSchema = z.object({ reason: z.enum(usageReasons), httpStatus: 
   otherEvents: z.number().int().min(0).max(1024 * 1024), usage: usageSchema.nullable() }).strict()
   .refine((r) => (r.reason === 'complete') === (r.usage !== null), 'Only complete usage can be eligible');
 const identityShape = { callId: z.string().uuid(), policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']), model: z.literal('deepseek-flash') };
-const legacyUsageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), ...identityShape });
+const legacyUsageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), ...identityShape })
+  .refine(r => r.reason !== 'unsupported_service_tier', 'Legacy policies do not emit a service-tier reason');
 const diagnosticReceiptInputSchema = receiptInputSchema.safeExtend({ diagnostic: usageDiagnosticSchema.nullable() })
   .refine(r => (r.reason === 'unsupported_usage') === (r.diagnostic !== null), 'Only unsupported usage has a shape diagnostic');
-const diagnosticUsageReceiptSchema = diagnosticReceiptInputSchema.safeExtend({ schemaVersion: z.literal(2), ...identityShape });
+const diagnosticUsageReceiptSchema = diagnosticReceiptInputSchema.safeExtend({ schemaVersion: z.literal(2), ...identityShape, policyId: z.enum(usagePolicies) })
+  .refine(r => r.reason !== 'unsupported_service_tier' || r.policyId === 't018-standard-tier-v1', 'Service-tier reason requires its named policy');
 export const usageReceiptSchema = z.union([legacyUsageReceiptSchema, diagnosticUsageReceiptSchema]);
 
 export class DeepseekBudget {
@@ -38,9 +40,11 @@ export class DeepseekBudget {
   private closed = false;
   private poisoned = false;
   private readonly freshReservations = new Set<string>();
-  constructor(readonly path: string, readonly policyId: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1',
+  constructor(readonly path: string, readonly policyId: UsagePolicy = 't011-conservative-v1',
     readonly receiptVersion: 1 | 2 = 1, readonly singleSampleBudgetMicroCny?: number) {
+    if (!usagePolicies.includes(policyId)) throw new Error('Unsupported budget policy');
     if (receiptVersion !== 1 && receiptVersion !== 2) throw new Error('Unsupported receipt version');
+    if (policyId === 't018-standard-tier-v1' && receiptVersion !== 2) throw new Error('Standard-tier policy requires receipt version 2');
     if (singleSampleBudgetMicroCny !== undefined) {
       if (!Number.isSafeInteger(singleSampleBudgetMicroCny) || singleSampleBudgetMicroCny < budgetPolicy.reservationMicroCny
         || singleSampleBudgetMicroCny > budgetPolicy.budgetMicroCny) throw new Error('Invalid single-sample budget');

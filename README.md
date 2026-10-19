@@ -17,6 +17,7 @@
 - DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。正常DSH完整学习闭环、Desktop及其他平台完整应用仍待验证；真实SDK回合的partial结果见[T011记录](docs/development/T011-acceptance.md)，安装见[试装记录](docs/development/T006d-installation.md)。
 - 追加真实DSH回归：用户另授权最多5元后，T015实际执行一次、2个HTTP；两条计费回执在起始usage结构处保守拒绝，预算unknown预留使后续停止，经验/复用仍未完成。SDK保守估算0.009626元不是账单或原账本结算，见[T015失败与后续缺口](docs/development/T015-acceptance.md)。
 - 计费结构诊断：T016支持拒绝位置及有限字段指纹；T017另授权最多3元后只做1次最小真实请求，HTTP200，确认当前起始usage有service_tier字段，值及历史T015原因未知。保留2.232768元最坏未知占额（不是账单），未重跑；兼容修复和完整学习仍待完成，见[T017记录](docs/development/T017-acceptance.md)。
+- 计费兼容修复：T018提供显式新策略，只接受文档standard服务档位或缺省，保留旧策略及未知值拒绝；100项本地检查通过，当前头CI/评审见[T018记录](docs/development/T018-acceptance.md)及关联PR。只用合成流验证，未新增模型调用，不能认定T017实际值或真实兼容已通过。
 - 原生Agent演练：新增`npm run dsh-rehearsal`，用真实AgentLoop和固定脚本响应回归经验保存/验证/引用/新会话复用/独立验收反馈；包含四个负路径，零付费。脚本模型不证明真实模型学习，见[T014记录](docs/development/T014-acceptance.md)。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
