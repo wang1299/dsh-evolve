@@ -1,5 +1,9 @@
 # 本轮实现与验证状态
 
+## 当前T022候选发现与提醒（2026-10-19）
+
+Issue [#53](https://github.com/wang1299/dsh-evolve/issues/53)，实施前[ADR025](../decisions/025-candidate-discovery.md)。第七工具在原session只读查询当前自动候选，shareWithModel关闭无存储信息；官方动态context下一正常步骤仅数量提醒，不唤醒/验证。面板顶部有界轮询与当前详情入口，保留编辑草稿；无变化不替换提醒按钮。实际包脚本不再从用户消息传候选ID。设计、失败回归、本地141项及浏览器证据、最终门槛/限制见[T022验收](T022-acceptance.md)及关联PR。T021已由PR #52两平台CI/独立评审合并84f5d57，#51关闭。零付费，真实模型/收益仍未完成，以下保留历史快照。
+
 ## 当前T021安装包自动学习演练与独立试装（2026-10-19）
 
 Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，实施前[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。实际安装tgz、核对24个产品JS/Loader模块身份，真实AgentLoop与固定脚本跑自动候选到新会话实际交付/独立目标验收/宿主合成反馈；三条负路径保留partial，无人工propose补候选。新的完整WindowsDSH配置中最新版插件安装、实际运行及重启通过，未配置Key。实际结果、保留的Loader/Python环境失败、检查/评审/CI门槛见[T021验收](T021-acceptance.md)和关联PR。零付费调用、不重开旧预算；真实模型连通/提炼质量仍待新预算与冻结实验。T020已由PR #50经135项两平台CI/实际安装及独立评审合并bd7d7fa，#49关闭。以下保留历史快照。

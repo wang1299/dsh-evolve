@@ -116,6 +116,8 @@ flowchart LR
 
 Agent显式调用`evolve_begin_task`；同session同时仅一个open任务。记录纠正，提交修复，`evolve_propose_experience`提交候选，`evolve_verify_experience`验证。不要求结束任务后才能提候选；结束只关闭采集／选择边界。
 
+T022支持发现后台自动候选：面板顶部待检查提醒（可见时5秒更新，不覆盖编辑），原DSH会话通过只读`evolve_list_candidates`取得当前版本ID与有限策略预览。shareWithModel关闭不返回候选信息；开启后下一正常模型步骤仅提示数量，无自动唤醒/验证。统计自动提炼且当前仍candidate，不持久化已读；查看不构成批准、执行授权或验收。手工候选仍在原经验库中查看。详见[ADR025](decisions/025-candidate-discovery.md)。
+
 验证比较任务起始commit与当前修复HEAD，用owner提供的外部pytest。另一任务begin在共享开启时尝试选择，返回精确版本、应用及原因。纠正与验证返回来源凭据，候选返回事实摘要；`evolve_link_fact_evidence`关联同任务来源：相同集合幂等；来源完整且已验证时锁定，owner须检查反馈并显式内容修订后才可更换；其他来源变化追加新revision。默认evidence-v1要求每条事实有完整有效引用。用户在面板查看/关联事实来源、追加反馈、修订、停用或恢复。T019新增finish后的本地自动证据包与最小可恢复Job；默认只整理已有报告，owner另开backgroundVerification且已有执行信任后才可后台验证，不依赖先创建候选。T020独立授权后对ready材料自动提炼候选，默认关闭；模型及HTTP不能授权或写owner反馈。
 
 ### 4.4 异常与人工接管

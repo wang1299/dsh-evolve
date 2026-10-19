@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T022在原六工具上增量加入`evolve_list_candidates(taskId?)`，SQLite仍v5、既有工具输入不变。固定官方AssembleContext.agent/systemPrompt.context用于同session数量提醒；diagnostic assembly无Agent时不含数据。兼容探针增加共享关闭、session/cwd隔离和卸载边界，当前包为七工具；历史六工具验证记录保留。实际安装/浏览器/CI与评审结果见[T022任务](tasks/T022-candidate-discovery.md)及关联PR，不能以旧T021试装替代新包验证。
+
 T021新增实际tgz自动候选链路与三条负路径，逐文件检查24个产品JS并核对Loader模块身份；官方AgentLoop为真实组件，模型是固定脚本。另在全新Windows完整0.2.0-rc.2 profile实际安装、加载和重启，原profile不改。组件演练与完整应用加载证据分别记录，不构成真实模型完整学习；见[T021验收](development/T021-acceptance.md)。
 
 T020增加精确可选peer `@deepseek-ai/dsh-llm@0.2.0-rc.2`（运行代码只经宿主服务，不导入provider/Key）。compat使用真实LlmRuntime.prepareCall与一次性stream，合成Adapter覆盖精确路由/maxTokens、无伪造session/purpose、文本/usage、坏流、晚注册provider和卸载中断。默认六工具仍可在无LLM服务下运行。源码兼容与本轮实际包/CI记录见[T020任务](tasks/T020-auto-extraction.md)，不等于真实模型提炼质量。

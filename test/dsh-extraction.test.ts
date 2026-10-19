@@ -79,7 +79,7 @@ test('normal DSH binding discovers a late LLM adapter and automatically extracts
     const adapter = new Adapter(textChunks(text)); ctx.llm.registerAdapter(['fixture'], adapter);
     for (let i = 0; i < 100 && store.extraction.jobs()[0]!.state === 'waiting'; i++) await pause(30);
     assert.equal(store.extraction.jobs()[0]!.state, 'candidate'); assert.equal(adapter.calls.length, 1); assert.equal(store.experiences()[0]!.status, 'candidate');
-    assert.equal((await ctx.systemPrompt.assemble()).tools.filter(t => t.name.startsWith('evolve_')).length, 6);
+    assert.equal((await ctx.systemPrompt.assemble()).tools.filter(t => t.name.startsWith('evolve_')).length, 7);
   } finally { await ctx.fiber.dispose(); }
 });
 
