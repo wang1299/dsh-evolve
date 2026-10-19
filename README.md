@@ -66,3 +66,5 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。本轮交付没有重新调用模型或上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合。
 
 新增`paired-evaluation -- --live --source-evidence <本地合成来源报告> --source-digest <SHA256>`配方：固定请求模型／推理／CLI版本，每组一次调用、失败不重试。v2记录原子资格、冻结经验库、精确引用及独立验收；温度／seed／服务端权重及token／金额硬限未知，不补造控制。历史首轮没有经验暴露，结果保留；后续同一配方缺少经验时，在调用前停止。检索漏选由[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)跟进。
+
+`feedback-evaluation`为另行冻结的feedback-v1小实验，v3记录积累应用的真实验收与反馈链、两个新合成转移目标和最多7次新调用。支持0调用prepare-only和明确不算模型的process-fixture模式，live需要显式开启并消费一次性协议资格；v1/v2和历史结果不改写。当前执行/失败/限制见[T008c记录](docs/development/T008c-acceptance.md)，不能从准备或夹具结果宣称Agent收益。

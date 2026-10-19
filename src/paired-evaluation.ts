@@ -7,6 +7,7 @@ import type { EvolveService } from './service.js';
 import type { Store } from './store.js';
 import { passes, verifiedCases } from './verification.js';
 import { rankText, retrievalPolicyDigest } from './retrieval.js';
+import { feedbackRetrievalPolicy } from './feedback-retrieval.js';
 
 export const arms = ['baseline', 'retrieval', 'evolve'] as const;
 export type Arm = typeof arms[number];
@@ -70,6 +71,8 @@ export const policyDigests: Record<Arm, string> = {
   retrieval: digest('retrieval/v2: ' + retrievalPolicyDigest + '; top 1; ID tie break; no source/scope/utility filter'),
   evolve: digest('evolve/v2: ' + retrievalPolicyDigest + '; verified source + scope before indexing + 0.7 text + 0.3 smoothed feedback; top 1'),
 };
+export const feedbackPolicyDigests: Record<Arm, string> = { ...policyDigests,
+  evolve: digest('evolve/feedback-v1:' + retrievalPolicyDigest + ':' + JSON.stringify(feedbackRetrievalPolicy)) };
 
 /** Freeze all inputs affecting selection, excluding new applications that have no feedback. */
 export function experienceBankDigest(store: Store): string {
@@ -112,6 +115,11 @@ export async function reservePairedRun(directory: string, plan: PairedPlan): Pro
 }
 
 export function evaluatePairedExperiment(input: unknown): object {
+  return evaluatePaired(input, false);
+}
+/** Internal structural checks for the separately versioned feedback experiment. */
+export function evaluateFeedbackStructure(input: unknown): object { return evaluatePaired(input, true); }
+function evaluatePaired(input: unknown, feedback: boolean): object {
   const experiment = pairedExperimentSchema.parse(input); const m = experiment.manifest;
   const accumulation = new Set(m.accumulationTaskIds); const tasks = new Map(m.tasks.map((t) => [t.id, t]));
   if (accumulation.size !== m.accumulationTaskIds.length || tasks.size !== m.tasks.length) throw new Error('Duplicate task identifiers');
@@ -124,7 +132,7 @@ export function evaluatePairedExperiment(input: unknown): object {
   for (const p of m.plans) {
     if (plans.has(p.runId)) throw new Error('Duplicate planned runId'); plans.set(p.runId, p);
     if (!tasks.has(p.taskId)) throw new Error('Plan uses unknown task');
-    if (![policyDigests[p.arm], legacyPolicyDigests[p.arm]].includes(p.policyDigest)) throw new Error('Unrecognized arm policy');
+    if (!(feedback ? [feedbackPolicyDigests[p.arm]] : [policyDigests[p.arm], legacyPolicyDigests[p.arm]]).includes(p.policyDigest)) throw new Error('Unrecognized arm policy');
     if (armPolicies.has(p.arm) && armPolicies.get(p.arm) !== p.policyDigest) throw new Error('Mixed policies within an arm');
     armPolicies.set(p.arm, p.policyDigest);
     if (p.arm === 'baseline' && p.experienceRefs.length) throw new Error('Baseline must not receive experience');
@@ -138,7 +146,7 @@ export function evaluatePairedExperiment(input: unknown): object {
     if (group.has(p.arm)) throw new Error('Duplicate task/replicate/arm'); group.add(p.arm); groups.set(key, group);
   }
   if ([...tasks.keys()].some((id) => !m.plans.some((p) => p.taskId === id)) || [...groups.values()].some((g) => g.size !== 3)) throw new Error('Missing comparison arm');
-  if ((armPolicies.get('retrieval') === legacyPolicyDigests.retrieval)
+  if (!feedback && (armPolicies.get('retrieval') === legacyPolicyDigests.retrieval)
     !== (armPolicies.get('evolve') === legacyPolicyDigests.evolve)) throw new Error('Mixed retrieval generations across arms');
   const ids = new Set<string>();
   for (const r of experiment.runs) {

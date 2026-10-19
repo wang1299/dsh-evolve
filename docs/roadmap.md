@@ -15,6 +15,7 @@
 | T008 检索覆盖与有效经验对照 | T006c | T008a的BM25及冻结离线诊断已实现、待PR验收；有效模型对照仍未完成 | Issue #15 |
 | T008a 长任务检索与离线消融 | T006c | PR #20已合并，37项两平台CI/实际安装/独立评审通过；误选和退步保留 | codex/t008-retrieval，Issue #19关闭 |
 | T008b 有来源的反馈检索记忆 | T008a | 已实现accepted备用表述/irrelevant精确拒绝，39项本地检查；当前CI/评审/合并见关联PR，不属于收益实验 | codex/t008b-feedback-retrieval，Issue #21 |
+| T008c feedback-v1真实模型初步对照 | T008b,T006c | ADR011和协议实现前冻结，v3/积累证据链/7次预算入口已实现；当前实际执行、CI、评审见关联PR | codex/t008c-feedback-evaluation，Issue #23 |
 
 远端：公开仓库wang1299/dsh-evolve。用户已恢复GitHub开发，PR #2/#9/#10/#11/#13/#14/#16/#17/#18已squash合并。当前交付T008a检索诊断，实际CI／评审／合并结果见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)，不以历史检查代替当前头。发布：无。
 
