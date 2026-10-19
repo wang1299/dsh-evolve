@@ -20,6 +20,8 @@ Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描�
 
 ## 数据与工具兼容（T010）
 
+当前T019为SQLite user_version=4：v2/v3旧JSON/历史不改，增加Job/Attempt/证据包及来源保留引用；v1仍沿用原报告降级流程。旧SQLite3及更早程序会拒绝v4，禁止混跑/直接降级；不自动重建历史已关闭任务。六工具、Task/Experience/Verification格式保持；新增配置backgroundVerification默认false且执行仍需executionTrusted。DSH固定官方类型的session/event与tools/result接口保持，finish自动入队和后台生命周期由兼容探针验证。详见[ADR022](decisions/022-task-evidence-jobs.md)及[T019验收](development/T019-acceptance.md)。以下保留T010迁移语义。
+
 SQLite user_version=3，事务创建最小evidence与fact_citations，保留v2全部旧JSON/历史/报告；v1继续原有报告身份降级再迁移。旧库缺逐条引用时默认evidence-v1拒绝自动复用；v2不改写source_verified修复状态，v1沿用降级重验迁移。旧SQLite2程序会拒绝v3，不支持混跑或直接降级；本机既有完整DSH预览安装未自动更新，禁止把用户库拿来做破坏性测试。
 
 Task/Experience v1、Verification v2和历史评价格式不变。新增evolve_link_fact_evidence及现有工具的来源/事实摘要receipt是增量接口。Candidate自身模式不变，propose工具另有可选citations。冻结Codex脚本固定原策略；本轮没有新模型调用，不宣称evidence-v1收益。引用只证明出处一致，不认证文字真值。详见[ADR013](decisions/013-fact-evidence.md)。
@@ -54,6 +56,7 @@ npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
   "repoRoot": "/absolute/path/to/target-repository",
   "dataDir": "/private/local/path/evolve-data",
   "executionTrusted": false,
+  "backgroundVerification": false,
   "shareWithModel": false,
   "acceptanceDir": "/independent/path/acceptance",
   "python": "python",
@@ -63,3 +66,5 @@ npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
 ```
 
 用户明确接受执行目标仓库代码后，才将executionTrusted设为true。用户明确接受把经验传给当前DSH模型后，才启用shareWithModel。验收目录必须在目标仓库之外。默认数据在用户目录`.dsh/evolve/<repository-hash>/evolve.sqlite`，不写目标仓库。
+
+T019结束任务后默认只整理已有来源；若owner希望后台自动验证无候选的修复，还须显式开启backgroundVerification。DSH插件或CLI面板运行时处理/恢复Job；核心调用方可显式jobs.runNext()。已开始验证后中断的unknown不会自动重跑；源码checkout并不自动更新既有Web预览安装。

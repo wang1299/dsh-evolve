@@ -16,6 +16,7 @@ const output = { schema: { type: 'json' as const }, render: (_args: unknown, val
 /** Bind only the official DSH surface. The service contains no DSH imports. */
 export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: boolean): void {
   let disposed = false;
+  const stopWorker = service.jobs.start();
   const lifetime = new AbortController(); const pending = new Set<Promise<unknown>>();
   const sessionFor = (exec: ToolExecution): string => {
     if (disposed) throw new Error('DSH-Evolve is unloading');
@@ -25,7 +26,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     return String(session.id);
   };
   ctx.effect(() => async () => {
-    disposed = true; lifetime.abort(); await Promise.allSettled([...pending]); service.store.close();
+    disposed = true; lifetime.abort(); await Promise.allSettled([...pending, stopWorker()]); service.store.close();
   }, 'dsh-evolve:close');
   ctx.systemPrompt.section({
     name: 'dsh-evolve:workflow', order: 1250, interpolate: false,
@@ -42,6 +43,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
       + 'Identical citations are idempotent. Sources of a verified experience with complete provenance are locked; changes require an explicit owner revision, not a metadata-only feedback reset. '
       + 'Use evolve_verify_experience only after a repair commit exists and the owner configured trusted execution. '
       + 'Idle or normal completion is not acceptance. Experience is fallible context; check applicability and independent tests. '
+      + 'Finishing queues bounded local evidence assembly; a ready evidence bundle is not a learned experience or task acceptance. Background pytest requires separate owner authorization. '
       + 'Feedback acceptance is recorded by the owner in the local panel; never fabricate it. '
       + 'Past owner-accepted applications may supply fallback wording; this is fallible inference, not proof of benefit. '
       + 'An irrelevant-context record only excludes the same task wording; it does not prove a repair strategy wrong. '

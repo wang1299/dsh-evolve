@@ -8,6 +8,7 @@ import { verifyRepair, type VerificationPolicy } from './verification.js';
 import { rankText, retrievalPolicy } from './retrieval.js';
 import { contextKey, feedbackMemory, rankFeedback, type ContextEvidence } from './feedback-retrieval.js';
 import { correctionEvidence, factProvenance, validateCitations, verificationEvidence } from './evidence.js';
+import { EvidenceJobs } from './evidence-jobs.js';
 
 function cleanCandidate(value: unknown): Candidate {
   const item = candidateSchema.parse(value);
@@ -22,7 +23,12 @@ export function similarity(query: string, text: string): number {
   return [...q].filter((word) => t.has(word)).length / q.size;
 }
 export class EvolveService {
-  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy) {}
+  readonly jobs: EvidenceJobs;
+  private readonly repoId: string;
+  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy, backgroundVerification = false) {
+    this.jobs = new EvidenceJobs(store, root, policy, backgroundVerification);
+    this.repoId = snapshot(root).scope.repoId;
+  }
   begin(sessionId: string, summary: string): Task {
     z.string().min(1).max(128).parse(sessionId); textSchema.parse(summary);
     if (this.store.tasks().some((t) => t.sessionId === sessionId && t.state === 'open')) throw new Error('Session already has an open task');
@@ -39,12 +45,14 @@ export class EvolveService {
     return task;
   }
   finish(id: string): Task {
-    const task = this.requireTask(id); const closed = { ...task, state: 'closed' as const };
-    this.store.putTask(closed); return closed;
+    const task = this.requireTask(id); if (task.state === 'closed') return task;
+    const closed = { ...task, state: 'closed' as const };
+    return this.store.transaction(() => { this.store.putTask(closed); this.jobs.enqueue(closed); return closed; });
   }
   observe(sessionId: string, eventId: string, kind: string, name?: string): void {
-    const task = this.store.tasks().find((t) => t.sessionId === sessionId && t.state === 'open');
-    if (!task) return;
+    const tasks = this.store.tasks().filter((t) => t.sessionId === sessionId && t.state === 'open');
+    if (tasks.length !== 1) return; const task = tasks[0]!;
+    if (task.scope.repoId !== this.repoId) return;
     this.store.event(redact(eventId, 200), task.id, new Date().toISOString(), {
       kind: redact(kind, 60), ...(name ? { tool: redact(name, 100) } : {}),
     });

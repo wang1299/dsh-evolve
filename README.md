@@ -12,6 +12,7 @@
 
 ## 开发状态
 
+- 自动证据整理：T019在显式结束任务后自动归并同任务纠正、工具事件元数据、版本、有限Python差异和测试报告；SQLite v4后台队列支持去重、重启恢复与陈旧任务拒绝，面板可查看证据包和处理历史。默认不运行测试，后台pytest须单独开启且有执行信任；不自动生成经验。见[设计](docs/decisions/022-task-evidence-jobs.md)与[验收](docs/development/T019-acceptance.md)。
 - 需求与架构：v0.2细化为58项编号需求、15个黄金验收场景、模块/数据/状态/接口/异常契约和完整追踪表；实现与目标分列，后续缺口见[架构总纲](docs/architecture.md)。T009交付门槛见[设计验收](docs/development/T009-design-acceptance.md)及关联PR。
 - 核心功能：已实现来源验证、候选与作用域选择、反馈及经验版本。T010新增按事实/经验版本绑定的纠正与测试来源、摘要/归属检查及历史引用保留；默认evidence-v1拒绝事实来源不完整的经验。见[设计](docs/decisions/013-fact-evidence.md)与[验收](docs/development/T010-acceptance.md)。
 - DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。正常DSH完整学习闭环、Desktop及其他平台完整应用仍待验证；真实SDK回合的partial结果见[T011记录](docs/development/T011-acceptance.md)，安装见[试装记录](docs/development/T006d-installation.md)。
@@ -51,7 +52,9 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 
 面板令牌只在本机终端显示，不要分享其完整地址。数据API仅限本机并需要令牌。经验恢复会产生待验证版本。
 
-SQLite已升级v3：v2旧记录不改写；v1沿用既有报告降级、追加候选并要求重验的迁移，历史保留。无事实引用的旧经验默认不自动复用，可在面板补充来源。旧SQLite2程序不能混跑或直接降级；本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
+SQLite已升级v4：v2/v3旧JSON和历史不改，v1沿用既有报告降级、追加候选并要求重验的迁移。新增本地Job/Attempt和证据包，已引用的最小来源继续保留；旧SQLite3及更早程序不能混跑或直接降级。本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
+
+完成现有`evolve_finish_task`后，后台自动整理本地证据。默认`backgroundVerification=false`，只复用已有匹配的验证报告；希望在没有候选经验时自动验证修复，需由owner在配置同时设置`backgroundVerification=true`和`executionTrusted=true`，并提供仓库外的`acceptanceDir`。DSH插件或CLI面板启动时恢复队列。没有报告/版本变化/材料超限时明确显示不完整；验证可能执行后中断为未知，不自动重跑。证据齐备不等于已经提炼或应用经验。
 
 面板反馈“此任务不相关”仅记住当前经验版本与相同任务表述；“策略无效/发现反例”会停用当前实际应用版本。旧数据可直接读取；写入新增`irrelevant`反馈后，旧程序不能解析该枚举，不支持混跑或直接降级。
 

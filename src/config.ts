@@ -9,6 +9,7 @@ import { EvolveService } from './service.js';
 export const configSchema = z.object({
   repoRoot: z.string().min(1), dataDir: z.string().min(1).optional(),
   executionTrusted: z.boolean().default(false), shareWithModel: z.boolean().default(false),
+  backgroundVerification: z.boolean().default(false),
   acceptanceDir: z.string().min(1).optional(), python: z.string().min(1).default('python'),
   regressionPath: z.string().min(1).default('tests'), timeoutMs: z.number().int().min(100).max(120000).default(15000),
 }).strict();
@@ -23,6 +24,6 @@ export function createService(input: Config): { service: EvolveService; config: 
     trusted: config.executionTrusted, python: config.python,
     acceptanceDir: config.acceptanceDir ? resolve(config.acceptanceDir) : join(dataDir, 'acceptance-not-configured'),
     regressionPath: config.regressionPath, timeoutMs: config.timeoutMs,
-  });
+  }, config.backgroundVerification);
   return { service, config };
 }

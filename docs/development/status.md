@@ -1,5 +1,9 @@
 # 本轮实现与验证状态
 
+## 当前T019自动任务证据与后台处理（2026-10-19）
+
+Issue #47，实施前[ADR022](../decisions/022-task-evidence-jobs.md)。finish原子关闭/唯一入队，SQLite v4 Job/Attempt/lease/fencing/事务发布；默认整理已有来源，owner另开backgroundVerification且有执行信任才后台pytest。面板显示包/缺口/处理历史，ready不自动生成经验；安全本地恢复最多3次，验证开始后unknown不重跑。真实合成Git/pytest无候选流程及27项相关检查通过；首轮旧清理假设失败保留并修复，随后本地完整115项及类型/静态/构建通过。当前头CI/实际包/独立审查见[T019验收](T019-acceptance.md)与关联PR。零模型调用，不改旧预算/预览安装；语义提炼、上下文和真实学习/收益仍未完成。T018已由PR #46经100项两平台CI/实际包及独立评审合并30ed213，Issue #45关闭；以下为历史阶段记录。
+
 ## 当前T018显式standard兼容（2026-10-19）
 
 Issue #45，[ADR021](../decisions/021-standard-service-tier.md)先于实现；新t018-standard-tier-v1仅接受文档standard分支/缺省，保持高水位/终结/数值检查及两旧策略。新身份贯穿预算/回执2，其他档位为有限拒绝原因、不存值；未知字段仍拒绝。31项针对、本地check100项及compat2项通过，当前头CI/实际包/独立审查和合并见关联PR与[T018验收](T018-acceptance.md)。没有新增真实模型调用、凭据读取或旧预算/资格变更；T017值仍未知，真实兼容、学习和收益未完成。T017已由PR #44经两平台92项/实际包和独立评审合并1e97963，Issue #43关闭；以下保留阶段记录。

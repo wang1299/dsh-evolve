@@ -2,18 +2,21 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { z } from 'zod';
+import { LearningStore, learningTablesSql } from './learning-store.js';
+import { observationSchema } from './learning-domain.js';
 import { applicationSchema, experienceSchema, feedbackSchema, taskSchema, verificationSchema, RevisionConflict,
   evidenceSchema, factCitationsSchema, type Evidence, type FactCitation,
   type Application, type Experience, type Feedback, type Task, type Verification } from './domain.js';
 
 export class Store {
   private readonly db: DatabaseSync;
+  readonly learning: LearningStore;
   constructor(path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path);
     this.db.exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
     const version = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (version !== 0 && version !== 1 && version !== 2 && version !== 3) { this.db.close(); throw new Error('Unsupported database schema version'); }
+    if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4) { this.db.close(); throw new Error('Unsupported database schema version'); }
     try { this.transaction(() => { this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS experiences(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, body TEXT NOT NULL);
@@ -30,8 +33,10 @@ export class Store {
       CREATE INDEX IF NOT EXISTS fact_citations_evidence ON fact_citations(evidence_id);
     `);
       if (version === 1) this.migrateV1();
-      this.db.exec('PRAGMA user_version=3');
+      this.db.exec(learningTablesSql);
+      this.db.exec('PRAGMA user_version=4');
     }); } catch (error) { this.db.close(); throw error; }
+    this.learning = new LearningStore(this.db, fn => this.transaction(fn));
   }
   private migrateV1(): void {
     this.transaction(() => {
@@ -98,8 +103,22 @@ export class Store {
     this.db.prepare('INSERT OR IGNORE INTO events VALUES(?,?,?,?)').run(id, taskId, createdAt, JSON.stringify(body));
   }
   events(taskId: string): unknown[] { return this.db.prepare('SELECT body FROM events WHERE task_id=? ORDER BY created_at').all(taskId).map((r) => JSON.parse(String(r.body)) as unknown); }
+  boundedObservations(taskId: string): { observations: { id: string; createdAt: string; kind: string; tool?: string }[]; omitted: number } {
+    const count = Number(this.db.prepare('SELECT count(*) AS n FROM events WHERE task_id=?').get(taskId)!.n);
+    const observations = this.db.prepare('SELECT id,created_at,body FROM events WHERE task_id=? ORDER BY rowid DESC LIMIT 128').all(taskId).reverse().flatMap(r => {
+      try {
+        const v = z.record(z.string(), z.unknown()).parse(JSON.parse(String(r.body)));
+        const item = observationSchema.safeParse({ id: String(r.id), createdAt: String(r.created_at), kind: v.kind, ...(v.tool === undefined ? {} : { tool: v.tool }) });
+        return item.success ? [item.data] : [];
+      } catch { return []; } // Legacy or malformed metadata is omitted explicitly, never copied wholesale.
+    });
+    return { observations, omitted: count - observations.length };
+  }
   evidence(id: string): Evidence | null { return this.parse(evidenceSchema, this.db.prepare('SELECT body FROM evidence WHERE id=?').get(id)); }
   evidenceRecords(): Evidence[] { return this.db.prepare('SELECT body FROM evidence ORDER BY id').all().map((r) => evidenceSchema.parse(JSON.parse(String(r.body)))); }
+  taskEvidence(taskId: string): Evidence[] {
+    return this.db.prepare('SELECT body FROM evidence WHERE task_id=? ORDER BY rowid').all(taskId).map(r => evidenceSchema.parse(JSON.parse(String(r.body))));
+  }
   putEvidence(input: Evidence): void {
     const item = evidenceSchema.parse(input); const old = this.evidence(item.id);
     if (old) { if (JSON.stringify(old) !== JSON.stringify(item)) throw new Error('Evidence is immutable'); return; }
@@ -112,7 +131,9 @@ export class Store {
   cleanEvidenceWithRetention(before: string): { removedEventSummaries: number; removedUnreferencedSources: number } {
     return this.transaction(() => {
       const removedEventSummaries = Number(this.db.prepare('DELETE FROM events WHERE created_at < ?').run(before).changes);
-      const removedUnreferencedSources = Number(this.db.prepare('DELETE FROM evidence WHERE created_at < ? AND NOT EXISTS (SELECT 1 FROM fact_citations WHERE evidence_id=evidence.id)').run(before).changes);
+      const removedUnreferencedSources = Number(this.db.prepare(`DELETE FROM evidence WHERE created_at < ?
+        AND NOT EXISTS (SELECT 1 FROM fact_citations WHERE evidence_id=evidence.id)
+        AND NOT EXISTS (SELECT 1 FROM learning_job_sources WHERE evidence_id=evidence.id)`).run(before).changes);
       return { removedEventSummaries, removedUnreferencedSources };
     });
   }

@@ -35,7 +35,8 @@ test('real repair binds correction and pytest sources, refuses incomplete reuse 
   try {
     const task = service.begin('source', 'transaction rollback exception');
     const correction = service.correction(task.id, 'Restore state on transaction exceptions.');
-    const unused = service.correction(task.id, 'Unreferenced synthetic note, eligible for ordinary cleanup.');
+    const queuedOnly = service.correction(task.id, 'Not cited by experience; the closed-task evidence job must retain this note.');
+    const unused = service.correction(service.begin('unrelated-cleanup', 'unrelated open task').id, 'Unreferenced synthetic note, eligible for ordinary cleanup.');
     await f.fix();
     const input = { ...candidate, observedFacts: [...candidate.observedFacts, 'The independent acceptance failed before the repair and passed after it.'] };
     const proposed = service.propose(task.id, input, [citeFact(correction, input.observedFacts[0]!)]);
@@ -61,6 +62,7 @@ test('real repair binds correction and pytest sources, refuses incomplete reuse 
     assert.match(selected.application!.reason, /evidence-v1:complete_fact_sources/);
     const counts = store.cleanEvidenceWithRetention('9999-12-31T00:00:00.000Z');
     assert.equal(counts.removedUnreferencedSources, 1); assert.equal(store.evidence(unused.id), null);
+    assert.ok(store.evidence(queuedOnly.id), 'queued evidence work pins its own minimal sources even without a fact citation');
     assert.equal(store.events(task.id).length, 0);
     assert.ok(store.evidence(correction.id)); assert.ok(store.evidence(reportSource.id));
     const disabled = service.disable(linked.id, 'Owner pauses this experience', linked.revision);
@@ -129,7 +131,7 @@ test('v2 upgrade preserves exact legacy records and withholds uncited experience
   const app = service.select(service.begin('old-target', candidate.title).id, 'feedback-v1').application!;
   service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'unknown', note: 'Historical result is unknown.', extraCost: null, humanRework: null });
   original.close();
-  const raw = new DatabaseSync(path); raw.exec('DROP TABLE fact_citations; DROP TABLE evidence; PRAGMA user_version=2');
+  const raw = new DatabaseSync(path); raw.exec('DROP TABLE learning_job_sources; DROP TABLE evidence_bundles; DROP TABLE learning_attempts; DROP TABLE learning_jobs; DROP TABLE fact_citations; DROP TABLE evidence; PRAGMA user_version=2');
   const tables = ['tasks', 'experiences', 'revisions', 'verifications', 'applications', 'feedback', 'events'];
   const before = tables.map((table) => raw.prepare('SELECT * FROM ' + table).all()); raw.close();
   const upgraded = new Store(path);
@@ -142,7 +144,7 @@ test('v2 upgrade preserves exact legacy records and withholds uncited experience
   } finally { upgraded.close(); }
   const checked = new DatabaseSync(path);
   try {
-    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 3);
+    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 4);
     // Only the explicit new-target task was added after migration.
     assert.deepEqual(tables.slice(1).map((table) => checked.prepare('SELECT * FROM ' + table).all()), before.slice(1));
   } finally { checked.close(); }
