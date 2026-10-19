@@ -23,11 +23,12 @@
 | T012 模型可见引用契约 | T010/T011 | 原生嵌套schema、引用顺序和错误重放；59项两平台CI/独立评审通过，已合并PR #35；不声明模型修复效果 | codex/t012-tool-input-contract，Issue #33关闭 |
 | T013 数值用量回执 | T011/T012 | 已合并PR #36，65项两平台CI/必要增量独立复审；数值回执离线完成，真实采样待做；不回填旧unknown | codex/t013-numeric-receipts，Issue #34保持open |
 | T014 原生Agent脚本演练 | T010–T013 | 已合并PR #38，Issue #37关闭；5场景、70项两平台CI及必要独立复审，零付费，不是模型或收益证据 | codex/t014-agent-rehearsal |
-| T017 最小单次真实采样 | T016、用户新增最多3元 | Issue #43 / PR #44；一次HTTP200/987字节，唯一未知字段指纹匹配service_tier，值/历史原因未知；2.232768元未知占额，未重跑；证据与最终门槛见[T017验收](development/T017-acceptance.md) | codex/t017-messages-sample |
+| T018 显式standard用量兼容 | T017、Issue #45 | 新策略/回执2接受文档standard分支，其他值继续拒绝；本地100项/compat通过，当前头CI/独立审查/合并见[T018验收](development/T018-acceptance.md)及关联PR；零新增模型调用 | codex/t018-standard-tier |
+| T017 最小单次真实采样 | T016、用户新增最多3元 | PR #44已合并，Issue #43关闭；一次HTTP200/987字节，字段指纹匹配service_tier，值/历史原因未知，2.232768元未知占额；两平台92项/实际包/独立评审通过，未重跑 | codex/t017-messages-sample |
 | T016 未知usage结构诊断 | T013/T015、Issue #41 | 可选v2回执/固定拒绝位置/有限字段指纹，离线检查及最终CI/评审门槛见关联PR；没有新付费或真实字段认定 | codex/t016-usage-diagnostics |
 | T015 追加预算真实学习回归 | T012–T014、用户另授权5元 | PR #40 / Issue #39；一次live共2个HTTP，start usage未兼容、来源仍open/经验0，partial；代码77项两平台检查、付费前及结果独立核对通过，当前提交CI/合并门槛见PR | codex/t015-live-learning |
 
-远端：公开仓库wang1299/dsh-evolve。T015真实学习回归（PR #40）和T016结构诊断（PR #42）已合并，T017单次真实采样（Issue #43 / PR #44）定位当前响应service_tier字段但未兼容其值；最终CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。T011/T015真实学习仍partial，发布：无。
+远端：公开仓库wang1299/dsh-evolve。T015真实学习回归（PR #40）、T016结构诊断（PR #42）、T017单次真实采样（PR #44）已合并；当前T018仅离线支持standard分支，T017响应值/真实兼容仍未知；最终CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。T011/T015真实学习仍partial，发布：无。
 
 后续实现从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)拆出独立任务。T010仅完成G01/G07显式来源切片，自动错误尝试归并/提炼、耐久协调、彻底遗忘仍未完成；继续G03/G02、G04、G05，G06独立重建/收益评价，G08/G09/G10按风险推进。优先跟进真实失败#33（引用契约，离线实现见[T012](development/T012-acceptance.md)）/#34（[用量数值回执](development/T013-acceptance.md)，离线实现），用户已在原预算之外明确新增最多5元，设计[ADR018](decisions/018-supplemental-live-validation.md)、执行与限制见[T015验收](development/T015-acceptance.md)；旧实验/未知预留不改。本轮实际2请求后保守停止，结果partial，结构诊断切片已另立[T016](development/T016-acceptance.md)，协议兼容/新采样仍在#34，不自动追加预算。父Issue #8/#15保持open。
 
