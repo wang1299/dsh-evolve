@@ -24,6 +24,10 @@ SQLite user_version=3，事务创建最小evidence与fact_citations，保留v2�
 
 Task/Experience v1、Verification v2和历史评价格式不变。新增evolve_link_fact_evidence及现有工具的来源/事实摘要receipt是增量接口。Candidate自身模式不变，propose工具另有可选citations。冻结Codex脚本固定原策略；本轮没有新模型调用，不宣称evidence-v1收益。引用只证明出处一致，不认证文字真值。详见[ADR013](decisions/013-fact-evidence.md)。
 
+## 模型输入契约（T012）
+
+固定DSH原生schema现在显式公开Candidate字段和FactCitation四字段，嵌套对象封闭、revision为integer。推荐先propose不带引用，再复制实际facts/同任务receipt并使用最新revision执行link；receipt.kind不属于引用，不能猜摘要。原Zod/服务层继续校验全部数量/路径/摘要/权限限制。离线错误重放与实际组装探针见[T012](development/T012-acceptance.md)；没有新模型验证或新数据迁移，T011失败保留。
+
 ## 本地接入（开发预览）
 
 构建安装包后，通过固定DSH版本将本地tgz装到独立测试profile；本机Windows完整CLI/Web试装已通过，日常模型学习仍待验收。当前包未发布到npm。

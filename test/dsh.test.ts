@@ -10,7 +10,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { bindDsh } from '../src/dsh.js';
-import { citeFact, fixture } from './fixture.js';
+import { fixture } from './fixture.js';
 
 test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and unload', async () => {
   const f = await fixture(); const ctx = new Context();
@@ -58,12 +58,19 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   assert.ok(JSON.stringify(correctionResult).includes(evidence.digest));
   const candidate = { title: 'transaction rollback', strategy: 'Restore state.',
     observedFacts: ['The explicit correction asks to restore state.'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] };
-  const receipt = { evidenceId: evidence.id, evidenceDigest: evidence.digest, kind: evidence.kind };
+  const receipt = (JSON.parse(correctionResult.content.find((b) => b.type === 'text')!.text) as {
+    evidence: { evidenceId: string; evidenceDigest: string; kind: string };
+  }).evidence;
+  assert.equal(receipt.evidenceId, evidence.id);
   assert.equal((await run('evolve_propose_experience', { taskId: task.id, candidate, citations: [receipt] })).isError, true, 'T011 receipt is not a citation');
   assert.equal(store.experiences().length, 0, 'invalid citations cannot leave a partial candidate');
   const proposal = await run('evolve_propose_experience', { taskId: task.id, candidate });
   assert.equal(proposal.isError, false);
-  const exp = store.experiences()[0]!; const citations = [citeFact(evidence, exp.observedFacts[0]!)];
+  const exp = store.experiences()[0]!;
+  const returned = JSON.parse(proposal.content.find((b) => b.type === 'text')!.text) as {
+    facts: { factIndex: number; factDigest: string }[];
+  };
+  const citations = [{ ...returned.facts[0]!, evidenceId: receipt.evidenceId, evidenceDigest: receipt.evidenceDigest }];
   assert.ok(JSON.stringify(proposal).includes(citations[0]!.factDigest));
   const args = { experienceId: exp.id, revision: exp.revision, citations };
   assert.equal((await run('evolve_link_fact_evidence', { ...args, citations: [receipt] })).isError, true);

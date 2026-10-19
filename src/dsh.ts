@@ -5,6 +5,7 @@ import '@deepseek-ai/dsh-system-prompt';
 import { realpathSync } from 'node:fs';
 import { createService, loadConfig, type Config } from './config.js';
 import type { EvolveService } from './service.js';
+import { candidateInput, citationsInput } from './dsh-schema.js';
 
 export const name = 'dsh-evolve';
 export const inject = ['tools', 'sessions', 'systemPrompt'];
@@ -31,7 +32,12 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     text: 'DSH-Evolve records scoped repair experience. For a new bug repair task use evolve_begin_task; explicitly finish it with evolve_finish_task. '
       + 'Use evolve_record_correction only for an explicit user correction, and evolve_propose_experience to submit a structured candidate after a repair. '
       + 'Candidates separate observedFacts, inferences and recommendations, and include title, strategy, requiredFiles. '
-      + 'Correction and verification return source receipts; propose returns fact digests. Use optional citations or evolve_link_fact_evidence to bind exact facts to same-task sources. '
+      + 'Prefer propose without citations first. It returns experienceId, revision and facts[{factIndex,factDigest}]. '
+      + 'Correction and verification return evidence{evidenceId,evidenceDigest,kind}; this source receipt alone is NOT a FactCitation. '
+      + 'After the repair commit, verify if owner execution trust is enabled; copy its latest revision and facts. '
+      + 'Call evolve_link_fact_evidence with that exact revision and citations[{factIndex,factDigest,evidenceId,evidenceDigest}], copying fact fields from facts and evidence fields from same-task receipts. '
+      + 'Do not pass kind in citations or invent digests. If only correction evidence is available, link after propose using its revision; after verify use the new revision. '
+      + 'Propose also accepts optional citations when exact fact digests are already known. Finish after the learning steps. '
       + 'Default reuse requires every fact to have a valid source. A citation proves provenance, not semantic truth; unsupported claims remain fallible. '
       + 'Identical citations are idempotent. Sources of a verified experience with complete provenance are locked; changes require an explicit owner revision, not a metadata-only feedback reset. '
       + 'Use evolve_verify_experience only after a repair commit exists and the owner configured trusted execution. '
@@ -64,8 +70,8 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     },
   }));
   ctx.tools.register(defineTool({
-    name: 'evolve_propose_experience', description: 'Propose a candidate from this task. candidate is a JSON object with title, strategy, observedFacts, inferences, recommendations, requiredFiles. No verification claims are accepted.',
-    parameters: { taskId: { type: 'string', required: true }, candidate: { type: 'json', required: true }, citations: { type: 'json' } }, output,
+    name: 'evolve_propose_experience', description: 'Propose a candidate from this task. Prefer omitting citations, then copy returned fact digests and source receipts into evolve_link_fact_evidence. No verification claims are accepted.',
+    parameters: { taskId: { type: 'string', required: true }, candidate: { ...candidateInput, required: true }, citations: citationsInput }, output,
     async execute(args, exec) {
       service.requireTask(args.taskId, sessionFor(exec)); const result = service.propose(args.taskId, args.candidate, args.citations ?? []);
       return json({ experienceId: result.id, revision: result.revision, status: result.status, facts: service.facts(result) });
@@ -87,8 +93,8 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     },
   }));
   ctx.tools.register(defineTool({
-    name: 'evolve_link_fact_evidence', description: 'Bind same-task source receipts to exact facts. Identical citations are idempotent. Verified experiences with complete sources are locked; only incomplete, candidate or disabled records can change sources. Citations do not certify claim semantics.',
-    parameters: { experienceId: { type: 'string', required: true }, revision: { type: 'number', required: true }, citations: { type: 'json', required: true } }, output,
+    name: 'evolve_link_fact_evidence', description: 'After propose/verify, bind exact returned facts to same-task evidence receipts using the latest revision. Each citation has factIndex, factDigest, evidenceId, evidenceDigest; omit receipt kind. Identical citations are idempotent. Verified experiences with complete sources are locked; only incomplete, candidate or disabled records can change sources. Citations do not certify claim semantics.',
+    parameters: { experienceId: { type: 'string', required: true }, revision: { type: 'integer', required: true, description: 'Positive latest revision returned by propose, verify or link.' }, citations: { ...citationsInput, required: true } }, output,
     async execute(args, exec) {
       const e = service.requireExperience(args.experienceId); service.requireTask(e.sourceTaskId, sessionFor(exec));
       const linked = service.linkEvidence(e.id, args.revision, args.citations);

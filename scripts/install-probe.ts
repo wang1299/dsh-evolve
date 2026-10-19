@@ -48,6 +48,12 @@ try {
   const assembled = await ctx.systemPrompt.assemble();
   assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 6);
   assert.ok(assembled.sections.some((section) => section.name === 'dsh-evolve:workflow'));
+  const propose = assembled.tools.find((tool) => tool.name === 'evolve_propose_experience')!;
+  const properties = propose.parameters.properties as Record<string, Record<string, unknown>>;
+  assert.equal(properties.candidate!.type, 'object', 'installed package must publish Candidate fields');
+  assert.equal(properties.candidate!.additionalProperties, false);
+  assert.deepEqual(new Set((properties.citations!.items as Record<string, unknown>).required as string[]),
+    new Set(['factIndex', 'factDigest', 'evidenceId', 'evidenceDigest']));
   const session = ctx.sessions.create(SessionId('installed-package-probe'), { meta: { cwd: f.repo } });
   const output = await ctx.tools.execute({ callId: ToolCallId(crypto.randomUUID()), name: 'evolve_begin_task',
     arguments: { summary: 'synthetic installed-package task' }, agent: { id: session.id } as Agent, signal: AbortSignal.timeout(10000) });
