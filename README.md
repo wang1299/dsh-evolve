@@ -22,7 +22,7 @@
 - 真实初步对照：1次积累通过后，两个新合成任务各运行三组，共7次真实Codex调用。Evolve两题均提供反馈经验，三组验收均2/2，未观察到成功率或复发率改善，增加输入成本；任务作者可见，只有一次重复。见[结果与限制](docs/development/T008c-acceptance.md)。
 - 验证：T008b已由PR #22完成39项两平台CI/实际安装和独立评审；T008c执行头44项本地及两平台CI、实际安装通过，两项预审阻塞已修复并复审。最终交付头见[PR #24](https://github.com/wang1299/dsh-evolve/pull/24)及[本轮记录](docs/development/status.md)，不以历史检查代替当前头验证。
 - 完整Web试装：T006d只有安装文档变化，本机已实际加载与停止重启；该文档交付的最终CI/独立审查见[PR #26](https://github.com/wang1299/dsh-evolve/pull/26)。
-- GitHub：T010已由PR #30合并；T011 / PR #32记录首次有预算的真实DSH验证，结果partial，后续#33已做[离线引用契约修复](docs/development/T012-acceptance.md)，#34用量回执待办；CI/评审/合并状态见关联PR。
+- GitHub：T010已由PR #30合并；T011 / PR #32记录首次有预算的真实DSH验证，结果partial，后续[引用契约修复](docs/development/T012-acceptance.md)已合并PR #35；#34增加[数值用量诊断](docs/development/T013-acceptance.md)，离线验证中；CI/评审/合并状态见关联PR。
 - npm、GitHub Release、线上部署：未发布。
 
 ## 开发组织

@@ -1,8 +1,9 @@
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { z } from 'zod';
+import { analyzeMessagesUsage, snapshotSchema, usageReasons, type UsageReason } from './messages-usage.js';
 
 // Experiment infrastructure, not a plugin setting or a provider billing API.
 export const budgetPolicy = Object.freeze({ budgetMicroCny: 5_000_000, maxCalls: 16,
@@ -15,6 +16,12 @@ const callSchema = z.object({ id: z.string().uuid(), chargedMicroCny: z.number()
 const stateSchema = z.object({ schemaVersion: z.literal(1), budgetMicroCny: z.literal(5_000_000),
   calls: z.array(callSchema).max(16) }).strict();
 export type BudgetState = z.infer<typeof stateSchema>;
+const receiptInputSchema = z.object({ reason: z.enum(usageReasons), httpStatus: z.number().int().min(100).max(599).nullable(),
+  responseBytes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), snapshots: z.array(snapshotSchema).max(64),
+  otherEvents: z.number().int().min(0).max(1024 * 1024), usage: usageSchema.nullable() }).strict()
+  .refine((r) => (r.reason === 'complete') === (r.usage !== null), 'Only complete usage can be eligible');
+export const usageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), callId: z.string().uuid(),
+  policyId: z.literal('t011-conservative-v1'), model: z.literal('deepseek-flash') });
 
 export class DeepseekBudget {
   readonly state: BudgetState;
@@ -33,13 +40,21 @@ export class DeepseekBudget {
     } catch (error) { closeSync(this.lock); unlinkSync(path + '.lock'); throw error; }
   }
   get spent(): number { return this.state.calls.reduce((sum, call) => sum + call.chargedMicroCny, 0); }
-  private persist(): void {
+  private persist(): void { this.write(this.path, this.state); }
+  private write(path: string, value: unknown): void {
     if (this.closed || this.poisoned) throw new Error('Budget closed or persistence failed');
     try {
-      const temp = this.path + '.' + randomUUID(); const fd = openSync(temp, 'wx');
-      try { writeFileSync(fd, JSON.stringify(this.state, null, 2)); fsyncSync(fd); } finally { closeSync(fd); }
-      renameSync(temp, this.path);
+      mkdirSync(dirname(path), { recursive: true });
+      const temp = path + '.' + randomUUID(); const fd = openSync(temp, 'wx');
+      try { writeFileSync(fd, JSON.stringify(value, null, 2)); fsyncSync(fd); } finally { closeSync(fd); }
+      renameSync(temp, path);
     } catch (error) { this.poisoned = true; throw error; }
+  }
+  writeReceipt(id: string, input: unknown): void {
+    if (!this.state.calls.some((call) => call.id === id)) throw new Error('Unknown budget call');
+    const receipt = usageReceiptSchema.parse({ ...receiptInputSchema.parse(input), schemaVersion: 1, callId: id,
+      policyId: 't011-conservative-v1', model: budgetPolicy.model });
+    this.write(join(this.path + '.receipts', id + '.json'), receipt);
   }
   reserve(): string {
     if (this.closed || this.poisoned) throw new Error('Budget unavailable');
@@ -51,50 +66,16 @@ export class DeepseekBudget {
   settle(id: string, input: unknown): void {
     const usage = usageSchema.parse(input); const call = this.state.calls.find((c) => c.id === id);
     if (!call || call.usage) throw new Error('Unknown or settled budget call');
-    call.usage = usage; call.chargedMicroCny = usage.input * 2 + usage.output * 8; this.persist();
+    const previousCharge = call.chargedMicroCny;
+    call.usage = usage; call.chargedMicroCny = usage.input * 2 + usage.output * 8;
+    try { this.persist(); }
+    catch (error) { call.usage = null; call.chargedMicroCny = previousCharge; throw error; }
   }
   close(): void { if (!this.closed) { this.closed = true; closeSync(this.lock); unlinkSync(this.path + '.lock'); } }
 }
 
 export function settledMessagesUsage(body: string): z.infer<typeof usageSchema> | null {
-  let started = false; let stopped = false; let final = false; let finalOutput = false; let input: number | undefined; let output: number | undefined;
-  let cached = 0; let written = 0;
-  try {
-    for (const frame of body.replace(/\r\n/g, '\n').split('\n\n')) {
-      const lines = frame.split('\n').filter((line) => line.startsWith('data:'));
-      if (!lines.length) continue;
-      if (stopped) return null;
-      const event = JSON.parse(lines.map((line) => line.slice(5).trimStart()).join('\n')) as Record<string, unknown>;
-      if (event.type === 'error') return null;
-      if (event.type === 'message_start') {
-        if (started) return null; started = true;
-        const usage = (event.message as { usage?: Record<string, unknown> })?.usage;
-        if (!usage || !Number.isSafeInteger(usage.input_tokens) || Number(usage.input_tokens) < 0
-          || !Number.isSafeInteger(usage.output_tokens) || Number(usage.output_tokens) < 0 || Number(usage.output_tokens) > budgetPolicy.maxOutputTokens) return null;
-        input = Number(usage.input_tokens); output = Number(usage.output_tokens);
-        for (const key of ['cache_read_input_tokens', 'cache_creation_input_tokens']) {
-          const value = usage[key] ?? 0; if (!Number.isSafeInteger(value) || Number(value) < 0) return null;
-          if (key === 'cache_read_input_tokens') cached = Number(value); else written = Number(value);
-        }
-      } else if (event.type === 'message_delta') {
-        if (!started) return null;
-        const usage = event.usage as Record<string, unknown> | undefined;
-        if (usage) for (const [key, previous] of [['input_tokens', input], ['cache_read_input_tokens', cached], ['cache_creation_input_tokens', written]] as const) {
-          if (usage[key] === undefined) continue;
-          const next = Number(usage[key]); if (!Number.isSafeInteger(usage[key]) || next < (previous ?? 0)) return null;
-          if (key === 'input_tokens') input = next; else if (key === 'cache_read_input_tokens') cached = next; else written = next;
-        }
-        if (usage?.output_tokens !== undefined) {
-          if (!Number.isSafeInteger(usage.output_tokens) || Number(usage.output_tokens) < (output ?? 0)) return null;
-          output = Number(usage.output_tokens);
-        }
-        const delta = event.delta as { stop_reason?: unknown } | undefined;
-        if (delta?.stop_reason) { if (final || !['end_turn', 'tool_use', 'max_tokens', 'stop_sequence'].includes(String(delta.stop_reason))) return null; final = true; finalOutput = usage?.output_tokens !== undefined; }
-      } else if (event.type === 'message_stop') { if (!started || !final) return null; stopped = true; }
-    }
-    if (!stopped || !finalOutput || input === undefined || output === undefined) return null;
-    return usageSchema.parse({ input: input + cached + written, output });
-  } catch { return null; }
+  return analyzeMessagesUsage(body, budgetPolicy).usage;
 }
 
 export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof fetch = fetch): Promise<{ baseURL: string; close: () => Promise<void> }> {
@@ -104,6 +85,15 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
     if (req.method !== 'POST' || req.url !== path + '/v1/messages' || active) { fail(429); return; }
     active = true; const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 60000);
     res.on('close', () => { if (!res.writableFinished) controller.abort(); });
+    let id: string | undefined; let httpStatus: number | null = null; let responseBytes = 0;
+    const result: Buffer[] = []; let failure: UsageReason = 'transport_error'; let terminalReceipt = false;
+    const receipt = (reason?: UsageReason): z.infer<typeof usageSchema> | null => {
+      const analysis = analyzeMessagesUsage(Buffer.concat(result).toString('utf8'), budgetPolicy);
+      const usage = reason ? null : analysis.usage;
+      budget.writeReceipt(id!, { ...analysis, ...(reason ? { reason } : {}), usage, httpStatus, responseBytes });
+      terminalReceipt = reason !== 'awaiting_response';
+      return usage;
+    };
     try {
       const chunks: Buffer[] = []; let bytes = 0;
       for await (const chunk of req) { bytes += chunk.length; if (bytes > budgetPolicy.maxRequestBytes) throw new Error('Request bound'); chunks.push(chunk); }
@@ -114,19 +104,29 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
         || (body.tools !== undefined && (!Array.isArray(body.tools) || body.tools.some((t: Record<string, unknown>) => t.type !== undefined
           || !['evolve_begin_task', 'evolve_finish_task', 'evolve_record_correction', 'evolve_propose_experience', 'evolve_verify_experience', 'evolve_link_fact_evidence'].includes(String(t.name)))))) throw new Error('Request policy');
       const key = req.headers['x-api-key']; if (typeof key !== 'string' || !key) throw new Error('Missing request credential');
-      const id = budget.reserve(); // Commit cost liability before any network call, including failed calls.
+      id = budget.reserve(); // Commit cost liability before any network call, including failed calls.
+      receipt('awaiting_response'); // A failed diagnostic write must prevent forwarding.
       const response = await transport('https://api.deepseek.com/anthropic/v1/messages', { method: 'POST', body: raw,
         headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01',
           ...(typeof req.headers['anthropic-beta'] === 'string' ? { 'anthropic-beta': req.headers['anthropic-beta'] } : {}) },
         redirect: 'error', signal: controller.signal });
-      if (!response.ok || !response.body || !response.headers.get('content-type')?.includes('text/event-stream')) { fail(502); return; }
+      httpStatus = response.status;
+      if (!response.ok) { receipt('http_rejected'); await response.body?.cancel(); fail(502); return; }
+      if (!response.body || !response.headers.get('content-type')?.includes('text/event-stream')) { receipt('missing_sse'); await response.body?.cancel(); fail(502); return; }
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store' });
-      const result: Buffer[] = []; let size = 0;
-      for await (const chunk of response.body) { size += chunk.length; if (size > 1024 * 1024) throw new Error('Response bound'); const data = Buffer.from(chunk); result.push(data); res.write(data); }
-      const usage = settledMessagesUsage(Buffer.concat(result).toString('utf8'));
+      for await (const chunk of response.body) {
+        responseBytes += chunk.length;
+        if (responseBytes > 1024 * 1024) { failure = 'response_bound'; throw new Error('Response bound'); }
+        const data = Buffer.from(chunk); result.push(data); res.write(data);
+      }
+      if (controller.signal.aborted) throw new Error('Interrupted stream');
+      const usage = receipt();
       if (usage) budget.settle(id, usage);
       res.end();
-    } catch { fail(502); } finally { clearTimeout(timer); active = false; }
+    } catch {
+      if (id && !terminalReceipt) { try { receipt(failure); } catch { /* Liability is already durable; a poisoned writer cannot reopen budget. */ } }
+      fail(502);
+    } finally { clearTimeout(timer); active = false; }
   });
   await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
   const address = server.address(); if (!address || typeof address === 'string') throw new Error('Relay address');
