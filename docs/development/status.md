@@ -2,7 +2,7 @@
 
 ## 当前T017最小单次采样（2026-10-19）
 
-用户明确新增最多3元/只采1个真实响应，Issue #43；[ADR020](../decisions/020-single-messages-sample.md)先于实现。独立schema3预算精确记录3元/1请求/v2回执，固定短合成提示、官方endpoint、16输出，无AgentLoop/SessionStore，不存响应文本。计划/源码/旧预算摘要和一次资格保护；实际运行和最终门槛见[T017验收](T017-acceptance.md)。旧unknown不释放或补造，样本不替代学习闭环或收益。T016已由PR #42经84项两平台CI及独立评审合并bf9508c；以下保留阶段快照。
+用户明确新增最多3元/只采1个真实响应，Issue #43 / PR #44；[ADR020](../decisions/020-single-messages-sample.md)先于实现。准确3元/1请求/v2预算、固定短合成提示，无AgentLoop/SessionStore，不存响应文本。92项代码两平台CI/付费前独立29项审查通过后，prepare/probe零请求，一次live收到HTTP200/987字节；起始usage拒绝唯一未知字段，冻结字典指纹匹配service_tier，值/类型和历史原因未知。2.232768元为最坏未知占额，不是账单；资格已消费、未重跑。证据摘要、限制及最终门槛见[T017验收](T017-acceptance.md)和关联PR；协议兼容和学习/收益仍未完成。T016已由PR #42经84项两平台CI及独立评审合并bf9508c；以下保留阶段快照。
 
 ## 当前T016结构诊断（2026-10-19）
 
