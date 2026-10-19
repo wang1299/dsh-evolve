@@ -234,7 +234,7 @@ Task只有`open/closed`；closed不表示通过。经验只有`candidate/source_
 | D05 | 迁移保历史、拒未知格式，说明降级混跑限制 | SQLite v2已有 |
 | I01 | 固定DSH发行版，官方服务／包／实际安装验证 | 0.2.0-rc.2组件及Windows完整Web已验证 |
 | I02 | 事件仅观察，工具运输成功不等于pytest通过 | 已实现 |
-| I03 | 卸载取消待执行验证并释放资源 | 官方服务探针已有；断电G03 |
+| I03 | 卸载取消待执行验证并释放资源 | 取消/等待pending经源码核对；探针仅验证卸载移除工具/提示，实际取消未专项运行；断电G03 |
 | I04 | 分开组件、完整应用、模型回合及平台覆盖 | 已执行；真实DSH／Desktop／其他平台G05 |
 | Q01 | 原始／普通检索／完整机制三组，控制模型任务预算环境 | 执行器已有；真实任务集G06 |
 | Q02 | 积累／未见评价分开，外部验收，评价反馈不泄漏 | 协议已有；公开重建G06 |
@@ -276,14 +276,14 @@ MemRL、GEPA、ExpeL的已核实对象与取舍见方法说明；当前不是论
 |---|---|---|---|
 | AC01 / A1 | session begin、纠正、结束 | task/session/repo/base绑定；跨session拒绝；closed非成功 | dsh／core；自动归属G01 |
 | AC02 / A2 | 旧失败、修复通过、固定验收 | 同用例失败→通过、回归通过；存输入环境diff | core真实pytest、demo |
-| AC03 / A2 | 改验收、删／跳过、无收集、超时 | 不授予证明；报告或明确基础设施错误 | core；耐久Attempt G03 |
+| AC03 / A2 | 改验收、删／跳过、无收集、超时 | 不授予证明；报告或明确基础设施错误 | core已测解析器/用例身份/skip/无收集及timeout标志；验收变动、实际pytest超时未专项运行；耐久Attempt G03 |
 | AC04 / A3 | 提出事实／推断／建议／条件 | candidate不可选；来源验证不认证文字 | schema／core；逐条核对G02 |
 | AC05 / A4 | 另一任务相关、条件一致 | 一条、精确revision、原因及Application | core／retrieval；DSH模型G05 |
 | AC06 / A4 | 仓库／依赖／文件不符或弱匹配 | 空上下文、理由，普通开发继续 | core／repository／retrieval |
 | AC07 / A5 | 当前版反例，修订后给旧应用负反馈 | 停用应用版、不停用新版、历史可查 | core／panel |
 | AC08 / A5 | irrelevant重复摘要，再accepted | 精确拒绝可纠正，不停用策略 | feedback-retrieval；换措辞不保证 |
 | AC09 / A5,A6 | 修订／恢复与另一连接并发 | 新候选需验，旧操作409，代码不变 | panel／migration |
-| AC10 / A6 | 无token、跨源、超大请求、注入文本 | 拒绝读写，文本按数据展示 | panel；大库／语义G10 |
+| AC10 / A6 | 无token、跨源、超大请求、注入文本 | 拒绝读写，文本按数据展示 | panel已测鉴权/同源/CSP及文本载荷不内嵌HTML；体积上限/DOM文本处理经源码核对，超过32KiB请求未专项发送；大库/语义G10 |
 | AC11 / A7 | 固定服务注册卸载、tgz安装 | 五工具／prompt有效，明示平台 | dsh／bundle／install-probe、T006d；G05 |
 | AC12 / A8 | 三组未启动、失败、漂移、泄漏、无提供 | 不伪造可比性／暴露／成功 | evaluation／paired／feedback-experiment |
 | AC13 / A1,A3 | 目标：重复事件／重启／来源不足 | 不重复、不跨任务、缺来源候选、不擅传 | 待G01–G03 |

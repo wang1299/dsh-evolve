@@ -219,7 +219,7 @@ observe只附到该session的open任务，无任务忽略。不保留任意参�
 
 verify使用工具signal与插件lifetime的合并取消信号；跟踪pending promises。卸载先标disposed、取消、等待settled，再关库；官方框架释放本组件工具和prompt。事件回调在disposed后不写入。
 
-真实官方服务探针覆盖注册／执行／session隔离／卸载；bundle验证官方空profile组合，tgz探针覆盖独立消费安装。Windows完整官方CLI/Web试装见[T006d](development/T006d-installation.md)。真实DSH模型自主调用／提炼、Desktop及其他平台完整应用仍为G05，不得由fixture Agent替代。
+真实官方服务探针覆盖注册／执行begin和finish／session隔离／卸载后工具及提示移除；没有调用验证工具或制造pending验证，取消/等待pending仅经源码核对，未作实际取消测试。bundle验证官方空profile组合，tgz探针覆盖独立消费安装。Windows完整官方CLI/Web试装见[T006d](development/T006d-installation.md)。真实DSH模型自主调用／提炼、Desktop及其他平台完整应用仍为G05，不得由fixture Agent替代。
 
 ## 8. 来源验证管线
 
@@ -397,6 +397,16 @@ Codex进程预算／取消／后代管道有专门测试；超时、缺完成、
 
 关键取舍：薄适配降低DSH耦合；SQLite便于本地事务／审计；精确条件宁可拒绝；独立验收不由模型自证；BM25便于小数据解释；恢复为候选避免历史证明误继承。代价是泛化保守、自动体验未完成、并发／大库／环境重建能力有限。
 
+| 当前选择 | 比较过的替代方向 | 维持当前选择的依据／重新考虑条件 |
+|---|---|---|
+| 本地SQLite＋核心服务 | DSH专用存储或云数据库 | 核心可脱离DSH验证、事务与历史可查；团队同步需求出现时另设计 |
+| 显式任务工具 | 按idle或turn直接判断成功 | 可核对归属且不自证成功；G01/G03具备证据与恢复后再自动化 |
+| 精确hash条件＋BM25 | 语义版本范围、embedding、学习排序 | 少数据可解释，优先暴露错误；独立误选/漏选证据支持后再比较 |
+| 临时Git快照 | 容器或系统强沙箱 | 当前受信任代码可验证；不满足恶意代码隔离，G08按威胁模型决定 |
+| 独立loopback面板 | DSH原生经验管理组件 | 当前功能可独立验收；G05验证官方UI扩展面与完整用户流程后再选 |
+
+这些是现有决策及重新评估条件，不在T009替换存储、算法、隔离或UI架构。
+
 ## 15. 需求到实现与验证的追踪
 
 ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范围表示其中每个ID都受该行约束。`test/`文件是现有检查，**只证明已实现部分**，G列标出的目标仍未通过。实际运行状态读任务验收／当前PR CI，不由表内文件名推断。
@@ -417,14 +427,14 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | C04 | §5.4、12 | core仅task／proof | G01/G02逐条引用 |
 | C05 | §5.3、14，cleanEvidence | core清理后证明 | G07纠正保护 |
 | C06 | §5.1、8，snapshot | repository、core scope | 条件充分性待评价 |
-| E01–E02 | §5.2、12，Candidate／propose | core严格模式／候选拒选 | G02文字核对 |
+| E01–E02 | §5.2、12，Candidate／propose | domain严格schema源码核对；core候选拒选 | G02文字核对 |
 | E03 | §3、5、12 | core条件边界 | G02提炼约束 |
 | E04–E05 | §5.4、10、12 | 尚无自动提取测试 | G02/G03授权／预算／幂等 |
 | V01–V02 | §8，verifyRepair | core信任／隔离 | G08强隔离 |
 | V03–V04 | §8.2，verifiedCases／passes | core失败身份／skip／无收集 | 受信任pytest |
 | V05 | §5.2、8 | core报告／demo | G06独立公开重建 |
-| V06 | §8.3、10 | core超时／dsh取消 | G03/G08耐久Attempt／进程树 |
-| V07 | §5.3、8，service.verify | core／panel版本冲突路径 | 无后台Job |
+| V06 | §8.3、10 | core仅timeout标志解析判断；取消/材料变动保护经源码核对 | 实际pytest超时/DSH取消未专项运行；G03/G08耐久Attempt/进程树 |
+| V07 | §5.3、8，service.verify | core正常验证；事务内revision guard经源码核对 | panel stale仅覆盖生命周期；verify运行中竞争未专项执行 |
 | S01 | §9.1，applicability | core依赖／代码、retrieval | G09主动过时 |
 | S02 | §9.1，service.select | core、retrieval | G03跨进程唯一 |
 | S03 | §9，reason／retrievalPolicy | retrieval、paired策略检查 | G04完整决策快照 |
@@ -445,7 +455,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | D05 | §5.3 | migration | 不支持旧程序混跑 |
 | I01 | §1、7.3 | bundle／dsh／install-probe、T006d | 版本固定 |
 | I02 | §3、7.2 | dsh、core真实pytest | 运输状态非验收 |
-| I03 | §7.3、10 | dsh官方卸载 | G03断电恢复 |
+| I03 | §7.3、10 | dsh官方卸载移除工具/prompt；pending取消经源码核对 | 实际pending取消未专项运行；G03断电恢复 |
 | I04 | §7.3、14 | T006d范围说明 | G05真实DSH／其他平台 |
 | Q01–Q02 | §13 | evaluation、paired、feedback-experiment | G06真实／公开重建 |
 | Q03 | §13 | evaluation未知／feedback recurrence | G06/G10人工／误用观测 |
