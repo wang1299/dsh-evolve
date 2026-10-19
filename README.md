@@ -19,7 +19,8 @@
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
 - 检索：T008a加入长任务BM25、弱匹配拒绝和版本化策略；普通检索对照使用同一算法。36条预先冻结合成查询的召回/误选/漏选与成本全部保留，尚不能证明Agent收益。见[离线诊断](docs/evaluation/retrieval-v1.md)。
 - 反馈记忆：当前版本的已接受应用可提供最多8个备用检索表述；原文都不匹配时才尝试。owner标记“不相关”后，同一完整任务表述不再收到该经验；策略错误/反例仍停用版本。见[反馈检索设计](docs/decisions/010-feedback-retrieval.md)。
-- 验证：T008b的39项本地检查通过；此前PR #20的37项两平台CI、实际安装和独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
+- 真实初步对照：1次积累通过后，两个新合成任务各运行三组，共7次真实Codex调用。Evolve两题均提供反馈经验，三组验收均2/2，未观察到成功率或复发率改善，增加输入成本；任务作者可见，只有一次重复。见[结果与限制](docs/development/T008c-acceptance.md)。
+- 验证：T008b已由PR #22完成39项两平台CI/实际安装和独立评审；T008c执行头44项本地及两平台CI、实际安装通过，两项预审阻塞已修复并复审。最终交付头见[PR #24](https://github.com/wang1299/dsh-evolve/pull/24)及[本轮记录](docs/development/status.md)，不以历史检查代替当前头验证。
 - GitHub：公开仓库已建立，任务Issue与聚焦PR正在依次推进。
 - npm、GitHub Release、线上部署：未发布。
 
@@ -63,6 +64,8 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 
 本地Codex CLI复用已有登录，以只读分析、结构化修复、宿主受限写入和外部pytest检查经验闭环。`codex-demo -- --live`显式开启真实模型，最多三次调用；显式续跑另计，默认及CI不调用模型。
 
-历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。本轮交付没有重新调用模型或上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合。
+历史真实合成案例中，来源与baseline通过；evolve超时、首次续跑格式失败，收紧输出契约后第二次续跑通过。失败及资格修复前的历史两次续跑均保留，预算不等，不能判断经验收益。该阶段GitHub交付未重跑模型；后续T008c新增调用另列，不上传原始模型／学习报告。见[执行说明](docs/codex-runner.md)和[历史验收](docs/development/T006b-acceptance.md)。它不替代真实DSH模型回合。
 
 新增`paired-evaluation -- --live --source-evidence <本地合成来源报告> --source-digest <SHA256>`配方：固定请求模型／推理／CLI版本，每组一次调用、失败不重试。v2记录原子资格、冻结经验库、精确引用及独立验收；温度／seed／服务端权重及token／金额硬限未知，不补造控制。历史首轮没有经验暴露，结果保留；后续同一配方缺少经验时，在调用前停止。检索漏选由[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)跟进。
+
+`feedback-evaluation`为另行冻结的feedback-v1小实验，v3记录积累应用的真实验收与反馈链、两个新合成转移目标和最多7次新调用。支持0调用prepare-only和明确不算模型的process-fixture模式，live需要显式开启并消费一次性协议资格；v1/v2和历史结果不改写。当前执行/失败/限制见[T008c记录](docs/development/T008c-acceptance.md)，不能从准备或夹具结果宣称Agent收益。
