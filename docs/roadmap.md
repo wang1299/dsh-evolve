@@ -18,7 +18,7 @@
 | T008b 有来源的反馈检索记忆 | T008a | PR #22已合并，39项两平台CI/实际安装/独立评审通过，不属于收益实验 | codex/t008b-feedback-retrieval，Issue #21关闭 |
 | T008c feedback-v1真实模型初步对照 | T008b,T006c | 7/7次真实调用，积累通过、两题三组均2/2，Evolve提供经验但无验收改善；PR #24经44项两平台CI/实际安装/独立评审合并，Issue #23关闭 | codex/t008c-feedback-evaluation |
 | T009 详细需求与架构基线 | T001及当前实现/验证 | PR #28经当前头两平台CI与独立评审合并，Issue #27关闭；58项需求、15场景与G01–G10追踪 | codex/t009-design-baseline |
-| T010 事实来源与历史保留 | T009，G01/G07切片 | SQLite v3最小证据/逐条引用、evidence-v1默认资格、六工具与面板；本地52项及界面通过；当前头CI/包安装/独立评审见关联PR | codex/t010-evidence-provenance，Issue #29 |
+| T010 事实来源与历史保留 | T009，G01/G07切片 | SQLite v3最小证据/逐条引用、evidence-v1默认资格、六工具与面板；本地53项及界面通过；来源相同幂等，完整已验证来源锁定；当前头CI/包安装/独立评审见关联PR | codex/t010-evidence-provenance，Issue #29 |
 
 远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26/#28已squash合并。当前交付T010事实来源与保留（Issue #29），实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
 

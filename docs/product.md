@@ -116,7 +116,7 @@ flowchart LR
 
 Agent显式调用`evolve_begin_task`；同session同时仅一个open任务。记录纠正，提交修复，`evolve_propose_experience`提交候选，`evolve_verify_experience`验证。不要求结束任务后才能提候选；结束只关闭采集／选择边界。
 
-验证比较任务起始commit与当前修复HEAD，用owner提供的外部pytest。另一任务begin在共享开启时尝试选择，返回精确版本、应用及原因。纠正与验证返回来源凭据，候选返回事实摘要；`evolve_link_fact_evidence`关联同任务来源并追加新revision。默认evidence-v1要求每条事实有完整有效引用。用户在面板查看/关联事实来源、追加反馈、修订、停用或恢复。当前没有自动证据归并、后台LLM提炼或模型可写owner反馈的工具。
+验证比较任务起始commit与当前修复HEAD，用owner提供的外部pytest。另一任务begin在共享开启时尝试选择，返回精确版本、应用及原因。纠正与验证返回来源凭据，候选返回事实摘要；`evolve_link_fact_evidence`关联同任务来源：相同集合幂等；来源完整且已验证时锁定，owner须检查反馈并显式内容修订后才可更换；其他来源变化追加新revision。默认evidence-v1要求每条事实有完整有效引用。用户在面板查看/关联事实来源、追加反馈、修订、停用或恢复。当前没有自动证据归并、后台LLM提炼或模型可写owner反馈的工具。
 
 ### 4.4 异常与人工接管
 
@@ -146,7 +146,7 @@ Agent显式调用`evolve_begin_task`；同session同时仅一个open任务。记
 
 Task只有`open/closed`；closed不表示通过。经验只有`candidate/source_verified/disabled`。“过时”“正在验证”“有益”不是现行枚举；漂移目前只影响选择资格。
 
-内容修订、恢复、停用和验证结果产生新revision。仅更新事实引用也产生新revision，文字不变时保留已有修复证明及状态；不继承旧版反馈效用。恢复复制旧内容到新候选并清空验证引用；不能激活旧证明。反馈指向实际Application的revision，旧版反例不能停用新版。
+内容修订、恢复、停用和验证结果产生新revision。相同事实引用保存保留原revision及反馈；来源完整且已验证的经验拒绝来源变化，避免仅靠元数据修订绕过负反馈。owner须检查反馈并显式内容修订后再编辑。其他真实来源变化产生新revision并保留当时状态/证明；候选/停用不因此获得验证资格。恢复复制旧内容到新候选并清空验证引用；不能激活旧证明。反馈指向实际Application的revision，旧版反例不能停用新版。
 
 事实正文仍是字符串数组，引用按经验revision保存在侧表。每条事实最多3个来源；校验fact hash、证据hash、task/repo及来源完整性。“来源已验证”仍仅指修复运行；引用不证明自然语言主张被来源蕴含，语义核对仍为G02。旧数据无引用时可查看/重验，但默认不会自动复用。
 

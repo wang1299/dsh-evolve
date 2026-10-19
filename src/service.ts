@@ -79,6 +79,11 @@ export class EvolveService {
       const old = this.requireExperience(id);
       if (old.revision !== expectedRevision) throw new RevisionConflict();
       const citations = validateCitations(this.store, old, input);
+      const normalized = (items: typeof citations): string => JSON.stringify([...items].sort((a, b) => a.factIndex - b.factIndex || a.evidenceId.localeCompare(b.evidenceId)));
+      if (normalized(citations) === normalized(this.store.citations(id, old.revision))) return old;
+      if (old.status === 'source_verified' && this.provenance(old).complete) {
+        throw new Error('Sources are locked for a verified experience with complete provenance; the owner must explicitly revise before changing sources');
+      }
       const next: Experience = { ...old, revision: old.revision + 1,
         reason: 'Source references updated; citations do not certify claim semantics', createdAt: new Date().toISOString() };
       this.store.putExperience(next, citations); return next;

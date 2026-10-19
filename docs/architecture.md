@@ -183,7 +183,7 @@ stateDiagram-v2
 
 停用操作也可对disabled再追加版本；禁止直接验证disabled，须先修订／恢复。restore复制历史内容／scope到新candidate，verificationId=null；没有代码回滚。修订保留sourceTaskId，当前不支持把经验重新绑定另一来源任务／起始commit。
 
-仅更新来源的linkEvidence追加新revision但保持文字、状态及既有修复证明；不会重新pytest，也不继承旧版反馈。内容revise默认清空引用；显式传入且文本/来源匹配才接纳。verify/disable复制本版引用，restore复制目标版引用并重查，但仍candidate/verificationId=null。详见ADR013。
+linkEvidence规范化比较引用集，相同则返回原revision、保留反馈。source_verified且事实来源完整时拒绝变化，DSH无内容修订工具，owner须检查反馈后显式revise为candidate。其余来源变化追加新revision，保持文字/状态/既有修复证明；不会重新pytest或给候选/停用提权。来源pytest重验不能消除后续任务反例，跨UUID重复候选仍属E05。内容revise默认清空引用；显式传入且文本/来源匹配才接纳。verify/disable复制本版引用，restore复制目标版引用并重查，但仍candidate/verificationId=null。详见ADR013。
 
 Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、correction、select需open；propose与verify允许已有closed来源任务。重复begin报错，重复select在已有应用后返回空与`already_applied_one_experience`，不会重发同一上下文。
 
@@ -208,7 +208,7 @@ Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、
 | evolve_record_correction | taskId,note:string | recorded:true,evidence:{evidenceId,evidenceDigest,kind} | open任务的脱敏最小证据与仅含引用ID的事件，同事务 |
 | evolve_propose_experience | taskId,candidate:json,citations?:json | experienceId,revision,status,facts:[{factIndex,factDigest}] | Candidate不变，引用在外层可选；同事务写候选/引用 |
 | evolve_verify_experience | experienceId:string | experienceId,revision,status,verificationId,facts,evidence | owner固定策略；新增最小报告来源；不授予文字真值 |
-| evolve_link_fact_evidence | experienceId:string,revision:number,citations:json | experienceId,revision,status,provenance | 同session/repo，拒绝陈旧/错误摘要/越界等，来源更新成新revision |
+| evolve_link_fact_evidence | experienceId:string,revision:number,citations:json | experienceId,revision,status,provenance | 同session/repo，拒绝陈旧/错误摘要/越界等；相同引用幂等，完整已验证来源锁定 |
 
 没有反馈、配置提权、任意命令或发布工具。反馈由owner面板／可信核心调用追加；核心API本身不提供外部身份认证。
 
@@ -318,7 +318,7 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 | begin | 查open后新UUID、写Task | 重复报错；无幂等key／后台重建 |
 | event | events.id冲突忽略 | 同key不同载荷不会诊断 |
 | propose | 新UUID＋revision1，引用校验/历史/当前/引用同事务 | 重复提交仍可能生成不同经验 |
-| linkEvidence | expectedRevision＋完整新引用集；原子追加版本 | 无部分写入；引用不足不满足默认资格，状态仍仅描述修复 |
+| linkEvidence | expectedRevision＋完整引用集；相同幂等，其余允许变化原子追加 | 完整已验证来源锁定；无部分写入；来源不足不满足默认资格 |
 | verify | 异步运行后重查revision；报告＋新版本同事务 | 版本已变拒绝；进程中断无Job可恢复 |
 | select | 顺序检查已有Application后写入 | 重复返回空；跨进程／交付裂缝未解决 |
 | feedback | 同id同payload幂等；不同payload报错；停用同事务 | 更正需新id追加，按rowid而非时钟排序 |
@@ -357,7 +357,7 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 | POST /api/feedback | Feedback去createdAt→追加Feedback | 严格schema，未知应用拒绝 |
 | POST /api/cleanup | {}→removedEventSummaries,removedUnreferencedSources | 事务清理30天前事件及未被任何历史版引用的来源 |
 | POST /api/experience/:id/revise | revision,reason,candidate,citations?→新candidate | 默认清空引用；UI保留未变事实引用；stale 409 |
-| POST /api/experience/:id/evidence | revision,citations→新revision | 只改来源，保留文字/修复证明，stale 409 |
+| POST /api/experience/:id/evidence | revision,citations→当前或新revision | 相同幂等；完整已验证来源锁定，owner须先检查反馈并显式修订；stale 409 |
 | POST /api/experience/:id/disable | revision,reason→新disabled | stale 409 |
 | POST /api/experience/:id/restore | revision,targetRevision,reason→新candidate | 不直接激活旧证明 |
 
@@ -499,7 +499,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 - 编号需求／黄金场景→任务Issue→codex分支→必要失败用例→实现→相关检查→Draft PR→稳定SHA独立只读评审→修复／必要复审→CI及保护检查→squash合并。
 - 格式／公开工具／HTTP／授权／生命周期／执行边界变化先写ADR，说明兼容、迁移、失败恢复及验收；普通实现细节不机械审批。
 - 当前CI在Windows／Ubuntu固定Node24.19.0、Python3.10、pytest9.1.1，执行check、官方兼容、demo、pack及真实tgz组件安装；这不是完整发行应用或模型收益验收。
-- T009为历史纯文档交付。T010代码/迁移/接口变更执行52项本地检查、官方六工具/面板/真实Git-pytest、包安装及当前头CI，并由独立Agent审稳定SHA；没有新模型调用、完整Web安装重跑或收益结论。
+- T009为历史纯文档交付。T010代码/迁移/接口变更执行53项本地检查、官方六工具/面板/真实Git-pytest、包安装及当前头CI，并由独立Agent审稳定SHA；没有新模型调用、完整Web安装重跑或收益结论。
 - 独立AI评审须写SHA、基线、范围、证据与影响，不充当GitHub正式批准；P0/P1及影响当前验收／数据／安全／主要路径的可复现P2必须修。
 - 计划、实现、验证、发布分别更新；不凭CI历史或测试数量合并，不上传私人报告、凭据或真实用户会话。
 

@@ -169,3 +169,29 @@ test('altered verification material invalidates cited facts and default reuse', 
     assert.equal(store.experience(linked.id)?.revision, linked.revision);
   } finally { store.close(); }
 });
+
+test('source-only edits cannot erase relevance feedback or a late counterexample on a reusable experience', { timeout: 60000 }, async () => {
+  const f = await fixture(); const store = new Store(':memory:'); const service = new EvolveService(store, f.repo, policy(f.acceptance, true));
+  try {
+    const task = service.begin('source', candidate.title);
+    const a = service.correction(task.id, 'Restore state.'); const b = service.correction(task.id, 'Check rollback.');
+    const refs = [citeFact(a, candidate.observedFacts[0]!), citeFact(b, candidate.observedFacts[0]!)];
+    await f.fix(); const verified = await service.verify(service.propose(task.id, candidate, refs).id); service.finish(task.id);
+    const summary = 'transaction rollback exception documentation';
+    const app = service.select(service.begin('applied', summary).id).application!; assert.ok(app);
+    service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'irrelevant', note: 'Wrong task context.', extraCost: null, humanRework: null });
+    assert.equal(service.select(service.begin('excluded', summary).id).experience, null);
+    const unchanged = service.linkEvidence(verified.id, verified.revision, [...refs].reverse());
+    assert.equal(unchanged.revision, verified.revision, 'Unchanged references must not create a clean feedback revision');
+    assert.equal(service.select(service.begin('still-excluded', summary).id).experience, null);
+    assert.throws(() => service.linkEvidence(verified.id, verified.revision, [refs[0]!]), /locked/);
+    assert.throws(() => service.linkEvidence(verified.id, verified.revision, []), /locked/);
+    assert.equal(store.history(verified.id).length, 2);
+    service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'counterexample', note: 'A later task disproves this strategy.', extraCost: null, humanRework: null });
+    assert.equal(store.experience(verified.id)?.status, 'disabled');
+    assert.equal(service.select(service.begin('after-counterexample', candidate.title).id).experience, null);
+    const disabled = store.experience(verified.id)!;
+    const maintenance = service.linkEvidence(disabled.id, disabled.revision, [refs[0]!]);
+    assert.equal(maintenance.status, 'disabled', 'source maintenance cannot reactivate a stopped experience');
+  } finally { store.close(); }
+});

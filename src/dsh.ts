@@ -33,6 +33,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
       + 'Candidates separate observedFacts, inferences and recommendations, and include title, strategy, requiredFiles. '
       + 'Correction and verification return source receipts; propose returns fact digests. Use optional citations or evolve_link_fact_evidence to bind exact facts to same-task sources. '
       + 'Default reuse requires every fact to have a valid source. A citation proves provenance, not semantic truth; unsupported claims remain fallible. '
+      + 'Identical citations are idempotent. Sources of a verified experience with complete provenance are locked; changes require an explicit owner revision, not a metadata-only feedback reset. '
       + 'Use evolve_verify_experience only after a repair commit exists and the owner configured trusted execution. '
       + 'Idle or normal completion is not acceptance. Experience is fallible context; check applicability and independent tests. '
       + 'Feedback acceptance is recorded by the owner in the local panel; never fabricate it. '
@@ -86,7 +87,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     },
   }));
   ctx.tools.register(defineTool({
-    name: 'evolve_link_fact_evidence', description: 'Bind existing same-task source receipts to unchanged facts in an exact revision. Creates a new revision; citations do not certify claim semantics.',
+    name: 'evolve_link_fact_evidence', description: 'Bind same-task source receipts to exact facts. Identical citations are idempotent. Verified experiences with complete sources are locked; only incomplete, candidate or disabled records can change sources. Citations do not certify claim semantics.',
     parameters: { experienceId: { type: 'string', required: true }, revision: { type: 'number', required: true }, citations: { type: 'json', required: true } }, output,
     async execute(args, exec) {
       const e = service.requireExperience(args.experienceId); service.requireTask(e.sourceTaskId, sessionFor(exec));

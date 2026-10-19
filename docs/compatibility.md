@@ -16,11 +16,11 @@ Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描�
 
 - 真实DSH模型会话中的自主调用、候选提取质量和经验收益。
 - Desktop发行应用安装器、其他平台完整CLI/Web安装及跨版本兼容；Windows固定CLI/Web的已验证范围如上。
-- T010本地52项及六工具兼容通过，当前头两平台CI/实际tgz及独立评审见关联PR与[T010验收](development/T010-acceptance.md)。T006d完整Web为历史安装包，不自动扩展到本轮新代码；组件CI不等于真实DSH模型回合。
+- T010本地53项及六工具兼容通过，当前头两平台CI/实际tgz及独立评审见关联PR与[T010验收](development/T010-acceptance.md)。T006d完整Web为历史安装包，不自动扩展到本轮新代码；组件CI不等于真实DSH模型回合。
 
 ## 数据与工具兼容（T010）
 
-SQLite user_version=3，事务创建最小evidence与fact_citations，保留v2全部旧JSON/历史/报告；v1继续原有报告身份降级再迁移。旧库缺逐条引用时默认evidence-v1拒绝自动复用，不改写source_verified修复状态。旧SQLite2程序会拒绝v3，不支持混跑或直接降级；本机既有完整DSH预览安装未自动更新，禁止把用户库拿来做破坏性测试。
+SQLite user_version=3，事务创建最小evidence与fact_citations，保留v2全部旧JSON/历史/报告；v1继续原有报告身份降级再迁移。旧库缺逐条引用时默认evidence-v1拒绝自动复用；v2不改写source_verified修复状态，v1沿用降级重验迁移。旧SQLite2程序会拒绝v3，不支持混跑或直接降级；本机既有完整DSH预览安装未自动更新，禁止把用户库拿来做破坏性测试。
 
 Task/Experience v1、Verification v2和历史评价格式不变。新增evolve_link_fact_evidence及现有工具的来源/事实摘要receipt是增量接口。Candidate自身模式不变，propose工具另有可选citations。冻结Codex脚本固定原策略；本轮没有新模型调用，不宣称evidence-v1收益。引用只证明出处一致，不认证文字真值。详见[ADR013](decisions/013-fact-evidence.md)。
 
