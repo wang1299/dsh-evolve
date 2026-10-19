@@ -1,0 +1,14 @@
+{
+  "kind": "authored-feedback-development-scenarios",
+  "schemaVersion": 1,
+  "cases": [
+    {"id":"bridge","seed":"transaction rollback: a rejected payment corrupts account totals; preserve prior monetary values when processing aborts","query":"a rejected payment corrupts account totals; preserve prior monetary values when processing aborts","feedback":"accepted","expected":"fallback_with_provenance"},
+    {"id":"unknown","seed":"transaction rollback: a rejected payment corrupts account totals","query":"a rejected payment corrupts account totals","feedback":"unknown","expected":"abstain"},
+    {"id":"exact-negative","seed":"Translate transaction rollback exception documentation heading","query":"  TRANSLATE transaction rollback exception documentation heading  ","feedback":"irrelevant","expected":"abstain_without_disable"},
+    {"id":"different-intent-wording","seed":"Translate transaction rollback exception documentation heading","query":"Rename transaction rollback exception manual section","feedback":"irrelevant","expected":"may_still_offer_known_limitation"},
+    {"id":"override","seed":"transaction rollback: a rejected payment corrupts account totals","query":"transaction rollback: a rejected payment corrupts account totals","feedback":"irrelevant_then_accepted","expected":"unblock_with_history"},
+    {"id":"strategy-counterexample","seed":"transaction rollback exception","query":"transaction rollback exception","feedback":"counterexample","expected":"disabled"},
+    {"id":"revision","seed":"transaction rollback: a rejected payment corrupts account totals","query":"a rejected payment corrupts account totals","feedback":"accepted_then_new_revision","expected":"old_alias_not_inherited"},
+    {"id":"scope","seed":"transaction rollback: a rejected payment corrupts account totals","query":"a rejected payment corrupts account totals","feedback":"accepted_then_dependency_change","expected":"abstain"}
+  ]
+}
