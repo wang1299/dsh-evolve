@@ -19,12 +19,13 @@ const numeric = (value: unknown): number | null => Number.isSafeInteger(value) ?
 const fields = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens'] as const;
 
 /** Usage diagnostics only: no provider text, arbitrary field names or identifiers escape. */
-export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: number; maxOutputTokens: number }): UsageAnalysis {
+export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: number; maxOutputTokens: number },
+  policy: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1'): UsageAnalysis {
   const snapshots: UsageSnapshot[] = []; let otherEvents = 0;
   const result = (reason: UsageReason, usage: UsageAnalysis['usage'] = null): UsageAnalysis => ({ reason, usage, snapshots, otherEvents });
   if (Buffer.byteLength(body) > 1024 * 1024) return result('response_bound');
   let started = false; let stopped = false; let final = false; let finalOutput = false;
-  let input = 0; let output = 0; let cached = 0; let written = 0;
+  let input = 0; let output = 0; let cached = 0; let written = 0; let inputHighWater = 0;
   const normalized = body.replace(/\r\n|\r/g, '\n'); const frames = normalized.split('\n\n');
   const tail = frames.pop()!;
   try {
@@ -62,7 +63,7 @@ export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: num
         if (usage) for (const [key, previous] of [['input_tokens', input], ['output_tokens', output], ['cache_read_input_tokens', cached], ['cache_creation_input_tokens', written]] as const) {
           if (usage[key] === undefined) continue;
           const next = numeric(usage[key]); if (next === null || next < 0) return result('invalid_delta_usage');
-          if (next < previous) return result('counter_decreased');
+          if (next < previous && (policy === 't011-conservative-v1' || key === 'output_tokens')) return result('counter_decreased');
           if (key === 'input_tokens') input = next; else if (key === 'output_tokens') output = next;
           else if (key === 'cache_read_input_tokens') cached = next; else written = next;
         }
@@ -74,10 +75,11 @@ export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: num
         if (!started || !final) return result('stop_before_final'); stopped = true;
       }
       if (input + cached + written > limits.maxInputTokens || output > limits.maxOutputTokens) return result('usage_bounds');
+      inputHighWater = Math.max(inputHighWater, input + cached + written);
     }
     if (tail.split('\n').some((line) => line.startsWith('data:'))) return result('incomplete_frame');
     if (!stopped) return result('missing_stop');
     if (!finalOutput) return result('missing_final_output');
-    return result('complete', { input: input + cached + written, output });
+    return result('complete', { input: inputHighWater, output });
   } catch { return result('invalid_json'); }
 }

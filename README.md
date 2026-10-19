@@ -15,6 +15,7 @@
 - 需求与架构：v0.2细化为58项编号需求、15个黄金验收场景、模块/数据/状态/接口/异常契约和完整追踪表；实现与目标分列，后续缺口见[架构总纲](docs/architecture.md)。T009交付门槛见[设计验收](docs/development/T009-design-acceptance.md)及关联PR。
 - 核心功能：已实现来源验证、候选与作用域选择、反馈及经验版本。T010新增按事实/经验版本绑定的纠正与测试来源、摘要/归属检查及历史引用保留；默认evidence-v1拒绝事实来源不完整的经验。见[设计](docs/decisions/013-fact-evidence.md)与[验收](docs/development/T010-acceptance.md)。
 - DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。正常DSH完整学习闭环、Desktop及其他平台完整应用仍待验证；真实SDK回合的partial结果见[T011记录](docs/development/T011-acceptance.md)，安装见[试装记录](docs/development/T006d-installation.md)。
+- 追加真实DSH回归：用户另授权最多5元后，T015实际执行一次、2个HTTP；两条计费回执在起始usage结构处保守拒绝，预算unknown预留使后续停止，经验/复用仍未完成。SDK保守估算0.009626元不是账单或原账本结算，见[T015失败与后续缺口](docs/development/T015-acceptance.md)。
 - 原生Agent演练：新增`npm run dsh-rehearsal`，用真实AgentLoop和固定脚本响应回归经验保存/验证/引用/新会话复用/独立验收反馈；包含四个负路径，零付费。脚本模型不证明真实模型学习，见[T014记录](docs/development/T014-acceptance.md)。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
