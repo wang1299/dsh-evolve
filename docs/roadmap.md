@@ -22,10 +22,11 @@
 | T011 有预算真实DSH验证 | T010、独立宿主、用户Key/5元 | 实际4请求、源码事后pytest通过；候选引用失败，预算unknown保留，partial；59项两平台代码CI通过，最终门槛见PR | codex/t011-dsh-live-validation，Issue #31 / PR #32 |
 | T012 模型可见引用契约 | T010/T011 | 原生嵌套schema、引用顺序和错误重放；59项两平台CI/独立评审通过，已合并PR #35；不声明模型修复效果 | codex/t012-tool-input-contract，Issue #33关闭 |
 | T013 数值用量回执 | T011/T012 | 已合并PR #36，65项两平台CI/必要增量独立复审；数值回执离线完成，真实采样待做；不回填旧unknown | codex/t013-numeric-receipts，Issue #34保持open |
-| T014 原生Agent脚本演练 | T010–T013 | 真实AgentLoop＋固定脚本适配器完成来源/复用/验收反馈，四个负路径拒绝；零付费，不是模型或收益证据 | codex/t014-agent-rehearsal，Issue #37 |
+| T014 原生Agent脚本演练 | T010–T013 | 已合并PR #38，Issue #37关闭；5场景、70项两平台CI及必要独立复审，零付费，不是模型或收益证据 | codex/t014-agent-rehearsal |
+| T015 追加预算真实学习回归 | T012–T014、用户另授权5元 | Draft PR #40 / Issue #39；75项本地检查与compat2通过，独立评审/实际安装/新一次真实运行待完成 | codex/t015-live-learning |
 
-远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26/#28/#30已squash合并。当前推进T014原生Agent脚本演练（Issue #37，零付费），T011首次真实模型仍为partial，实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
+远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26/#28/#30已squash合并。当前推进T015追加5元真实学习回归（Issue #39 / Draft PR #40），T011首次真实模型仍为partial，实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
 
-后续实现从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)拆出独立任务。T010仅完成G01/G07显式来源切片，自动错误尝试归并/提炼、耐久协调、彻底遗忘仍未完成；继续G03/G02、G04、G05，G06独立重建/收益评价，G08/G09/G10按风险推进。优先跟进真实失败#33（引用契约，离线实现见[T012](development/T012-acceptance.md)）/#34（[用量数值回执](development/T013-acceptance.md)，离线实现），用户再次确认暂不新增预算，继续离线开发。父Issue #8/#15保持open。
+后续实现从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)拆出独立任务。T010仅完成G01/G07显式来源切片，自动错误尝试归并/提炼、耐久协调、彻底遗忘仍未完成；继续G03/G02、G04、G05，G06独立重建/收益评价，G08/G09/G10按风险推进。优先跟进真实失败#33（引用契约，离线实现见[T012](development/T012-acceptance.md)）/#34（[用量数值回执](development/T013-acceptance.md)，离线实现），用户已在原预算之外明确新增最多5元，设计[ADR018](decisions/018-supplemental-live-validation.md)、执行与限制见[T015验收](development/T015-acceptance.md)；旧实验/未知预留不改，真实结果待记录。父Issue #8/#15保持open。
 
 已有Codex真实合成接入；未见真实任务集的收益实验仍未完成，历史两组预算不等，不能据此判断收益。GitHub main当前无保护及ruleset，未修改权限或伪造正式Review；仍按验收、必要CI与AI独立评审条件合并。
