@@ -4,6 +4,8 @@
 
 T008a起retrieval/evolve均使用同一BM25文本策略（普通检索不做来源/作用域/效用），并更新policyDigest；历史v1覆盖策略记录继续可评价，组内不可混用。离线四种消融、36条合成查询和全部错误见[检索诊断](evaluation/retrieval-v1.md)，不是新的Agent三组收益结果。本次没有追加模型调用。
 
+T008b产品默认增加owner反馈备用表述/精确拒绝，现有冻结Codex配方仍显式固定bm25-v1，不悄悄改为feedback-v1，含irrelevant标签的库会在调用前被旧选择器拒绝。经验库新摘要加入有反馈应用的任务摘要/作用域，已有报告不改写。反馈夹具是已见开发测试；新策略需要新的明确配方和真实对照，本轮不运行模型。
+
 以时间或任务族拆分经验积累任务和未见任务。冻结模型、版本、提示、任务集、每任务预算、随机种子、环境、验收脚本摘要。优化与选择不能查看未见验收答案。三组从相同干净代码快照运行，独立验收在 Agent 不可修改目录中；不能仅依靠提示词要求 Agent 不修改测试。
 
 逐条记录：taskId、split、arm、model、budget、environmentDigest、acceptanceDigest、accepted、sameErrorRecurred、humanRework、wrongExperienceApplied、extraCost、experienceIds、runId。缺失项为 unknown，不补零。成本必须含经验提取、验证、检索和模型使用，不只看最终执行。

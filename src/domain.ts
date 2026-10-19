@@ -70,7 +70,7 @@ export const applicationSchema = z.object({
 }).strict();
 export type Application = z.infer<typeof applicationSchema>;
 export const feedbackSchema = z.object({
-  id: idSchema, applicationId: idSchema, outcome: z.enum(['accepted', 'rejected', 'counterexample', 'unknown']),
+  id: idSchema, applicationId: idSchema, outcome: z.enum(['accepted', 'rejected', 'counterexample', 'irrelevant', 'unknown']),
   note: textSchema, extraCost: z.number().finite().nonnegative().nullable(),
   humanRework: z.number().int().nonnegative().nullable(), createdAt: z.string().datetime(),
 }).strict();

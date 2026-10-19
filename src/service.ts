@@ -6,6 +6,7 @@ import { candidateSchema, feedbackSchema, idSchema, redact, textSchema, Revision
   type Application, type Candidate, type Experience, type Feedback, type Scope, type Task } from './domain.js';
 import { verifyRepair, type VerificationPolicy } from './verification.js';
 import { rankText, retrievalPolicy } from './retrieval.js';
+import { contextKey, feedbackMemory, rankFeedback, type ContextEvidence } from './feedback-retrieval.js';
 
 function cleanCandidate(value: unknown): Candidate {
   const item = candidateSchema.parse(value);
@@ -80,12 +81,13 @@ export class EvolveService {
   requireExperience(id: string): Experience {
     const value = this.store.experience(idSchema.parse(id)); if (!value) throw new Error('Unknown experience'); return value;
   }
-  select(taskId: string): { application: Application | null; experience: Experience | null; reasons: string[] } {
+  select(taskId: string, mode: 'feedback-v1' | 'bm25-v1' = 'feedback-v1'): { application: Application | null; experience: Experience | null; reasons: string[] } {
+    z.enum(['feedback-v1', 'bm25-v1']).parse(mode);
     const task = this.requireTask(taskId); if (task.state !== 'open') throw new Error('Task is closed');
     if (this.store.applications().some((a) => a.taskId === task.id)) return { application: null, experience: null, reasons: ['already_applied_one_experience'] };
     const reasons: string[] = [];
     const eligible = new Map<string, { experience: Experience; scope: Scope }>();
-    const ranked: { experience: Experience; score: number; textScore: number; utility: number; anchors: number; scope: Scope }[] = [];
+    const ranked: { experience: Experience; score: number; textScore: number; utility: number; anchors: number; scope: Scope; evidence?: ContextEvidence }[] = [];
     for (const experience of this.store.experiences()) {
       if (experience.sourceTaskId === task.id) { reasons.push(experience.id + ':source_task'); continue; }
       if (experience.status !== 'source_verified') { reasons.push(experience.id + ':' + experience.status); continue; }
@@ -100,21 +102,33 @@ export class EvolveService {
       if (mismatch) { reasons.push(experience.id + ':' + mismatch); continue; }
       eligible.set(experience.id, { experience, scope: current.scope });
     }
-    for (const match of rankText(task.summary, [...eligible.values()].map((e) => e.experience))) {
-      if (match.reason) { reasons.push(match.id + ':' + match.reason); continue; }
+    const memory = mode === 'feedback-v1' ? feedbackMemory(this.store, [...eligible.values()].map((e) => e.experience)) : new Map();
+    for (const [id] of eligible) {
+      const negative = memory.get(id)?.irrelevant.get(contextKey(task.summary));
+      if (negative) { eligible.delete(id); reasons.push(`${id}:owner_irrelevant_context; feedback=${negative.feedbackId}; application=${negative.applicationId}; task=${negative.taskId}`); }
+    }
+    const experiences = [...eligible.values()].map((e) => e.experience);
+    const original = rankText(task.summary, experiences);
+    for (const m of original) if (m.reason) reasons.push(m.id + ':' + m.reason);
+    const originalMatches = original.filter((m) => m.reason === null);
+    const matches: { id: string; score: number; anchors: number; evidence?: ContextEvidence }[] = originalMatches.length || mode === 'bm25-v1'
+      ? originalMatches : rankFeedback(task.summary, experiences, memory);
+    for (const match of matches) {
       const { experience, scope } = eligible.get(match.id)!;
       const uses = new Set(this.store.applications().filter((a) => a.experienceId === experience.id && a.revision === experience.revision).map((a) => a.id));
       const latest = new Map<string, Feedback>();
       for (const feedback of this.store.feedback()) if (uses.has(feedback.applicationId) && feedback.outcome !== 'unknown') latest.set(feedback.applicationId, feedback);
-      const feedback = [...latest.values()];
+      const feedback = [...latest.values()].filter((f) => f.outcome !== 'irrelevant');
       const utility = (feedback.filter((f) => f.outcome === 'accepted').length + 1) / (feedback.length + 2);
-      ranked.push({ experience, score: 0.7 * match.score + 0.3 * utility, textScore: match.score, utility, anchors: match.anchors, scope });
+      ranked.push({ experience, score: 0.7 * match.score + 0.3 * utility, textScore: match.score, utility, anchors: match.anchors, scope,
+        ...(match.evidence ? { evidence: match.evidence } : {}) });
     }
     ranked.sort((a, b) => b.score - a.score || a.experience.id.localeCompare(b.experience.id));
     const selected = ranked[0];
     if (!selected) return { application: null, experience: null, reasons: reasons.length ? reasons : ['no_experiences'] };
     const application: Application = { id: randomUUID(), taskId: task.id, experienceId: selected.experience.id,
-      revision: selected.experience.revision, reason: `Applicable code/dependency scope; ${retrievalPolicy.version}; text=${selected.textScore.toFixed(3)}; utility=${selected.utility.toFixed(3)}; anchors=${selected.anchors}; combined=${selected.score.toFixed(3)}`, createdAt: new Date().toISOString() };
+      revision: selected.experience.revision, reason: `Applicable code/dependency scope; ${mode}; text=${retrievalPolicy.version}:${selected.textScore.toFixed(3)}; utility=${selected.utility.toFixed(3)}; anchors=${selected.anchors}; combined=${selected.score.toFixed(3)}`
+        + (selected.evidence ? `; fallback_owner_accepted_inference; feedback=${selected.evidence.feedbackId}; application=${selected.evidence.applicationId}; task=${selected.evidence.taskId}` : '; original_text'), createdAt: new Date().toISOString() };
     this.store.putApplication(application);
     return { application, experience: selected.experience, reasons: [application.reason] };
   }

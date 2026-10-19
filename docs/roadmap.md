@@ -13,7 +13,8 @@
 | T006 真实Agent实验与完整应用安装 | T003,T004,T005,T006a,T006b | Codex合成接入已有；真实任务收益、DSH模型回合和完整应用安装仍未完成 | Issue #8 |
 | T007 开发工具依赖更新 | 当前功能PR | PR #13已squash合并，13项两平台CI及独立只读评审通过，Issue #12关闭 | codex/t007-tooling |
 | T008 检索覆盖与有效经验对照 | T006c | T008a的BM25及冻结离线诊断已实现、待PR验收；有效模型对照仍未完成 | Issue #15 |
-| T008a 长任务检索与离线消融 | T006c | 数据/方法实现前冻结，开发/合成留出各18查询；报告包括误选和退步，待当前CI和独立评审 | codex/t008-retrieval，Issue #19 |
+| T008a 长任务检索与离线消融 | T006c | PR #20已合并，37项两平台CI/实际安装/独立评审通过；误选和退步保留 | codex/t008-retrieval，Issue #19关闭 |
+| T008b 有来源的反馈检索记忆 | T008a | 已实现accepted备用表述/irrelevant精确拒绝，39项本地检查；当前CI/评审/合并见关联PR，不属于收益实验 | codex/t008b-feedback-retrieval，Issue #21 |
 
 远端：公开仓库wang1299/dsh-evolve。用户已恢复GitHub开发，PR #2/#9/#10/#11/#13/#14/#16/#17/#18已squash合并。当前交付T008a检索诊断，实际CI／评审／合并结果见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)，不以历史检查代替当前头。发布：无。
 
