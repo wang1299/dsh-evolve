@@ -10,12 +10,13 @@ const complete = (): InstalledReport => ({ schemaVersion: 1, kind: 'installed-sc
   targetAccepted: true, feedbackRecorded: true, extractionState: 'candidate', logicalExtractions: 1, scriptedAgentCalls: 11,
   sourceProof: { verified: true, baseFailures: 1, fixedFailures: 0, regressionFailures: 0 },
   targetProof: { verified: true, baseFailures: 1, fixedFailures: 0, regressionFailures: 0 },
-  tools: [{ name: 'evolve_begin_task', isError: false }], counts: { tasks: 2, experiences: 1, applications: 1, feedback: 1 } });
+  tools: [{ name: 'evolve_begin_task', isError: false }, { name: 'evolve_list_candidates', isError: false }], counts: { tasks: 2, experiences: 1, applications: 1, feedback: 1 } });
 
 test('installed learning cannot pass from DB selection without an actual receipt and continued model call', () => {
   const value = complete(); assert.ok(installedReportSchema.safeParse(value).success);
   assert.equal(installedReportSchema.safeParse({ ...value, receiptReturned: false }).success, false);
   assert.equal(installedReportSchema.safeParse({ ...value, modelContinued: false }).success, false);
+  assert.equal(installedReportSchema.safeParse({ ...value, tools: [{ name: 'evolve_begin_task', isError: false }] }).success, false);
 });
 test('source success cannot stand in for target acceptance or allow benchmark feedback', () => {
   const value = complete();

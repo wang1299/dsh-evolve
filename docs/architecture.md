@@ -94,7 +94,7 @@ flowchart TB
 | retrieval.ts | 摘要／候选文字→分数及拒绝 | 纯本地BM25 | 无语义理解／训练 |
 | feedback-retrieval.ts | 同版应用反馈→备用表述／精确排除 | 从本地记录派生，不改经验正文 | 错误accepted可污染 |
 | config.ts | JSON／启动输入→固定service | 解析路径、打开本地库 | 严格字段，默认执行／共享关闭 |
-| dsh.ts | 官方工具／事件→核心调用 | 注册六工具、prompt、监听器 | 不注入llm；真实模型闭环未验证 |
+| dsh.ts | 官方工具／事件→核心调用 | 注册七工具、prompt、监听器；T022只读候选查询和数量context | 不注入llm；真实模型闭环未验证 |
 | panel.ts | 本机HTTP→状态／生命周期操作 | loopback、受保护API | 无任意执行、分页或配置编辑 |
 | cli.ts | panel／evaluate参数→入口 | 本机服务／评价JSON读取 | 不自动学习或发布 |
 | codex-runner.ts | 明确实验请求→受限结构化提案 | 可选只读CLI、有限JSONL元数据 | 不是DSH模型凭据桥梁 |
@@ -218,6 +218,7 @@ v4新增learning_jobs、learning_attempts、learning_job_sources、evidence_bund
 | evolve_finish_task | taskId:string | closed Task | 只关闭边界，不验收 |
 | evolve_record_correction | taskId,note:string | recorded:true,evidence:{evidenceId,evidenceDigest,kind} | open任务的脱敏最小证据与仅含引用ID的事件，同事务 |
 | evolve_propose_experience | taskId,candidate:json,citations?:json | experienceId,revision,status,facts:[{factIndex,factDigest}] | Candidate不变，引用在外层可选；同事务写候选/引用 |
+| evolve_list_candidates（T022） | taskId?:string | total,more,items:最多10条当前自动候选预览；共享关闭仅reason | 强制session/cwd；读取不产生验证、应用、反馈或已读状态 |
 | evolve_verify_experience | experienceId:string | experienceId,revision,status,verificationId,facts,evidence | owner固定策略；新增最小报告来源；不授予文字真值 |
 | evolve_link_fact_evidence | experienceId:string,revision:number,citations:json | experienceId,revision,status,provenance | 同session/repo，拒绝陈旧/错误摘要/越界等；相同引用幂等，完整已验证来源锁定 |
 
@@ -379,6 +380,8 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 DSH Web认证与面板token不同：固定官方Web应从CLI打印的启动URL完成认证bootstrap；新的裸根URL可能401。不能把本机token写到README、PR或截图中。完整安装／模型体验范围见T006d记录。
 
 ## 12. 自动候选提炼的当前契约
+
+T022新增发现接口，见[ADR025](decisions/025-candidate-discovery.md)：本仓库自动Job关联且当前仍candidate的经验，按提炼时间/ID稳定排序；读取当前revision，策略最多512字符、摘要160字符。DSH只读工具强制当前session且受shareWithModel约束；官方AssembleContext.agent与user-role动态context仅在正常模型步骤提示数量，不自动唤醒/验证。本机令牌保护`GET /api/candidates`向owner提供同一投影；面板可见时5秒轮询且不重叠，只刷新提醒区，点击才加载完整state并打开当前详情；错误明确标旧结果。DB仍v5，无持久化未读/迁移。工具和提醒不检查适用性或认证文字语义。
 
 T020实现见[ADR023](decisions/023-automatic-candidate-extraction.md)。这是G02/G03的有限切片；正常真实模型学习与收益仍待验证。
 

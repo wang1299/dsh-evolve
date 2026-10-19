@@ -79,7 +79,7 @@ try {
   const entry = [...ctx.loader.entries()].find(e => e.options.name === 'dsh-evolve');
   assert.ok(entry?.fiber); assert.equal((entry.moduleNamespace as typeof import('../src/dsh.js')).apply, installedModule.apply);
   const assembled = await ctx.systemPrompt.assemble();
-  assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 6);
+  assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 7);
   assert.ok(assembled.sections.some((section) => section.name === 'dsh-evolve:workflow'));
   const propose = assembled.tools.find((tool) => tool.name === 'evolve_propose_experience')!;
   const properties = propose.parameters.properties as Record<string, Record<string, unknown>>;
@@ -92,9 +92,9 @@ try {
     arguments: { summary: 'synthetic installed-package task' }, agent: { id: session.id } as Agent, signal: AbortSignal.timeout(10000) });
   assert.equal(output.isError, false, JSON.stringify(output));
   await writeFile(join(work, 'evidence.json'), JSON.stringify({ schemaVersion: 1, at: new Date().toISOString(),
-    runtimeVersion: getDshRuntimeVersion(), archiveDigest, profile, entries, toolCount: 6,
+    runtimeVersion: getDshRuntimeVersion(), archiveDigest, profile, entries, toolCount: 7,
     installation: 'official shared plugin-manager operation and app-boot loader',
     limitations: ['Peer services supplied by source checkout; no full Web/Desktop application, actual Agent loop or benefit experiment'] }, null, 2));
-  console.log('Installed tgz, official profile composition, loader and six tools passed. Evidence:', join(work, 'evidence.json'));
+  console.log('Installed tgz, official profile composition, loader and seven tools passed. Evidence:', join(work, 'evidence.json'));
 } finally { await ctx.fiber.dispose(); }
 }

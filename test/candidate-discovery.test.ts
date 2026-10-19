@@ -69,6 +69,11 @@ test('official DSH candidate tool and next-step reminder respect sharing, sessio
       const reminder = (await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-evolve:candidates');
       if (sharing) { assert.ok(reminder); assert.match(reminder.text, /1/); assert.ok(!reminder.text.includes(own.exp.id)); assert.ok(!reminder.text.includes(candidate.title)); }
       else assert.ok(!reminder?.text);
+      if (sharing) {
+        service.disable(own.exp.id, 'Owner rejects the pending candidate', 1);
+        const fresh = await run({ taskId: own.task.id }); assert.equal(fresh.isError, false); assert.equal(JSON.parse(fresh.content.find(c => c.type === 'text')!.text).total, 0);
+        assert.ok(!(await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-evolve:candidates')?.text);
+      }
       for (const agent of [undefined, { id: outside.id } as Agent]) {
         const assembly = await ctx.systemPrompt.assemble(agent ? assembleContextFor(agent) : {}); assert.ok(!assembly.contexts.find(c => c.name === 'dsh-evolve:candidates')?.text);
       }

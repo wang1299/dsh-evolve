@@ -27,7 +27,7 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   const run = (name: string, args: object, agent = identity) => ctx.tools.execute({ callId: ToolCallId(crypto.randomUUID()), name, arguments: args, agent, signal: new AbortController().signal });
   const assembly = await ctx.systemPrompt.assemble();
   assert.ok(assembly.sections.some((s) => s.name === 'dsh-evolve:workflow'));
-  assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 6);
+  assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 7);
   const proposeSchema = assembly.tools.find((t) => t.name === 'evolve_propose_experience')!.parameters;
   const linkSchema = assembly.tools.find((t) => t.name === 'evolve_link_fact_evidence')!.parameters;
   const candidateSchema = (proposeSchema.properties as Record<string, Record<string, unknown>>).candidate!;

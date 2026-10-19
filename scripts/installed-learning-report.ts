@@ -24,6 +24,7 @@ export const installedReportSchema = z.object({
   if (r.sourceVerified && (!r.autoCandidateCreated || !r.candidateInitiallyInactive || !r.sourceProof?.verified)) fail('Automatic candidate and independent source proof required');
   if (r.tools.some(t => t.name === 'evolve_propose_experience' || t.name === 'evolve_link_fact_evidence')) fail('Manual candidates cannot establish the automatic path');
   if (r.phase === 'passed' && (r.scenario !== 'happy' || r.reason !== 'completed' || r.stage !== 'completed' || !r.autoCandidateCreated || !r.candidateInitiallyInactive
+    || !r.tools.some(t => t.name === 'evolve_list_candidates' && !t.isError)
     || !r.sourceVerified || !r.experienceOffered || r.targetAccepted !== true || !r.feedbackRecorded || r.extractionState !== 'candidate'
     || r.logicalExtractions !== 1 || !r.sourceTaskId || !r.targetTaskId || !r.experienceId || r.revision !== 2
     || r.counts.tasks !== 2 || r.counts.experiences !== 1 || r.counts.applications !== 1 || r.counts.feedback !== 1)) fail('Incomplete automatic learning cannot pass');

@@ -123,6 +123,25 @@ export class EvolveService {
   requireExperience(id: string): Experience {
     const value = this.store.experience(idSchema.parse(id)); if (!value) throw new Error('Unknown experience'); return value;
   }
+  /** Current automatic candidates only. Reading is not review, acceptance or an application. */
+  pendingCandidates(sessionId?: string, taskId?: string): { total: number; more: boolean; items: {
+    experienceId: string; revision: number; taskId: string; summary: string; title: string; strategy: string; strategyTruncated: boolean;
+  }[] } {
+    if (taskId !== undefined) this.requireTask(taskId, sessionId);
+    const tasks = new Map(this.store.tasks().filter(t => t.scope.repoId === this.repoId && (sessionId === undefined || t.sessionId === sessionId)
+      && (taskId === undefined || t.id === taskId)).map(t => [t.id, t]));
+    const experiences = new Map(this.store.experiences().map(e => [e.id, e]));
+    const rows = this.store.extraction.jobs().filter(j => {
+      const e = j.candidateId ? experiences.get(j.candidateId) : undefined;
+      return j.repoId === this.repoId && j.state === 'candidate' && tasks.has(j.taskId) && e?.status === 'candidate'
+        && e.scope.repoId === this.repoId && e.sourceTaskId === j.taskId;
+    }).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id));
+    return { total: rows.length, more: rows.length > 10, items: rows.slice(0, 10).map(j => {
+      const e = experiences.get(j.candidateId!)!;
+      return { experienceId: e.id, revision: e.revision, taskId: j.taskId, summary: tasks.get(j.taskId)!.summary.slice(0, 160),
+        title: e.title, strategy: e.strategy.slice(0, 512), strategyTruncated: e.strategy.length > 512 };
+    }) };
+  }
   select(taskId: string, mode: 'evidence-v1' | 'feedback-v1' | 'bm25-v1' = 'evidence-v1'): { application: Application | null; experience: Experience | null; reasons: string[] } {
     z.enum(['evidence-v1', 'feedback-v1', 'bm25-v1']).parse(mode);
     const task = this.requireTask(taskId); if (task.state !== 'open') throw new Error('Task is closed');

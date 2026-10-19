@@ -61,12 +61,19 @@ class OfflineAdapter extends LlmAdapter {
         case 3: return { name: 'evolve_finish_task', args: { taskId: this.taskId } };
         case 4: assert.equal(toolResult(options, 'evolve_finish_task').state, 'closed'); return { text: 'Source capture closed; wait for the background candidate.' };
         case 5: {
-          const user = options.messages.filter(m => m.role === 'user').at(-1); const text = user?.content.find(b => b.type === 'text');
-          const input = z.object({ reviewedCandidateId: idSchema }).strict().parse(JSON.parse(text?.type === 'text' ? text.text : 'null'));
-          assert.equal(input.reviewedCandidateId, this.experienceId);
-          return { name: 'evolve_verify_experience', args: { experienceId: input.reviewedCandidateId } };
+          return { name: 'evolve_list_candidates', args: { taskId: this.taskId } };
         }
         case 6: {
+          const receipt = toolResult(options, 'evolve_list_candidates');
+          if (this.scenario === 'sharing-off') {
+            assert.deepEqual(receipt, { reason: 'sharing_disabled_by_owner' }); return { text: 'Owner disabled discovery; no candidate identifier is available.' };
+          }
+          assert.equal(receipt.total, 1); const items = z.array(z.object({ experienceId: idSchema, revision: z.literal(1), taskId: idSchema, title: z.string(), strategy: z.string() })).parse(receipt.items);
+          assert.equal(items[0]!.taskId, this.taskId); assert.equal(items[0]!.title, summary); assert.ok(items[0]!.strategy.includes('restore'));
+          this.experienceId = items[0]!.experienceId;
+          return { name: 'evolve_verify_experience', args: { experienceId: this.experienceId } };
+        }
+        case 7: {
           const receipt = toolResult(options, 'evolve_verify_experience'); assert.equal(receipt.status, 'source_verified');
           this.revision = z.number().int().positive().parse(receipt.revision); return { text: 'Source verification receipt observed.' };
         }
@@ -183,9 +190,11 @@ export async function installedLearning(input: {
     assert.equal(sourceTask.state, 'closed'); assert.equal(sourceTask.sessionId, sourceId);
     let experience = read('experiences', experienceSchema).find(e => e.id === candidateId)!;
     assert.ok(experience); assert.equal(experience.sourceTaskId, adapter.taskId); assert.equal(experience.status, 'candidate'); assert.equal(experience.verificationId, null); assert.equal(experience.revision, 1);
-    report.autoCandidateCreated = true; report.candidateInitiallyInactive = true; report.experienceId = experience.id; adapter.experienceId = experience.id;
+    report.autoCandidateCreated = true; report.candidateInitiallyInactive = true; report.experienceId = experience.id;
     assert.equal(db.prepare('SELECT count(*) AS n FROM fact_citations WHERE experience_id=? AND revision=1').get(experience.id)!.n, experience.observedFacts.length);
-    report.stage = 'source_verify'; await turn(source, JSON.stringify({ reviewedCandidateId: experience.id }));
+    report.stage = 'source_verify'; await turn(source, 'Inspect this session\'s automatic candidates and explicitly verify the source repair after inspection; this scripted owner request authorizes no new model calls.');
+    if (input.scenario === 'sharing-off') { assert.equal(adapter.experienceId, ''); report.reason = 'sharing_disabled'; throw new Error('Expected no discovery with sharing disabled'); }
+    assert.equal(adapter.experienceId, experience.id, 'Verification ID must come from the actual candidate-list receipt');
     experience = read('experiences', experienceSchema).find(e => e.id === candidateId)!;
     assert.equal(experience.status, 'source_verified'); assert.equal(experience.revision, adapter.revision); assert.equal(experience.revision, 2);
     const sourceProof = read('verifications', verificationSchema).find(p => p.id === experience.verificationId)!;
@@ -195,7 +204,6 @@ export async function installedLearning(input: {
     report.receiptReturned = adapter.returned; report.modelContinued = adapter.continued;
     const applications = read('applications', applicationSchema);
     const application = applications.find(a => a.id === adapter.applicationId); report.experienceOffered = !!(application && adapter.returned && adapter.continued);
-    if (input.scenario === 'sharing-off') { assert.equal(applications.length, 0); report.reason = 'sharing_disabled'; throw new Error('Expected no sharing'); }
     assert.ok(application); assert.equal(application.experienceId, experience.id); assert.equal(application.revision, experience.revision); report.targetTaskId = application.taskId;
     const code = codeFrom(proposedTarget); validateRepair(code, 'reserve_stock'); await writeFile(join(f.repo, 'cart.py'), code); git(f.repo, ['add', 'cart.py']);
     // The failed-target fixture is still a committed change, so commit identity cannot replace acceptance.
