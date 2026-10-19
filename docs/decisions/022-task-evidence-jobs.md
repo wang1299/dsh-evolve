@@ -16,6 +16,8 @@ Job持久化：唯一task、repo、严格有界输入/摘要、queued/running/su
 
 EvidenceBundle v1不可变，包含Job/输入摘要、任务/版本/依赖、最小来源引用/事件/Python diff、所选验证ID/内容摘要、ready或incomplete及有限缺失原因。ready仅表示当前有限材料满足下一步提炼输入条件，不是已学习/语义正确/经验可用或收益。匹配同task/repo/base/fix/依赖的最新报告优先，失败报告不能被旧成功遮盖；每个来源重新核对digest。没有明确纠正、缺报告/未通过、省略/材料不可用等保留incomplete；外部中断为Job unknown，不补造成功。
 
+存储采用规范化引用：材料只保留在不可变Job输入，Bundle存Job/输入摘要、验证引用、状态/原因；读取时关联形成逻辑证据包，不重复存正文。包不直接成为FactCitation来源或提升经验状态，后续提炼须引用已有最小Evidence。
+
 ## 占用、恢复与发布
 
 原子条件写入只准一个worker领取queued；每次token/lease与Attempt持久化。lease过期且未开始外部验证的本地工作可重新排队，最多3次attempt；已设置effectStarted的工作转unknown且不自动重开。该标记在调用verifyRepair前落库，即使恰在标记后、启动前断电也保守unknown。无模型调用或费用资格。
