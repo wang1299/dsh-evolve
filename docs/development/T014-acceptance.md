@@ -10,7 +10,7 @@ Issue [#37](https://github.com/wang1299/dsh-evolve/issues/37)，设计先于实�
 
 没有调用原T011实验/预算/资格或已安装SDK/Web profile，不读取Key。新增的AgentLoop、LLM、session projection仅是固定开发依赖，包的files/peer/SQLite格式/六工具不变。持久化仅全新合成仓库/学习库及有限报告，完整session/请求只在内存、不写会话日志；不自动删除旧数据。报告含生成的本机路径，仅用于本地，不能直接作为公开去敏报告上传。
 
-自审补齐合成用户输入：首轮prompt包含完整明确纠正文案，脚本必须先从实际user消息确认原文才record；不能仅把适配器自带常量当作用户已提供的材料。它仍是测试作者编写的合成纠正，不是真实用户学习证据。
+自审补齐合成用户输入：首轮prompt包含完整明确纠正文案，脚本必须先从实际user消息确认原文才record；不能仅把适配器自带常量当作用户已提供的材料。它仍是测试作者编写的合成纠正，不是真实用户学习证据。修复后5项针对回归、构建与静态检查通过；缺失原文时只有begin任务，没有纠正证据或候选。
 
 ## 使用
 
@@ -28,13 +28,14 @@ npm run dsh-rehearsal
 npm run dsh-rehearsal -- --scenario bad-citation
 npm run dsh-rehearsal -- --scenario failed-proof
 npm run dsh-rehearsal -- --scenario sharing-off
+npm run dsh-rehearsal -- --scenario missing-correction
 ```
 
-三个故障场景预期exit1/partial，不为通过测试而报告成功。可指定`--report <new-local-path>`，已有文件不会被覆盖。
+四个故障场景预期exit1/partial，不为通过测试而报告成功。可指定`--report <new-local-path>`，已有文件不会被覆盖。
 
 ## 验收证据
 
-设计及失败用例先提交：原基线没有演练入口，测试因MODULE_NOT_FOUND失败。实现后4项针对回归通过：
+设计及失败用例先提交：原基线没有演练入口，测试因MODULE_NOT_FOUND失败。首审前4项针对回归通过，来源修复新增missing-correction为第5项：
 
 | 场景 | 数据与实际验收 | 结论 |
 |---|---|---|
@@ -42,5 +43,6 @@ npm run dsh-rehearsal -- --scenario sharing-off
 | bad-citation | T011错误receipt直接作为引用；真实Agent执行提案被拒绝；0候选/应用/反馈 | partial，来源未关闭，不进入transfer |
 | failed-proof | 固定响应给无效修复并自称验证成功；外部pytest仍失败，经验candidate且未闭合 | partial，不能由自称成功或idle接受 |
 | sharing-off | 来源已验证/引用完整，owner共享关闭；新session无应用，目标未执行 | partial，没有伪造交付/反馈 |
+| missing-correction | 实际合成user输入缺纠正字段；脚本解析拒绝，0纠正/候选/应用/反馈 | partial，不从适配器常量补造来源 |
 
-测试独立打开CLI生成的SQLite核对事实摘要/来源、verification base/fix/失败及回归、精确revision应用、不同session与反馈依据；没有只断言最终报告布尔值。本地check通过69项（含类型/静态/构建）、compat2项通过，26文档/58需求/58追踪/15场景映射通过。实际独立运行开发命令得到scripted_loop_passed/11次脚本调用，T011原账本SHA256仍d72138c863196251ea5dcaff42bbc7164002227520cb4de55a836e354969fe75。两平台当前头CI、实际tgz组件兼容和稳定SHA独立只读评审在关联PR追加，满足门槛才合并。真实DeepSeek计数兼容/模型闭环仍未验证，#8/#15/#34保持open；T011首次失败与历史无改善保留。
+测试独立打开CLI生成的SQLite核对事实摘要/来源、verification base/fix/失败及回归、精确revision应用、不同session与反馈依据；没有只断言最终报告布尔值。首审前本地check通过69项（含类型/静态/构建）、compat2项通过，26文档/58需求/58追踪/15场景映射通过。实际独立运行开发命令得到scripted_loop_passed/11次脚本调用，T011原账本SHA256仍d72138c863196251ea5dcaff42bbc7164002227520cb4de55a836e354969fe75。两平台当前头CI、实际tgz组件兼容和稳定SHA独立只读评审在关联PR追加，满足门槛才合并。真实DeepSeek计数兼容/模型闭环仍未验证，#8/#15/#34保持open；T011首次失败与历史无改善保留。

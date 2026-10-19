@@ -12,7 +12,7 @@ const reportSchema = z.object({ schemaVersion: z.literal(1), kind: z.literal('sc
   realModel: z.literal(false), benefitEvaluated: z.literal(false), phase: z.enum(['scripted_loop_passed', 'partial']),
   sourceAccepted: z.boolean(), experienceOffered: z.boolean(), transferAccepted: z.boolean().nullable(), feedbackOutcome: z.string().nullable(),
   dbPath: z.string(), scriptedCalls: z.number().int().max(12), captureOverflow: z.boolean(), sourceClosed: z.boolean(),
-  sourceBase: z.string(), sourceFix: z.string(), provenanceComplete: z.boolean(),
+  sourceBase: z.string(), sourceFix: z.string().nullable(), provenanceComplete: z.boolean(),
   counts: z.object({ tasks: z.number(), experiences: z.number(), applications: z.number(), feedback: z.number() }),
   tools: z.array(z.object({ name: z.string(), isError: z.boolean() })),
   sourceProof: z.object({ verified: z.boolean(), base: z.number(), fixed: z.number(), regression: z.number() }).nullable(),
@@ -48,6 +48,7 @@ test('actual AgentLoop rehearses source proof, exact fact receipts and new-sessi
     assert.equal(citations.length, 1); assert.equal(citations[0]!.factDigest, digest(experience.observedFacts[0]!));
     const evidence = store.evidence(citations[0]!.evidenceId)!;
     assert.equal(evidence.kind, 'correction'); assert.equal(evidence.taskId, experience.sourceTaskId);
+    if (evidence.kind === 'correction') assert.equal(evidence.note, 'Restore the original balance when a transaction fails.');
     assert.equal(citations[0]!.evidenceDigest, evidence.digest);
     const app = store.applications()[0]!; const target = store.task(app.taskId)!;
     assert.equal(app.experienceId, experience.id); assert.equal(app.revision, experience.revision);
@@ -81,4 +82,14 @@ test('a source-verified record with sharing disabled cannot be reported as deliv
   assert.equal(report.sourceAccepted, true); assert.equal(report.phase, 'partial');
   assert.equal(report.experienceOffered, false); assert.equal(report.transferAccepted, null); assert.equal(report.feedbackOutcome, null);
   assert.deepEqual(report.counts, { tasks: 2, experiences: 1, applications: 0, feedback: 0 });
+});
+
+test('missing explicit user correction cannot be invented from the scripted adapter constants', () => {
+  const report = runFixture('missing-correction', 1);
+  assert.equal(report.phase, 'partial'); assert.equal(report.sourceAccepted, false); assert.equal(report.sourceProof, null);
+  assert.equal(report.sourceFix, null); assert.equal(report.sourceClosed, false); assert.equal(report.feedbackOutcome, null);
+  assert.deepEqual(report.counts, { tasks: 1, experiences: 0, applications: 0, feedback: 0 });
+  assert.deepEqual(report.tools.map((tool) => tool.name), ['evolve_begin_task']);
+  const store = new Store(report.dbPath);
+  try { assert.equal(store.evidenceRecords().length, 0); } finally { store.close(); }
 });

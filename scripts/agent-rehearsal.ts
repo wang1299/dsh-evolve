@@ -23,7 +23,8 @@ import { deliveryEvidence, validateRepair } from './dsh-live.js';
 const provider = 'evolve-scripted-offline'; const model = 'fixed-rehearsal';
 const summary = 'database transaction rollback exception';
 const correction = 'Restore the original balance when a transaction fails.';
-const scenarios = ['happy', 'bad-citation', 'failed-proof', 'sharing-off'] as const;
+const scenarios = ['happy', 'bad-citation', 'failed-proof', 'sharing-off', 'missing-correction'] as const;
+const sourceInputSchema = z.object({ fixture: z.literal('source-repair'), explicitCorrection: z.string().min(1).max(4000) }).strict();
 const receiptSchema = z.object({ evidenceId: idSchema, evidenceDigest: hashSchema, kind: z.enum(['correction', 'verification']) });
 const proposalSchema = z.object({ experienceId: idSchema, revision: z.number().int().positive(), status: z.string(),
   facts: z.array(z.object({ factIndex: z.number().int(), factDigest: hashSchema })).length(1) });
@@ -35,6 +36,7 @@ class ScriptedAdapter extends LlmAdapter {
   calls = 0;
   private sourceStep = 0; private targetStep = 0;
   private taskId = ''; private experienceId = ''; private revision = 0;
+  private userCorrection = '';
   private correctionReceipt: z.infer<typeof receiptSchema> | undefined;
   constructor(private readonly sourceId: string, private readonly targetId: string, private readonly sourceCode: string,
     private readonly targetCode: string, private readonly scenario: typeof scenarios[number]) { super(); }
@@ -51,18 +53,19 @@ class ScriptedAdapter extends LlmAdapter {
     if (options.sessionId === this.sourceId) {
       switch (this.sourceStep++) {
         case 0: return { name: 'evolve_begin_task', args: { summary } };
-        case 1:
-          if (!options.messages.some((m) => m.role === 'user' && m.content.some((b) => b.type === 'text' && b.text.includes(correction)))) {
-            throw new Error('No explicit synthetic user correction');
-          }
+        case 1: {
+          const user = options.messages.filter((m) => m.role === 'user').at(-1);
+          const text = user?.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+          this.userCorrection = sourceInputSchema.parse(JSON.parse(text ?? '')).explicitCorrection;
           this.taskId = idSchema.parse(this.result(options, 'evolve_begin_task').taskId);
-          return { name: 'evolve_record_correction', args: { taskId: this.taskId, note: correction } };
+          return { name: 'evolve_record_correction', args: { taskId: this.taskId, note: this.userCorrection } };
+        }
         case 2:
           this.correctionReceipt = receiptSchema.parse(this.result(options, 'evolve_record_correction').evidence);
           return { text: JSON.stringify({ code: this.sourceCode }) };
         case 3: return { name: 'evolve_propose_experience', args: { taskId: this.taskId,
           candidate: { title: summary, strategy: 'Save the original state; restore it before raising on failure.',
-            observedFacts: [correction], inferences: [], recommendations: [], requiredFiles: ['contract.py'] },
+            observedFacts: [this.userCorrection], inferences: [], recommendations: [], requiredFiles: ['contract.py'] },
           ...(this.scenario === 'bad-citation' ? { citations: [this.correctionReceipt] } : {}) } };
         case 4:
           if (this.scenario === 'bad-citation') return { text: 'Scripted fixture stops after the rejected proposal; no retry.' };
@@ -151,7 +154,8 @@ export async function rehearse(scenario: typeof scenarios[number] = 'happy'): Pr
   const events: JsonObject[] = []; const tools: { name: string; isError: boolean }[] = []; let captureOverflow = false;
   const report: JsonObject = { schemaVersion: 1, kind: 'scripted-native-agent-rehearsal', runtime: '0.2.0-rc.2', scenario,
     realModel: false, benefitEvaluated: false, phase: 'initialize', sourceAccepted: false, experienceOffered: false,
-    transferAccepted: null, feedbackOutcome: null, dbPath, repo: f.repo, sourceBase };
+    transferAccepted: null, feedbackOutcome: null, sourceClosed: false, sourceFix: null, sourceProof: null,
+    provenanceComplete: false, dbPath, repo: f.repo, sourceBase };
   try {
     for (const plugin of [SessionStore, SessionProjectionRegistry, AgentRegistry, LlmRuntime]) await ctx.plugin(plugin).await();
     await ctx.plugin(SystemPrompt, {}).await(); await ctx.plugin(ToolRuntime, { mode: 'native' }).await();
@@ -171,8 +175,8 @@ export async function rehearse(scenario: typeof scenarios[number] = 'happy'): Pr
     };
     const source = await create(sourceId); report.phase = 'source_proposal';
     const parse = (text: string): string => z.object({ code: z.string().max(4096) }).strict().parse(JSON.parse(text)).code;
-    const proposedCode = parse(await turn(source, 'Scripted fixture: begin, record this explicit synthetic user correction: "' + correction
-      + '". Then propose source repair JSON.', events));
+    const sourceInput = { fixture: 'source-repair', ...(scenario === 'missing-correction' ? {} : { explicitCorrection: correction }) };
+    const proposedCode = parse(await turn(source, JSON.stringify(sourceInput), events));
     validateRepair(proposedCode, 'apply_change'); writeFileSync(join(f.repo, 'ledger.py'), proposedCode);
     git(f.repo, ['add', 'ledger.py']); git(f.repo, ['commit', '-m', 'scripted Agent source proposal']);
     const sourceFix = git(f.repo, ['rev-parse', 'HEAD']); report.sourceFix = sourceFix;

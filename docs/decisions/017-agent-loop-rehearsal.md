@@ -10,7 +10,9 @@
 
 同一来源session分两轮：begin/显式纠正/修复提案 → 宿主AST限制与提交 → propose无citations/verify/link/finish。只有真实报告、完整同任务纠正引用、精确base/fix和closed成立才进入新session的相似任务。真实begin返回应用后需同callId成功结果和后续assistant；独立外置pytest判断目标修复，宿主反馈注明合成基准来源。idle仅负责等待。
 
-使用进程内固定响应，最多12次适配器调用，步骤/工具名固定，不失败自动重试。每阶段有deadline与取消清理；创建全新临时合成仓库/SQLite，命令只在ignored目录输出有限去敏报告，不保存完整请求或session正文。旧T011计划、事件、账本、SDK/Web profile及Key均不读取或写入。
+使用进程内固定响应，最多12次适配器调用，步骤/工具名固定，不失败自动重试。Agent轮等待有deadline与取消清理、pytest单次有deadline；创建全新临时合成仓库/SQLite，命令只在ignored目录输出有限去敏报告，不保存完整请求或session正文。旧T011计划、事件、账本、SDK/Web profile及Key均不读取或写入。
+
+来源输入自审补充：合成user消息以封闭结构显式携带纠正文案，适配器从实际GenerateOptions.user内容解析并记录该值；缺失时停止，不能从私有常量补造。最早失败的报告也保留明确null/false字段，不把未开始当通过。
 
 ## 验收
 

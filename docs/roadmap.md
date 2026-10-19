@@ -22,7 +22,7 @@
 | T011 有预算真实DSH验证 | T010、独立宿主、用户Key/5元 | 实际4请求、源码事后pytest通过；候选引用失败，预算unknown保留，partial；59项两平台代码CI通过，最终门槛见PR | codex/t011-dsh-live-validation，Issue #31 / PR #32 |
 | T012 模型可见引用契约 | T010/T011 | 原生嵌套schema、引用顺序和错误重放；59项两平台CI/独立评审通过，已合并PR #35；不声明模型修复效果 | codex/t012-tool-input-contract，Issue #33关闭 |
 | T013 数值用量回执 | T011/T012 | 已合并PR #36，65项两平台CI/必要增量独立复审；数值回执离线完成，真实采样待做；不回填旧unknown | codex/t013-numeric-receipts，Issue #34保持open |
-| T014 原生Agent脚本演练 | T010–T013 | 真实AgentLoop＋固定脚本适配器完成来源/复用/验收反馈，三个负路径拒绝；零付费，不是模型或收益证据 | codex/t014-agent-rehearsal，Issue #37 |
+| T014 原生Agent脚本演练 | T010–T013 | 真实AgentLoop＋固定脚本适配器完成来源/复用/验收反馈，四个负路径拒绝；零付费，不是模型或收益证据 | codex/t014-agent-rehearsal，Issue #37 |
 
 远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26/#28/#30已squash合并。当前推进T014原生Agent脚本演练（Issue #37，零付费），T011首次真实模型仍为partial，实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
 
