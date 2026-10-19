@@ -45,6 +45,7 @@ export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: num
         cacheRead: numeric(usage?.cache_read_input_tokens), cacheWrite: numeric(usage?.cache_creation_input_tokens),
         stopReason: stop == null ? null : stopReasons.includes(stop as typeof stopReasons[number]) ? stop as typeof stopReasons[number] : 'unknown' });
       if (kind === 'error') return result('provider_error');
+      if ((kind === 'message_start' || kind === 'message_stop') && event.usage !== undefined) return result('unsupported_usage');
       if (usage && Object.keys(usage).some((key) => !fields.includes(key as typeof fields[number]))) return result('unsupported_usage');
       if (kind === 'message_start') {
         if (started) return result('duplicate_start'); started = true;

@@ -83,6 +83,22 @@ test('numeric replay explains conservative cache repartition rejection and malfo
   assert.deepEqual(analyze(sse().replace(/\n/g, '\r')).usage, { input: 32, output: 8 });
 });
 
+test('usage on unsupported start or stop fields must retain the full reservation', async () => {
+  const variants = [null, {}, { input_tokens: 1_100_000, output_tokens: 4096 }, { output_tokens: -1 }];
+  const bodies = variants.map((usage) => sse().replace('{"type":"message_stop"}', JSON.stringify({ type: 'message_stop', usage })));
+  bodies.push(sse().replace('{"type":"message_start",', '{"type":"message_start","usage":{"output_tokens":4096},'));
+  for (const body of bodies) {
+    assert.equal(analyze(body).reason, 'unsupported_usage'); assert.equal(settledMessagesUsage(body), null);
+    const budget = ledger();
+    const relay = await startBudgetRelay(budget, async () => new Response(body, { headers: { 'content-type': 'text/event-stream' } }));
+    try {
+      await (await fetch(relay.baseURL + '/v1/messages', { method: 'POST', headers: { 'x-api-key': 'fake' }, body: JSON.stringify(request) })).text();
+      assert.equal(readReceipt(budget).reason, 'unsupported_usage'); assert.equal(budget.state.calls[0]!.usage, null);
+      assert.equal(budget.spent, budgetPolicy.reservationMicroCny);
+    } finally { await relay.close(); budget.close(); }
+  }
+});
+
 test('split SSE chunks retain only numeric snapshots, never response text or arbitrary stop reasons', async () => {
   const budget = ledger();
   const content = 'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"response-private-code"}}\n\n';
