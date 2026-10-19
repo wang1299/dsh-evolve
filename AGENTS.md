@@ -1,6 +1,6 @@
 # DSH-Evolve development rules
 
-- Product requirements live in `docs/product.md`. Run2Skill is a workflow reference only; do not copy its product or implementation.
+- Product requirements live in `docs/product.md`. The user authorized Run2Skill as a reference for development workflow and requirements/architecture documentation granularity (ADR-012); do not copy its product or implementation.
 - Keep all work inside this repository. Never stage the parent repository or sibling directories.
 - The user resumed GitHub development for `wang1299/dsh-evolve`. Task branches, Issues, Draft PRs, development comments, and squash merges are authorized when the documented acceptance, CI, review, and repository rules are satisfied.
 - Mini Claude Code (`scipenai/mini-claude-code`) is a technical reference only. Do not establish an upstream contribution or collaboration relationship: no forks, remotes, branches, pushes, Issues, PRs, comments, or messages in or to that project.
