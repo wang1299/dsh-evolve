@@ -57,7 +57,7 @@ export class DeepseekBudget {
 }
 
 export function settledMessagesUsage(body: string): z.infer<typeof usageSchema> | null {
-  let started = false; let stopped = false; let final = false; let input: number | undefined; let output: number | undefined;
+  let started = false; let stopped = false; let final = false; let finalOutput = false; let input: number | undefined; let output: number | undefined;
   let cached = 0; let written = 0;
   try {
     for (const frame of body.replace(/\r\n/g, '\n').split('\n\n')) {
@@ -69,8 +69,9 @@ export function settledMessagesUsage(body: string): z.infer<typeof usageSchema> 
       if (event.type === 'message_start') {
         if (started) return null; started = true;
         const usage = (event.message as { usage?: Record<string, unknown> })?.usage;
-        if (!usage || !Number.isSafeInteger(usage.input_tokens) || Number(usage.input_tokens) < 0) return null;
-        input = Number(usage.input_tokens);
+        if (!usage || !Number.isSafeInteger(usage.input_tokens) || Number(usage.input_tokens) < 0
+          || !Number.isSafeInteger(usage.output_tokens) || Number(usage.output_tokens) < 0 || Number(usage.output_tokens) > budgetPolicy.maxOutputTokens) return null;
+        input = Number(usage.input_tokens); output = Number(usage.output_tokens);
         for (const key of ['cache_read_input_tokens', 'cache_creation_input_tokens']) {
           const value = usage[key] ?? 0; if (!Number.isSafeInteger(value) || Number(value) < 0) return null;
           if (key === 'cache_read_input_tokens') cached = Number(value); else written = Number(value);
@@ -88,10 +89,10 @@ export function settledMessagesUsage(body: string): z.infer<typeof usageSchema> 
           output = Number(usage.output_tokens);
         }
         const delta = event.delta as { stop_reason?: unknown } | undefined;
-        if (delta?.stop_reason) { if (final || !['end_turn', 'tool_use', 'max_tokens', 'stop_sequence'].includes(String(delta.stop_reason))) return null; final = true; }
+        if (delta?.stop_reason) { if (final || !['end_turn', 'tool_use', 'max_tokens', 'stop_sequence'].includes(String(delta.stop_reason))) return null; final = true; finalOutput = usage?.output_tokens !== undefined; }
       } else if (event.type === 'message_stop') { if (!started || !final) return null; stopped = true; }
     }
-    if (!stopped || input === undefined || output === undefined) return null;
+    if (!stopped || !finalOutput || input === undefined || output === undefined) return null;
     return usageSchema.parse({ input: input + cached + written, output });
   } catch { return null; }
 }

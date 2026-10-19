@@ -59,6 +59,8 @@ test('settlement requires complete cumulative usage and valid bounds; settled co
   assert.deepEqual(settledMessagesUsage(sse()), { input: 32, output: 8 });
   assert.deepEqual(settledMessagesUsage(sse().replace('"usage":{"output_tokens":8}', '"usage":{"input_tokens":25,"cache_read_input_tokens":40,"output_tokens":8}')), { input: 65, output: 8 });
   for (const bad of [sse().replace('message_stop', 'other'), sse().replace('"output_tokens":8', '"other":8'),
+    sse().replace('"output_tokens":0', '"output_tokens":5000'), sse().replace('"output_tokens":0', '"output_tokens":100'),
+    sse().replace('"output_tokens":0', '"output_tokens":-1'),
     sse(-1), sse(1_100_001), sse(12, 4097), sse() + 'data: {"type":"error"}\n\n']) assert.equal(settledMessagesUsage(bad), null);
   const budget = ledger();
   try {
