@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 
 const stopReasons = ['end_turn', 'tool_use', 'max_tokens', 'stop_sequence'] as const;
 export const usageReasons = ['awaiting_response', 'complete', 'http_rejected', 'missing_sse', 'transport_error', 'response_bound',
@@ -13,16 +14,49 @@ export type UsageSnapshot = z.infer<typeof snapshotSchema>;
 export type UsageReason = typeof usageReasons[number];
 export type UsageAnalysis = { reason: UsageReason; usage: { input: number; output: number } | null;
   snapshots: UsageSnapshot[]; otherEvents: number };
+export const usageDiagnosticSchema = z.object({
+  location: z.enum(['start_top_level', 'start_message_usage', 'delta_usage', 'stop_usage', 'other_event_usage']),
+  violation: z.enum(['unsupported_location', 'unknown_fields']),
+  usageType: z.enum(['null', 'object', 'array', 'string', 'number', 'boolean']),
+  unknownFieldCount: z.number().int().min(0).max(1024 * 1024),
+  fieldFingerprints: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(8),
+  omittedFieldCount: z.number().int().min(0).max(1024 * 1024),
+}).strict().refine(d => d.fieldFingerprints.length === Math.min(d.unknownFieldCount, 8)
+  && d.omittedFieldCount === d.unknownFieldCount - d.fieldFingerprints.length
+  && d.fieldFingerprints.every((hash, i) => i === 0 || d.fieldFingerprints[i - 1]! < hash)
+  && (d.violation === 'unknown_fields'
+    ? d.unknownFieldCount > 0 && d.usageType === 'object' && ['start_message_usage', 'delta_usage'].includes(d.location)
+    : ['start_top_level', 'stop_usage', 'other_event_usage'].includes(d.location)), 'Inconsistent usage shape diagnostic');
+export type UsageDiagnostic = z.infer<typeof usageDiagnosticSchema>;
+export type DiagnosticUsageAnalysis = UsageAnalysis & { diagnostic: UsageDiagnostic | null };
 const object = (value: unknown): Record<string, unknown> | undefined =>
   value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const numeric = (value: unknown): number | null => Number.isSafeInteger(value) ? Number(value) : null;
 const fields = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens'] as const;
 
+function describeRejection(location: UsageDiagnostic['location'], violation: UsageDiagnostic['violation'], value: unknown): UsageDiagnostic {
+  const unknown = Object.keys(object(value) ?? {}).filter(key => !fields.includes(key as typeof fields[number]));
+  const fingerprints = [...new Set(unknown.map(key => createHash('sha256').update('dsh-evolve/usage-field/v1\0' + key).digest('hex')))].sort().slice(0, 8);
+  return usageDiagnosticSchema.parse({ location, violation,
+    usageType: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
+    unknownFieldCount: unknown.length, fieldFingerprints: fingerprints, omittedFieldCount: unknown.length - fingerprints.length });
+}
+
 /** Usage diagnostics only: no provider text, arbitrary field names or identifiers escape. */
 export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: number; maxOutputTokens: number },
   policy: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1'): UsageAnalysis {
+  const result = diagnoseMessagesUsage(body, limits, policy);
+  return { reason: result.reason, usage: result.usage, snapshots: result.snapshots, otherEvents: result.otherEvents };
+}
+
+/** Opt-in structure only: hashed direct field names, never their values or provider text. */
+export function diagnoseMessagesUsage(body: string, limits: { maxInputTokens: number; maxOutputTokens: number },
+  policy: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1'): DiagnosticUsageAnalysis {
   const snapshots: UsageSnapshot[] = []; let otherEvents = 0;
-  const result = (reason: UsageReason, usage: UsageAnalysis['usage'] = null): UsageAnalysis => ({ reason, usage, snapshots, otherEvents });
+  const result = (reason: UsageReason, usage: UsageAnalysis['usage'] = null, diagnostic: UsageDiagnostic | null = null): DiagnosticUsageAnalysis =>
+    ({ reason, usage, snapshots, otherEvents, diagnostic });
+  const unsupported = (location: UsageDiagnostic['location'], violation: UsageDiagnostic['violation'], value: unknown): DiagnosticUsageAnalysis =>
+    result('unsupported_usage', null, describeRejection(location, violation, value));
   if (Buffer.byteLength(body) > 1024 * 1024) return result('response_bound');
   let started = false; let stopped = false; let final = false; let finalOutput = false;
   let input = 0; let output = 0; let cached = 0; let written = 0; let inputHighWater = 0;
@@ -37,7 +71,7 @@ export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: num
       if (!event) return result('invalid_json');
       const kind = event.type;
       if (kind !== 'message_start' && kind !== 'message_delta' && kind !== 'message_stop' && kind !== 'error') {
-        otherEvents++; if (event.usage !== undefined) return result('unsupported_usage'); continue;
+        otherEvents++; if (event.usage !== undefined) return unsupported('other_event_usage', 'unsupported_location', event.usage); continue;
       }
       if (snapshots.length === 64) return result('receipt_limit');
       const usage = object(kind === 'message_start' ? object(event.message)?.usage : event.usage);
@@ -46,8 +80,10 @@ export function analyzeMessagesUsage(body: string, limits: { maxInputTokens: num
         cacheRead: numeric(usage?.cache_read_input_tokens), cacheWrite: numeric(usage?.cache_creation_input_tokens),
         stopReason: stop == null ? null : stopReasons.includes(stop as typeof stopReasons[number]) ? stop as typeof stopReasons[number] : 'unknown' });
       if (kind === 'error') return result('provider_error');
-      if ((kind === 'message_start' || kind === 'message_stop') && event.usage !== undefined) return result('unsupported_usage');
-      if (usage && Object.keys(usage).some((key) => !fields.includes(key as typeof fields[number]))) return result('unsupported_usage');
+      if ((kind === 'message_start' || kind === 'message_stop') && event.usage !== undefined) return unsupported(
+        kind === 'message_start' ? 'start_top_level' : 'stop_usage', 'unsupported_location', event.usage);
+      if (usage && Object.keys(usage).some((key) => !fields.includes(key as typeof fields[number]))) return unsupported(
+        kind === 'message_start' ? 'start_message_usage' : 'delta_usage', 'unknown_fields', usage);
       if (kind === 'message_start') {
         if (started) return result('duplicate_start'); started = true;
         if (!usage || !Number.isSafeInteger(usage.input_tokens) || Number(usage.input_tokens) < 0
