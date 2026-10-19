@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T020增加精确可选peer `@deepseek-ai/dsh-llm@0.2.0-rc.2`（运行代码只经宿主服务，不导入provider/Key）。compat使用真实LlmRuntime.prepareCall与一次性stream，合成Adapter覆盖精确路由/maxTokens、无伪造session/purpose、文本/usage、坏流、晚注册provider和卸载中断。默认六工具仍可在无LLM服务下运行。源码兼容与本轮实际包/CI记录见[T020任务](tasks/T020-auto-extraction.md)，不等于真实模型提炼质量。
+
 `npm run compat` 使用发行包真实Context、SessionStore、ToolRuntime、SystemPrompt，注册六个工具和提示区，执行开始/完成任务、记录纠正、提候选和关联事实来源、拒绝陈旧/跨session操作及未授权验证、采集最小工具结果元数据，并验证卸载移除工具和提示区。
 
 Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描述为真实模型端到端成功。
@@ -20,7 +22,7 @@ Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描�
 
 ## 数据与工具兼容（T010）
 
-当前T019为SQLite user_version=4：v2/v3旧JSON/历史不改，增加Job/Attempt/证据包及来源保留引用；v1仍沿用原报告降级流程。旧SQLite3及更早程序会拒绝v4，禁止混跑/直接降级；不自动重建历史已关闭任务。六工具、Task/Experience/Verification格式保持；新增配置backgroundVerification默认false且执行仍需executionTrusted。DSH固定官方类型的session/event与tools/result接口保持，finish自动入队和后台生命周期由兼容探针验证。详见[ADR022](decisions/022-task-evidence-jobs.md)及[T019验收](development/T019-acceptance.md)。以下保留T010迁移语义。
+当前T020为SQLite user_version=5：v2/v3/v4旧JSON/历史不改，增加Job/Attempt/证据包及来源保留引用；v1仍沿用原报告降级流程。旧SQLite4及更早程序会拒绝v5，禁止混跑/直接降级；不自动重建历史已关闭任务。六工具、Task/Experience/Verification格式保持；新增配置backgroundVerification默认false且执行仍需executionTrusted。DSH固定官方类型的session/event与tools/result接口保持，finish自动入队和后台生命周期由兼容探针验证。详见[ADR022](decisions/022-task-evidence-jobs.md)及[T019验收](development/T019-acceptance.md)。以下保留T010迁移语义。
 
 SQLite user_version=3，事务创建最小evidence与fact_citations，保留v2全部旧JSON/历史/报告；v1继续原有报告身份降级再迁移。旧库缺逐条引用时默认evidence-v1拒绝自动复用；v2不改写source_verified修复状态，v1沿用降级重验迁移。旧SQLite2程序会拒绝v3，不支持混跑或直接降级；本机既有完整DSH预览安装未自动更新，禁止把用户库拿来做破坏性测试。
 

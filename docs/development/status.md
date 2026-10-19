@@ -1,5 +1,9 @@
 # 本轮实现与验证状态
 
+## 当前T020自动候选经验提炼（2026-10-19）
+
+Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，实施前[ADR023](../decisions/023-automatic-candidate-extraction.md)，后续提交实际失败用例再实现。owner单独配置extraction后，仅对随后结束的任务创建资格；ready修复包经二次摘要/版本核对，官方DSH LLM返回严格策略/factIds或拒绝，宿主生成事实、引用和文件条件，只产生候选。SQLite v5额度/唯一任务/原子发布；中断unknown不退额不重跑。默认关闭，无新增付费或真实Key操作；真实模型提炼质量、正常学习与收益待验。本轮实际测试/失败/评审/CI及合并状态见[T020验收](T020-acceptance.md)和[PR #50](https://github.com/wang1299/dsh-evolve/pull/50)。T019已由PR #48经115项两平台CI/实际包及独立审查合并278f58a，#47关闭。以下保留历史快照。
+
 ## 当前T019自动任务证据与后台处理（2026-10-19）
 
 Issue #47，实施前[ADR022](../decisions/022-task-evidence-jobs.md)。finish原子关闭/唯一入队，SQLite v4 Job/Attempt/lease/fencing/事务发布；默认整理已有来源，owner另开backgroundVerification且有执行信任才后台pytest。面板显示包/缺口/处理历史，ready不自动生成经验；安全本地恢复最多3次，验证开始后unknown不重跑。真实合成Git/pytest无候选流程及27项相关检查通过；首轮旧清理假设失败保留并修复，随后本地完整115项及类型/静态/构建通过。当前头CI/实际包/独立审查见[T019验收](T019-acceptance.md)与关联PR。零模型调用，不改旧预算/预览安装；语义提炼、上下文和真实学习/收益仍未完成。T018已由PR #46经100项两平台CI/实际包及独立评审合并30ed213，Issue #45关闭；以下为历史阶段记录。

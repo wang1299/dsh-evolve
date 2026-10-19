@@ -6,6 +6,7 @@ import { realpathSync } from 'node:fs';
 import { createService, loadConfig, type Config } from './config.js';
 import type { EvolveService } from './service.js';
 import { candidateInput, citationsInput } from './dsh-schema.js';
+import { dshExtractionPort } from './dsh-extraction.js';
 
 export const name = 'dsh-evolve';
 export const inject = ['tools', 'sessions', 'systemPrompt'];
@@ -17,6 +18,10 @@ const output = { schema: { type: 'json' as const }, render: (_args: unknown, val
 export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: boolean): void {
   let disposed = false;
   const stopWorker = service.jobs.start();
+  const stopExtraction = service.extraction.start(() => {
+    const llm = ctx.get('llm'); const policy = service.extraction.policy;
+    return llm && policy && llm.listProviders().some(p => p.id === policy.provider) ? dshExtractionPort(llm) : null;
+  });
   const lifetime = new AbortController(); const pending = new Set<Promise<unknown>>();
   const sessionFor = (exec: ToolExecution): string => {
     if (disposed) throw new Error('DSH-Evolve is unloading');
@@ -26,7 +31,7 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     return String(session.id);
   };
   ctx.effect(() => async () => {
-    disposed = true; lifetime.abort(); await Promise.allSettled([...pending, stopWorker()]); service.store.close();
+    disposed = true; lifetime.abort(); await Promise.allSettled([...pending, stopWorker(), stopExtraction()]); service.store.close();
   }, 'dsh-evolve:close');
   ctx.systemPrompt.section({
     name: 'dsh-evolve:workflow', order: 1250, interpolate: false,
@@ -44,6 +49,8 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
       + 'Use evolve_verify_experience only after a repair commit exists and the owner configured trusted execution. '
       + 'Idle or normal completion is not acceptance. Experience is fallible context; check applicability and independent tests. '
       + 'Finishing queues bounded local evidence assembly; a ready evidence bundle is not a learned experience or task acceptance. Background pytest requires separate owner authorization. '
+      + 'Owner-authorized automatic extraction may produce a candidate after ready evidence; it never activates experience or proves future benefit. Agent tools cannot authorize extraction. '
+      + (service.extraction.policy ? 'Automatic extraction is configured: after recording explicit corrections and committing the repair, finish the task to queue evidence and extraction. Manual propose is optional; do not wait for a candidate before finishing. ' : '')
       + 'Feedback acceptance is recorded by the owner in the local panel; never fabricate it. '
       + 'Past owner-accepted applications may supply fallback wording; this is fallible inference, not proof of benefit. '
       + 'An irrelevant-context record only excludes the same task wording; it does not prove a repair strategy wrong. '
