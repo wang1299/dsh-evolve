@@ -10,7 +10,7 @@ T014演练通过手工propose/verify/link形成经验；T020组件测试覆盖�
 
 1. 全新合成Git仓库、外部验收、学习库/profile；安装包编译JS逐文件核对源码构建摘要。默认安装探针保留原模式，显式--learning开启开发演练。
 2. 脚本Agent调用begin/correction并返回有限修复提案；宿主检查限定函数/路径后写入合成文件及commit。明确用户纠正只从实际合成用户输入取得。Agent finish后后台验证和自动提炼，不能调用propose来补候选。
-3. 等待ready与唯一自动candidate，验证完整来源、candidate非激活及grant消耗；随后让同一Agent显式调用verify，检查返回结果及完整引用。
+3. 等待ready与唯一自动candidate，验证完整来源、candidate非激活及grant消耗；宿主模拟owner检查候选后，在真实用户消息中提供reviewedCandidateId，再让同一Agent显式调用verify，检查返回结果及完整引用。不用Adapter私有状态替代模型实际收到ID；后台候选主动通知/发现仍是后续体验缺口。
 4. 新真实Agent会话begin取得精确经验/版本；确认实际tool/result回执进入该会话且模型后续调用含该回执，再接受有限目标修复提案。目标commit后显式finish。独立目标pytest使用另一仓库外验收；原来源成功不能替代它。
 5. 仅在目标独立验收通过后，由宿主通过实际安装包本机面板API追加“合成基准验收反馈”，不伪装成真实owner评价。记录精确application/revision和反馈。负路径包括坏提炼输出、关闭共享与无效目标修复；失败保留partial和原因，无伪造反馈。
 

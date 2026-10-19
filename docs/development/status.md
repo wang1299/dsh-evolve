@@ -1,5 +1,9 @@
 # 本轮实现与验证状态
 
+## 当前T021安装包自动学习演练与独立试装（2026-10-19）
+
+Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，实施前[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。实际安装tgz、核对24个产品JS/Loader模块身份，真实AgentLoop与固定脚本跑自动候选到新会话实际交付/独立目标验收/宿主合成反馈；三条负路径保留partial，无人工propose补候选。新的完整WindowsDSH配置中最新版插件安装、实际运行及重启通过，未配置Key。实际结果、保留的Loader/Python环境失败、检查/评审/CI门槛见[T021验收](T021-acceptance.md)和关联PR。零付费调用、不重开旧预算；真实模型连通/提炼质量仍待新预算与冻结实验。T020已由PR #50经135项两平台CI/实际安装及独立评审合并bd7d7fa，#49关闭。以下保留历史快照。
+
 ## 当前T020自动候选经验提炼（2026-10-19）
 
 Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，实施前[ADR023](../decisions/023-automatic-candidate-extraction.md)，后续提交实际失败用例再实现。owner单独配置extraction后，仅对随后结束的任务创建资格；ready修复包经二次摘要/版本核对，官方DSH LLM返回严格策略/factIds或拒绝，宿主生成事实、引用和文件条件，只产生候选。SQLite v5额度/唯一任务/原子发布；中断unknown不退额不重跑。默认关闭，无新增付费或真实Key操作；真实模型提炼质量、正常学习与收益待验。本轮实际测试/失败/评审/CI及合并状态见[T020验收](T020-acceptance.md)和[PR #50](https://github.com/wang1299/dsh-evolve/pull/50)。T019已由PR #48经115项两平台CI/实际包及独立审查合并278f58a，#47关闭。以下保留历史快照。

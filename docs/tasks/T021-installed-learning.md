@@ -16,4 +16,4 @@ Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，基线bd7d7fa；
 
 ## 非目标
 
-真实模型质量/正常完整学习、经验收益、发布部署、改Key/账户/旧预算均不包含。实际结果见后续验收记录与关联PR。
+真实模型质量/正常完整学习、经验收益、发布部署、改Key/账户/旧预算均不包含。实际结果见[验收记录](../development/T021-acceptance.md)与关联PR。

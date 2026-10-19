@@ -25,6 +25,7 @@
 | T014 原生Agent脚本演练 | T010–T013 | 已合并PR #38，Issue #37关闭；5场景、70项两平台CI及必要独立复审，零付费，不是模型或收益证据 | codex/t014-agent-rehearsal |
 | T019 自动证据包与本地后台机制 | G01/G03切片、Issue #47 | finish去重入队、v4 Job/Attempt/lease/fencing、受授权pytest和面板；真实合成无候选案例/针对检查已通过，最终check/CI/评审/实际包见[T019验收](development/T019-acceptance.md)及关联PR；无模型提炼 | codex/t019-task-evidence |
 | T020 自动候选经验提炼 | G02/G03切片、Issue #49、T019 | 独立owner授权、官方DSH LLM端口、宿主事实/引用/条件、v5单次资格/额度/原子候选发布与状态面板；默认关闭，仅离线适配器；最终验证/CI/评审见[T020任务](tasks/T020-auto-extraction.md) | codex/t020-auto-extraction |
+| T021 安装包自动学习演练/独立试装 | T020、Issue #51 | 实际包/Loader/AgentLoop与脚本模型四场景、新完整Windowsprofile安装/加载/重启；零付费，真实连通/质量仍待；最终门槛见[T021验收](development/T021-acceptance.md) | codex/t021-packaged-learning |
 | T018 显式standard用量兼容 | T017、Issue #45 | PR #46已合并30ed213，Issue #45关闭；文档standard分支/回执2，其他值拒绝；100项两平台CI/实际包/独立评审通过，零新增模型调用 | codex/t018-standard-tier |
 | T017 最小单次真实采样 | T016、用户新增最多3元 | PR #44已合并，Issue #43关闭；一次HTTP200/987字节，字段指纹匹配service_tier，值/历史原因未知，2.232768元未知占额；两平台92项/实际包/独立评审通过，未重跑 | codex/t017-messages-sample |
 | T016 未知usage结构诊断 | T013/T015、Issue #41 | 可选v2回执/固定拒绝位置/有限字段指纹，离线检查及最终CI/评审门槛见关联PR；没有新付费或真实字段认定 | codex/t016-usage-diagnostics |

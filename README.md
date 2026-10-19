@@ -12,6 +12,8 @@
 
 ## 开发状态
 
+- 安装包自动学习演练：T021通过实际tgz/Loader和真实AgentLoop跑自动候选→显式验证→新会话回执→目标独立pytest→合成基准反馈，另保留坏提炼/关闭共享/无效目标三条负路径。新增独立Windows完整CLI/Web安装及重启核对，24个产品JS一致。模型为固定脚本，未验证真实模型质量；见[验收](docs/development/T021-acceptance.md)。
+
 - 自动候选提炼：T020在独立授权后，把ready修复证据交给DSH已注册模型；宿主固定事实、来源与代码条件，模型生成策略或拒绝，结果仅为候选。SQLite v5保存调用资格、次数和结果，重启不退额、中断不自动重试。默认关闭，本轮仅合成模型验证；见[设计](docs/decisions/023-automatic-candidate-extraction.md)与[任务](docs/tasks/T020-auto-extraction.md)。
 - 自动证据整理：T019在显式结束任务后自动归并同任务纠正、工具事件元数据、版本、有限Python差异和测试报告；后台队列支持去重、重启恢复与陈旧任务拒绝，面板可查看证据包和处理历史。默认不运行测试，后台pytest须单独开启且有执行信任。见[设计](docs/decisions/022-task-evidence-jobs.md)与[验收](docs/development/T019-acceptance.md)。
 - 需求与架构：v0.2细化为58项编号需求、15个黄金验收场景、模块/数据/状态/接口/异常契约和完整追踪表；实现与目标分列，后续缺口见[架构总纲](docs/architecture.md)。T009交付门槛见[设计验收](docs/development/T009-design-acceptance.md)及关联PR。
