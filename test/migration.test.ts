@@ -41,3 +41,19 @@ test('v1 database preserves history, migrates feedback and invalidates aggregate
   const reopened = new Store(path);
   assert.equal(reopened.history(candidate.id).length, 3); reopened.close();
 });
+
+test('failed legacy migration rolls back format and tables; unknown versions are left untouched', async () => {
+  const f = await fixture(); const path = join(f.home, 'failed-migration.sqlite'); const original = new Store(path); original.close();
+  const raw = new DatabaseSync(path);
+  raw.exec('DROP TABLE fact_citations; DROP TABLE evidence; DROP TABLE feedback; CREATE TABLE feedback(id TEXT PRIMARY KEY, application_id TEXT NOT NULL UNIQUE, body TEXT NOT NULL); PRAGMA user_version=1');
+  raw.prepare('INSERT INTO verifications VALUES(?,?)').run(randomUUID(), JSON.stringify({ malformed: 'synthetic old report' }));
+  const previous = raw.prepare("SELECT sql FROM sqlite_master WHERE name='feedback'").get()!.sql; raw.close();
+  assert.throws(() => new Store(path));
+  const checked = new DatabaseSync(path);
+  assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 1);
+  assert.equal(checked.prepare("SELECT sql FROM sqlite_master WHERE name='feedback'").get()!.sql, previous);
+  assert.equal(checked.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name IN ('evidence','fact_citations')").get()!.n, 0);
+  checked.exec('PRAGMA user_version=99'); checked.close();
+  assert.throws(() => new Store(path), /Unsupported/);
+  const unchanged = new DatabaseSync(path); assert.equal(unchanged.prepare('PRAGMA user_version').get()!.user_version, 99); unchanged.close();
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { startPanel } from '../src/panel.js';
-import { fixture } from './fixture.js';
+import { citeFact, fixture } from './fixture.js';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Script } from 'node:vm';
@@ -58,4 +58,35 @@ test('shared database stale disable and restore cannot affect a newer revision',
     assert.throws(() => a.restore(exp.id, 1, 'Stale restore', observedRevision), /Stale/);
     assert.equal(first.experience(exp.id)?.revision, 2);
   } finally { first.close(); second.close(); }
+});
+
+test('panel source editing authenticates, validates digests and exposes immutable revision provenance', async () => {
+  const f = await fixture(); const store = new Store(':memory:');
+  const service = new EvolveService(store, f.repo, { trusted: false, python: 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 10000 });
+  const task = service.begin('panel-source', 'transaction rollback');
+  const source = service.correction(task.id, 'Explicit fixture correction <script>untrusted</script>');
+  const input = { title: 'rollback', strategy: 'restore state', observedFacts: ['A recorded correction asks for a fix.'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] };
+  const exp = service.propose(task.id, input); const panel = await startPanel(service);
+  try {
+    const headers = { Authorization: 'Bearer ' + panel.token, Origin: panel.origin, 'Content-Type': 'application/json' };
+    const url = panel.origin + '/api/experience/' + exp.id + '/evidence';
+    const citations = [citeFact(source, input.observedFacts[0]!)]; const body = JSON.stringify({ revision: 1, citations });
+    assert.equal((await fetch(url, { method: 'POST', headers: { Origin: panel.origin, 'Content-Type': 'application/json' }, body })).status, 401);
+    assert.equal((await fetch(url, { method: 'POST', headers: { ...headers, Origin: 'https://attacker.invalid' }, body })).status, 403);
+    assert.equal((await fetch(url, { method: 'POST', headers, body: JSON.stringify({ revision: 1, citations: [{ ...citations[0], evidenceDigest: '0'.repeat(64) }] }) })).status, 400);
+    assert.equal(store.history(exp.id).length, 1);
+    assert.equal((await fetch(url, { method: 'POST', headers, body })).status, 200);
+    assert.equal((await fetch(url, { method: 'POST', headers, body })).status, 409);
+    const state = await (await fetch(panel.origin + '/api/state', { headers })).json() as {
+      evidence: { id: string }[]; provenance: Record<string, Record<string, { complete: boolean; citations: unknown[] }>>;
+    };
+    assert.ok(state.evidence.some((e) => e.id === source.id));
+    assert.equal(state.provenance[exp.id]!['1']!.complete, false); assert.equal(state.provenance[exp.id]!['2']!.complete, true);
+    const revise = await fetch(panel.origin + '/api/experience/' + exp.id + '/revise', { method: 'POST', headers,
+      body: JSON.stringify({ revision: 2, reason: 'Change strategy; keep exact fact references', candidate: input, citations }) });
+    assert.equal(revise.status, 200); assert.equal(service.provenance(store.experience(exp.id)!).complete, true);
+    assert.equal((await fetch(panel.origin)).status, 200);
+    const cleanup = await (await fetch(panel.origin + '/api/cleanup', { method: 'POST', headers, body: '{}' })).json() as Record<string, unknown>;
+    assert.equal(typeof cleanup.removedUnreferencedSources, 'number');
+  } finally { await panel.close(); store.close(); }
 });

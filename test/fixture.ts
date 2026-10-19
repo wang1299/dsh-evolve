@@ -3,6 +3,11 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { git } from '../src/repository.js';
+import { digest, type Evidence, type FactCitation } from '../src/domain.js';
+
+export function citeFact(evidence: Evidence, fact: string, factIndex = 0): FactCitation {
+  return { factIndex, factDigest: digest(fact), evidenceId: evidence.id, evidenceDigest: evidence.digest };
+}
 
 export async function fixture(): Promise<{ home: string; repo: string; acceptance: string; base: string; fix: () => Promise<string> }> {
   const home = await mkdtemp(join(tmpdir(), 'evolve-test-'));

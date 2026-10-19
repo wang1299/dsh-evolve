@@ -79,7 +79,7 @@ if (Number(live) + Number(prepareOnly) + Number(fixture) !== 1 || !args.includes
     if (verified.status !== 'source_verified') throw new Error('source_not_verified');
     const sourceExperience = store.experience(verified.id)!; const sourceVerification = store.verification(verified.verificationId!)!;
     const envDigest = digest(JSON.stringify(environment())); const caseA = protocol.accumulation; const taskA = service.begin('accumulation', caseA.query);
-    const selected = service.select(taskA.id); if (!selected.application || selected.experience?.id !== verified.id) throw new Error('accumulation_experience_missing');
+    const selected = service.select(taskA.id, 'feedback-v1'); if (!selected.application || selected.experience?.id !== verified.id) throw new Error('accumulation_experience_missing');
     const context = { id: verified.id, revision: verified.revision, sourceTaskId: verified.sourceTaskId, title: verified.title, strategy: verified.strategy };
     const preparedA = await prepareCodexTask(root, caseA.query, [caseA.file], context, { candidate: 'none' });
     const makeTask = async (id: string, c: z.infer<typeof caseSchema>, prepared: PreparedCodexTask) => ({ id, taskDigest: prepared.taskDigest,
@@ -136,7 +136,7 @@ if (Number(live) + Number(prepareOnly) + Number(fixture) !== 1 || !args.includes
         const logicalId = randomUUID(); let task: PairedRun['task'] | null = null;
         for (const arm of c.order as Arm[]) {
           const selectTask = service.begin(c.id + '-' + arm, c.query);
-          const selection = arm === 'evolve' ? (() => { const s = service.select(selectTask.id); return { context: s.experience ? context : null, reasons: s.reasons }; })()
+          const selection = arm === 'evolve' ? (() => { const s = service.select(selectTask.id, 'feedback-v1'); return { context: s.experience ? context : null, reasons: s.reasons }; })()
             : selectComparisonExperience(service, selectTask.id, arm);
           if ((arm === 'evolve' && (!selection.context || !selection.reasons.join(' ').includes('fallback_owner_accepted_inference')))
             || (arm !== 'evolve' && selection.context)) throw new Error('preflight_no_feedback_contrast');
