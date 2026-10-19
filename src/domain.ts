@@ -75,3 +75,23 @@ export const feedbackSchema = z.object({
   humanRework: z.number().int().nonnegative().nullable(), createdAt: z.string().datetime(),
 }).strict();
 export type Feedback = z.infer<typeof feedbackSchema>;
+
+const evidenceBase = { schemaVersion: z.literal(1), id: idSchema, taskId: idSchema, repoId: hashSchema,
+  digest: hashSchema, createdAt: z.string().datetime() };
+export const evidenceSchema = z.discriminatedUnion('kind', [
+  z.object({ ...evidenceBase, kind: z.literal('correction'), note: textSchema }).strict(),
+  z.object({ ...evidenceBase, kind: z.literal('verification'), verificationId: idSchema }).strict(),
+]);
+export type Evidence = z.infer<typeof evidenceSchema>;
+export const factCitationSchema = z.object({ factIndex: z.number().int().min(0).max(11), factDigest: hashSchema,
+  evidenceId: idSchema, evidenceDigest: hashSchema }).strict();
+export const factCitationsSchema = z.array(factCitationSchema).max(36).superRefine((items, ctx) => {
+  const keys = new Set<string>(); const counts = new Map<number, number>();
+  for (const item of items) {
+    const key = item.factIndex + ':' + item.evidenceId;
+    const count = (counts.get(item.factIndex) ?? 0) + 1; counts.set(item.factIndex, count);
+    if (keys.has(key) || count > 3) ctx.addIssue({ code: 'custom', message: 'Duplicate citation or more than three sources for one fact' });
+    keys.add(key);
+  }
+});
+export type FactCitation = z.infer<typeof factCitationSchema>;

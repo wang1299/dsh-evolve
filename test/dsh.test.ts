@@ -10,7 +10,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { bindDsh } from '../src/dsh.js';
-import { fixture } from './fixture.js';
+import { citeFact, fixture } from './fixture.js';
 
 test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and unload', async () => {
   const f = await fixture(); const ctx = new Context();
@@ -26,7 +26,7 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   const run = (name: string, args: object, agent = identity) => ctx.tools.execute({ callId: ToolCallId(crypto.randomUUID()), name, arguments: args, agent, signal: new AbortController().signal });
   const assembly = await ctx.systemPrompt.assemble();
   assert.ok(assembly.sections.some((s) => s.name === 'dsh-evolve:workflow'));
-  assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 5);
+  assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 6);
   const result = await run('evolve_begin_task', { summary: 'database rollback' });
   assert.equal(result.isError, false, JSON.stringify(result));
   const task = service.store.tasks()[0]!;
@@ -34,6 +34,22 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   const other = ctx.sessions.create(SessionId('compat-other'), { meta: { cwd: f.repo } });
   const rejected = await run('evolve_finish_task', { taskId: task.id }, { id: other.id } as Agent);
   assert.equal(rejected.isError, true);
+  const correctionResult = await run('evolve_record_correction', { taskId: task.id, note: 'Explicit fixture correction: restore state.' });
+  assert.equal(correctionResult.isError, false);
+  const evidence = store.evidenceRecords()[0]!;
+  assert.ok(JSON.stringify(correctionResult).includes(evidence.digest));
+  const proposal = await run('evolve_propose_experience', { taskId: task.id, candidate: { title: 'transaction rollback', strategy: 'Restore state.',
+    observedFacts: ['The explicit correction asks to restore state.'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] } });
+  assert.equal(proposal.isError, false);
+  const exp = store.experiences()[0]!; const citations = [citeFact(evidence, exp.observedFacts[0]!)];
+  assert.ok(JSON.stringify(proposal).includes(citations[0]!.factDigest));
+  const args = { experienceId: exp.id, revision: exp.revision, citations };
+  assert.equal((await run('evolve_link_fact_evidence', args, { id: other.id } as Agent)).isError, true);
+  assert.equal((await run('evolve_link_fact_evidence', args)).isError, false);
+  assert.equal(service.provenance(store.experience(exp.id)!).complete, true);
+  assert.equal((await run('evolve_link_fact_evidence', args)).isError, true, 'stale tool calls cannot overwrite new references');
+  assert.equal((await run('evolve_verify_experience', { experienceId: exp.id })).isError, true, 'DSH cannot grant execution trust');
+  assert.equal(store.history(exp.id).length, 2);
   const observed = store.events(task.id);
   assert.ok(observed.length > 0);
   assert.ok(!JSON.stringify(observed).includes('database rollback'));

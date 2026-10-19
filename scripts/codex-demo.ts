@@ -78,7 +78,7 @@ if (!process.argv.includes('--live')) {
     for (const arm of ['baseline', 'evolve']) {
       git(root, ['switch', '-c', 'codex-' + arm, startingCommit]);
       const task = service.begin('codex-' + arm, taskText);
-      const selection = arm === 'evolve' ? service.select(task.id) : { experience: null, application: null };
+      const selection = arm === 'evolve' ? service.select(task.id, 'feedback-v1') : { experience: null, application: null };
       if (arm === 'evolve' && !selection.experience) throw new Error('no_applicable_experience');
       const exp = selection.experience;
       const context: ExperienceContext | null = exp ? { id: exp.id, revision: exp.revision, sourceTaskId: exp.sourceTaskId, title: exp.title, strategy: exp.strategy } : null;

@@ -31,6 +31,9 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     text: 'DSH-Evolve records scoped repair experience. For a new bug repair task use evolve_begin_task; explicitly finish it with evolve_finish_task. '
       + 'Use evolve_record_correction only for an explicit user correction, and evolve_propose_experience to submit a structured candidate after a repair. '
       + 'Candidates separate observedFacts, inferences and recommendations, and include title, strategy, requiredFiles. '
+      + 'Correction and verification return source receipts; propose returns fact digests. Use optional citations or evolve_link_fact_evidence to bind exact facts to same-task sources. '
+      + 'Default reuse requires every fact to have a valid source. A citation proves provenance, not semantic truth; unsupported claims remain fallible. '
+      + 'Identical citations are idempotent. Sources of a verified experience with complete provenance are locked; changes require an explicit owner revision, not a metadata-only feedback reset. '
       + 'Use evolve_verify_experience only after a repair commit exists and the owner configured trusted execution. '
       + 'Idle or normal completion is not acceptance. Experience is fallible context; check applicability and independent tests. '
       + 'Feedback acceptance is recorded by the owner in the local panel; never fabricate it. '
@@ -55,14 +58,17 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
   ctx.tools.register(defineTool({
     name: 'evolve_record_correction', description: 'Record a bounded explicit user correction for the current task; not an acceptance signal.',
     parameters: { taskId: { type: 'string', required: true }, note: { type: 'string', required: true } }, output,
-    async execute(args, exec) { service.requireTask(args.taskId, sessionFor(exec)); service.correction(args.taskId, args.note); return { recorded: true }; },
+    async execute(args, exec) {
+      service.requireTask(args.taskId, sessionFor(exec)); const e = service.correction(args.taskId, args.note);
+      return { recorded: true, evidence: { evidenceId: e.id, evidenceDigest: e.digest, kind: e.kind } };
+    },
   }));
   ctx.tools.register(defineTool({
     name: 'evolve_propose_experience', description: 'Propose a candidate from this task. candidate is a JSON object with title, strategy, observedFacts, inferences, recommendations, requiredFiles. No verification claims are accepted.',
-    parameters: { taskId: { type: 'string', required: true }, candidate: { type: 'json', required: true } }, output,
+    parameters: { taskId: { type: 'string', required: true }, candidate: { type: 'json', required: true }, citations: { type: 'json' } }, output,
     async execute(args, exec) {
-      service.requireTask(args.taskId, sessionFor(exec)); const result = service.propose(args.taskId, args.candidate);
-      return { experienceId: result.id, revision: result.revision, status: result.status };
+      service.requireTask(args.taskId, sessionFor(exec)); const result = service.propose(args.taskId, args.candidate, args.citations ?? []);
+      return json({ experienceId: result.id, revision: result.revision, status: result.status, facts: service.facts(result) });
     },
   }));
   ctx.tools.register(defineTool({
@@ -72,8 +78,21 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
       const experience = service.requireExperience(args.experienceId);
       service.requireTask(experience.sourceTaskId, sessionFor(exec));
       const promise = service.verify(args.experienceId, AbortSignal.any([exec.signal, lifetime.signal])); pending.add(promise);
-      try { const verified = await promise; return { experienceId: verified.id, status: verified.status, verificationId: verified.verificationId }; }
+      try {
+        const verified = await promise; const e = service.store.evidence(verified.verificationId!);
+        return json({ experienceId: verified.id, revision: verified.revision, status: verified.status, verificationId: verified.verificationId,
+          facts: service.facts(verified), evidence: e ? { evidenceId: e.id, evidenceDigest: e.digest, kind: e.kind } : null });
+      }
       finally { pending.delete(promise); }
+    },
+  }));
+  ctx.tools.register(defineTool({
+    name: 'evolve_link_fact_evidence', description: 'Bind same-task source receipts to exact facts. Identical citations are idempotent. Verified experiences with complete sources are locked; only incomplete, candidate or disabled records can change sources. Citations do not certify claim semantics.',
+    parameters: { experienceId: { type: 'string', required: true }, revision: { type: 'number', required: true }, citations: { type: 'json', required: true } }, output,
+    async execute(args, exec) {
+      const e = service.requireExperience(args.experienceId); service.requireTask(e.sourceTaskId, sessionFor(exec));
+      const linked = service.linkEvidence(e.id, args.revision, args.citations);
+      return json({ experienceId: linked.id, revision: linked.revision, status: linked.status, provenance: service.provenance(linked) });
     },
   }));
   ctx.on('session/event', (session, event) => {

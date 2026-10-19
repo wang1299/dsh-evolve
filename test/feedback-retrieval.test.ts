@@ -8,7 +8,7 @@ import type { Experience, Feedback, Task } from '../src/domain.js';
 import { experienceBankDigest, selectComparisonExperience } from '../src/paired-evaluation.js';
 import { EvolveService } from '../src/service.js';
 import { Store } from '../src/store.js';
-import { fixture } from './fixture.js';
+import { citeFact, fixture } from './fixture.js';
 
 const scenarios = JSON.parse(await readFile(new URL('../../test/fixtures/feedback-cases.json', import.meta.url), 'utf8'));
 const scenario = (id: string): { seed: string; query: string } => scenarios.cases.find((c: { id: string }) => c.id === id);
@@ -55,7 +55,8 @@ test('an accepted applied task supplies a traceable fallback for a later wording
   const service = new EvolveService(store, f.repo, { trusted: true, python: process.env.EVOLVE_PYTHON ?? 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 15000 });
   try {
     const source = service.begin('source', 'transaction rollback exception'); await f.fix();
-    const candidate = service.propose(source.id, { title: 'transaction rollback exception', strategy: 'Restore the original balance before raising the failed transaction exception.', observedFacts: ['A failure changed the balance'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
+    const correction = service.correction(source.id, 'Fixture correction: a failure changed the balance; restore it.');
+    const candidate = service.propose(source.id, { title: 'transaction rollback exception', strategy: 'Restore the original balance before raising the failed transaction exception.', observedFacts: ['A failure changed the balance'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] }, [citeFact(correction, 'A failure changed the balance')]);
     const verified = await service.verify(candidate.id); service.finish(source.id);
     assert.equal(verified.status, 'source_verified');
     const query = scenario('bridge').query;

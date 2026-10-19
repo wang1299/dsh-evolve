@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { fixture } from '../test/fixture.js';
+import { citeFact, fixture } from '../test/fixture.js';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 
@@ -13,15 +13,15 @@ const service = new EvolveService(store, target.repo, {
 });
 try {
   const source = service.begin('synthetic-source', 'database transaction rollback on exception');
-  service.correction(source.id, 'Restore the original balance when a transaction fails.');
+  const correction = service.correction(source.id, 'Restore the original balance when a transaction fails.');
   const fixCommit = await target.fix();
   const candidate = service.propose(source.id, {
     title: 'database transaction rollback on exception',
     strategy: 'Capture prior state, restore it on exceptions, then re-raise. Verify error and success paths.',
-    observedFacts: ['The independent acceptance test failed before restoring the balance.'],
+    observedFacts: ['The recorded correction asks to restore the original balance when a transaction fails.'],
     inferences: ['A similar mutation may need equivalent rollback.'], recommendations: ['Check transaction error paths with independent acceptance tests.'],
     requiredFiles: ['contract.py'],
-  });
+  }, [citeFact(correction, 'The recorded correction asks to restore the original balance when a transaction fails.')]);
   const verified = await service.verify(candidate.id);
   if (verified.status !== 'source_verified') throw new Error('Synthetic repair did not verify');
   service.finish(source.id);

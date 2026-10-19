@@ -46,15 +46,15 @@ const ctx = await boot('dsh', join(profile, 'cordis.yml'), patches, async (root)
 }, pathToFileURL(join(profile, 'package.json')).href);
 try {
   const assembled = await ctx.systemPrompt.assemble();
-  assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 5);
+  assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 6);
   assert.ok(assembled.sections.some((section) => section.name === 'dsh-evolve:workflow'));
   const session = ctx.sessions.create(SessionId('installed-package-probe'), { meta: { cwd: f.repo } });
   const output = await ctx.tools.execute({ callId: ToolCallId(crypto.randomUUID()), name: 'evolve_begin_task',
     arguments: { summary: 'synthetic installed-package task' }, agent: { id: session.id } as Agent, signal: AbortSignal.timeout(10000) });
   assert.equal(output.isError, false, JSON.stringify(output));
   await writeFile(join(work, 'evidence.json'), JSON.stringify({ schemaVersion: 1, at: new Date().toISOString(),
-    runtimeVersion: getDshRuntimeVersion(), archiveDigest, profile, entries, toolCount: 5,
+    runtimeVersion: getDshRuntimeVersion(), archiveDigest, profile, entries, toolCount: 6,
     installation: 'official shared plugin-manager operation and app-boot loader',
     limitations: ['Peer services supplied by source checkout; no full Web/Desktop application, actual Agent loop or benefit experiment'] }, null, 2));
-  console.log('Installed tgz, official profile composition, loader and five tools passed. Evidence:', join(work, 'evidence.json'));
+  console.log('Installed tgz, official profile composition, loader and six tools passed. Evidence:', join(work, 'evidence.json'));
 } finally { await ctx.fiber.dispose(); }

@@ -2,7 +2,7 @@
 
 ## 1. 范围、权威与版本
 
-日期：2026-10-19。对应[产品需求v0.2](product.md)及[ADR012](decisions/012-detailed-design-baseline.md)，T009 / Issue #27。运行实现核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；本次仅改文档。
+日期：2026-10-19。对应[产品需求v0.2](product.md)及[ADR012](decisions/012-detailed-design-baseline.md)，T009 / Issue #27。T009运行核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`。T010从已合并`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`增加事实来源切片，实施前[ADR013](decisions/013-fact-evidence.md)固定契约；本总纲随实现更新。
 
 本总纲回答模块职责、数据和状态契约、信任边界、正常与异常路径、验证与缺口。标为“当前”的内容是已存在代码；标为“目标”的接口是逻辑设计，**尚无对应导出、数据库列、后台worker或HTTP路由**。实施目标契约前须另立任务设计及迁移／兼容验收。
 
@@ -12,10 +12,10 @@
 | npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 2 | 接受新库、v1迁移、v2；拒绝未知版 |
+| SQLite | user_version 3 | 新库及v1/v2事务迁移，v3可读；拒绝未知版和旧程序混跑 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
-| 产品选择 | feedback-v1 | 原文BM25优先，反馈备用 |
-| 冻结历史模型配方 | bm25-v1 | 不静默改为feedback-v1 |
+| 产品选择 | evidence-v1 | 每条事实来源完整后使用feedback-v1内核 |
+| 冻结历史模型配方 | bm25-v1／feedback-v1 | 显式固定，未改为evidence-v1，不评价新策略收益 |
 | DSH／Cordis | 0.2.0-rc.2／4.0.5 | 固定发行包与运行证据，不追master |
 
 历史ADR状态是当时快照；现行覆盖结合[兼容性](compatibility.md)、[开发状态](development/status.md)和本文件。重要决策变更需显式替代ADR，不删除历史。
@@ -81,6 +81,7 @@ flowchart TB
 | 模块 | 输入→输出 | I/O与副作用 | 失败与限制 |
 |---|---|---|---|
 | domain.ts | unknown→严格对象／校验错误 | hash、限长、模式脱敏 | 不能校验文字语义真实性 |
+| evidence.ts | 最小纠正/报告及事实引用→摘要、完整性 | 校验task/repo/index/hash和来源；本地读取 | 出处一致不等于文字蕴含/真值 |
 | repository.ts | Git根／文件选择→快照、条件 | 只读Git及regular file | 非根、越界、缺文件拒绝 |
 | store.ts | 严格对象→当前／历史／查询 | 同步SQLite、SAVEPOINT事务 | 不支持未知版本，revision冲突 |
 | service.ts | 任务／候选／反馈→业务结果 | 编排store、快照、验证、选择 | 无后台自动提炼／耐久Job |
@@ -88,7 +89,7 @@ flowchart TB
 | retrieval.ts | 摘要／候选文字→分数及拒绝 | 纯本地BM25 | 无语义理解／训练 |
 | feedback-retrieval.ts | 同版应用反馈→备用表述／精确排除 | 从本地记录派生，不改经验正文 | 错误accepted可污染 |
 | config.ts | JSON／启动输入→固定service | 解析路径、打开本地库 | 严格字段，默认执行／共享关闭 |
-| dsh.ts | 官方工具／事件→核心调用 | 注册五工具、prompt、监听器 | 不注入llm；真实模型闭环未验证 |
+| dsh.ts | 官方工具／事件→核心调用 | 注册六工具、prompt、监听器 | 不注入llm；真实模型闭环未验证 |
 | panel.ts | 本机HTTP→状态／生命周期操作 | loopback、受保护API | 无任意执行、分页或配置编辑 |
 | cli.ts | panel／evaluate参数→入口 | 本机服务／评价JSON读取 | 不自动学习或发布 |
 | codex-runner.ts | 明确实验请求→受限结构化提案 | 可选只读CLI、有限JSONL元数据 | 不是DSH模型凭据桥梁 |
@@ -123,8 +124,10 @@ flowchart TB
 | TestCase | id,status | id≤2000；passed／failed／error／skipped |
 | Application | id,taskId,experienceId,revision,reason,createdAt | 绑定选择的精确版本，没有delivered／adopted字段 |
 | Feedback | id,applicationId,outcome,note,extraCost,humanRework,createdAt | 成本非负可null；返工非负整数可null |
+| Evidence v1 | schemaVersion,id,taskId,repoId,kind,digest,createdAt；correction另有note，verification另有verificationId | 服务构造，不可变；只复制最小纠正或引用完整既有报告 |
+| FactCitation | factIndex,factDigest,evidenceId,evidenceDigest | index 0–11，一版≤36，每事实≤3，重复拒绝 |
 
-`observedFacts`是事实主张字符串，没有逐条EvidenceRef；来源报告通过不能认证策略和所有文字。验收文件输入存path和UTF-8 content，单文件读取≤64KiB；环境是string record，只记录Node／Python／pytest／platform／dependencyDigest。
+`observedFacts`正文仍为字符串，事实引用在按经验revision保存的侧表。逐条核对来源存在、task/repo、文本hash与证据digest；缺失/错误默认拒绝复用。引用不等于文字主张已被来源蕴含，来源报告通过不能认证策略和所有文字。验收文件输入存path和UTF-8 content，单文件读取≤64KiB；环境是string record，只记录Node／Python／pytest／platform／dependencyDigest。
 
 反馈枚举为`accepted/rejected/counterexample/irrelevant/unknown`。`extraCost`数据结构没有currency／unit；现面板提示USD，不能由此推定所有API历史数值单位一致或直接汇总金额。评价报告的`extraCostUSD`是另一字段。该语义缺口为G10。
 
@@ -138,25 +141,28 @@ flowchart TB
 | verifications | id；body | 追加证明 |
 | applications | id；body | 追加选择记录 |
 | feedback | id；application_id＋body | 追加，查询按rowid |
-| events | id；task_id、created_at、body | INSERT OR IGNORE去重 |
+| events | id；task_id、created_at、body | INSERT OR IGNORE去重；纠正只记evidenceId |
+| evidence | id；task_id、created_at、body | 严格模式，不同载荷同ID拒绝，最小来源不可变 |
+| fact_citations | (experience_id,revision,fact_index,evidence_id)；两个digest | 仅随新经验revision插入；证据ID索引用于清理 |
 
-开启`foreign_keys=ON`，**当前DDL未声明外键约束**；关联完整性依靠服务及模式校验，底层Store是可信内部边界。不要声称SQLite自动阻止所有悬挂引用。
+开启`foreign_keys=ON`；新增fact_citations对revisions(id,revision)和evidence(id)声明外键，防止引用清理裂缝。既有表仍未声明外键，task/repo和摘要等完整性依靠服务校验，底层Store是可信内部边界；不声称SQLite阻止所有悬挂引用。
 
-`putExperience`要求新revision恰为当前+1，同事务写历史与当前。使用SAVEPOINT支持嵌套，busy_timeout为5000ms。验证完成时重新检查revision，再同事务写报告和经验；负反馈追加与当前版停用也在事务中。
+`putExperience`要求新revision恰为当前+1，同事务写历史、当前及该版全部引用，不允许独立追加历史引用。使用SAVEPOINT支持嵌套，busy_timeout为5000ms。验证完成时重新检查revision，再同事务写报告和经验；负反馈追加与当前版停用也在事务中。
 
 v1→v2迁移保留反馈／历史，移除旧application唯一反馈限制；旧报告补空cases并标未验证。旧当前source_verified追加candidate版本要求重验；历史保持。未知数据库版本拒绝打开。新增irrelevant不升SQLite版本，但含该枚举后旧程序不能解析，禁止混跑／直接降级；见[ADR003](decisions/003-evidence-migration.md)、[ADR010](decisions/010-feedback-retrieval.md)。
+
+v2→v3只增侧表/索引，不重写旧JSON/历史/报告/应用/反馈；旧source_verified仍表示修复验证，缺事实来源时默认拒绝复用。v1保留上述迁移行为，创建侧表与迁移在同一外层事务，失败回滚，重开幂等。旧SQLite2程序会拒绝v3，不允许混跑/直接降级。详见ADR013。现有实验摘要不含侧表，仅用于固定旧策略；未来evidence-v1实验必须另冻结这些新输入。
 
 ### 5.4 当前没有的目标逻辑对象
 
 | 目标对象 | 最小语义 | 实施前必须固定 |
 |---|---|---|
-| EvidenceRef | repo/task、来源种类、事件／报告／commit引用、摘要与保留级别 | 格式版本、逐条主张关联、失效及清理迁移 |
 | LearningJob | 输入摘要、任务边界、状态、调用资格、输出引用、失败原因 | 原子占用、重启与不重试规则、事务发布 |
 | ExtractionPort | 经授权的最小证据包→候选及主张引用／拒绝 | DSH官方接口、模型预算、结构化输出与注入防护 |
 | ExperienceContext | 适用条件、策略、必要依据、精确revision／摘要 | DSH字节／token预算、截断顺序、交付回执 |
 | DecisionRecord | 快照／策略摘要、候选与拒绝、交付及后续结果 | 状态定义、幂等与并发提交边界 |
 
-这是后续任务的设计方向，**不是当前公开类型**。不能提前向现行工具发送这些字段；严格schema会拒绝未知输入。
+最小Evidence/FactCitation已由T010落地，自动错误尝试归并、更多来源种类和主张语义核对仍属G01/G02。上表其余对象是后续任务的设计方向，**不是当前公开类型**。不能提前向现行工具发送这些字段；严格schema会拒绝未知输入。
 
 ## 6. 状态机与生命周期
 
@@ -176,6 +182,8 @@ stateDiagram-v2
 ```
 
 停用操作也可对disabled再追加版本；禁止直接验证disabled，须先修订／恢复。restore复制历史内容／scope到新candidate，verificationId=null；没有代码回滚。修订保留sourceTaskId，当前不支持把经验重新绑定另一来源任务／起始commit。
+
+linkEvidence规范化比较引用集，相同则返回原revision、保留反馈。source_verified且事实来源完整时拒绝变化，DSH无内容修订工具，owner须检查反馈后显式revise为candidate。其余来源变化追加新revision，保持文字/状态/既有修复证明；不会重新pytest或给候选/停用提权。来源pytest重验不能消除后续任务反例，跨UUID重复候选仍属E05。内容revise默认清空引用；显式传入且文本/来源匹配才接纳。verify/disable复制本版引用，restore复制目标版引用并重查，但仍candidate/verificationId=null。详见ADR013。
 
 Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、correction、select需open；propose与verify允许已有closed来源任务。重复begin报错，重复select在已有应用后返回空与`already_applied_one_experience`，不会重发同一上下文。
 
@@ -197,9 +205,10 @@ Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、
 |---|---|---|---|
 | evolve_begin_task | summary:string | taskId,application,experience,reasons | 建task；共享开时select，否则sharing_disabled_by_owner |
 | evolve_finish_task | taskId:string | closed Task | 只关闭边界，不验收 |
-| evolve_record_correction | taskId,note:string | recorded:true | open任务的脱敏纠正事件 |
-| evolve_propose_experience | taskId,candidate:json | experienceId,revision,status | 校验Candidate，新UUID候选；不接受验证声明 |
-| evolve_verify_experience | experienceId:string | experienceId,status,verificationId | owner固定策略；拒绝disabled、跨session、条件变动等 |
+| evolve_record_correction | taskId,note:string | recorded:true,evidence:{evidenceId,evidenceDigest,kind} | open任务的脱敏最小证据与仅含引用ID的事件，同事务 |
+| evolve_propose_experience | taskId,candidate:json,citations?:json | experienceId,revision,status,facts:[{factIndex,factDigest}] | Candidate不变，引用在外层可选；同事务写候选/引用 |
+| evolve_verify_experience | experienceId:string | experienceId,revision,status,verificationId,facts,evidence | owner固定策略；新增最小报告来源；不授予文字真值 |
+| evolve_link_fact_evidence | experienceId:string,revision:number,citations:json | experienceId,revision,status,provenance | 同session/repo，拒绝陈旧/错误摘要/越界等；相同引用幂等，完整已验证来源锁定 |
 
 没有反馈、配置提权、任意命令或发布工具。反馈由owner面板／可信核心调用追加；核心API本身不提供外部身份认证。
 
@@ -209,7 +218,7 @@ Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、
 |---|---|---|---|
 | session/event | session:<sessionId>:<seq> | 归属任务及event.type等最小元数据 | 用户主张、任务成功、完整轨迹 |
 | tools/result | tool:<agentId>:<callId> | 工具名及transport_error／result_observed | pytest通过、最终修复有效 |
-| 显式纠正 | 新UUID | kind=explicit_correction、note | 自动纠正识别或逐条事实来源 |
+| 显式纠正 | 来源UUID | kind=explicit_correction、evidenceId；正文只在最小evidence | 自动纠正识别或认证真实用户原话 |
 
 observe只附到该session的open任务，无任务忽略。不保留任意参数／结果正文；重复event ID忽略，**不会比较同ID载荷是否冲突**。当前无持久化水位、轨迹回放、自动失败尝试关联或重新归属。
 
@@ -273,12 +282,13 @@ Codex执行器的进程树／继承管道期限加固不能套用到当前pytest
 1. 要求open任务且尚无Application。
 2. 排除来源任务、candidate、disabled。
 3. 核对verificationId指向verified报告，来源task与repo匹配。
-4. 读取当前条件文件，精确repoId／dependencyDigest／requiredFiles hash匹配。
-5. feedback-v1排除当前revision、精确规范化任务摘要的irrelevant上下文。
-6. 对合格经验原文做BM25；有任何合格原文命中就只比较原文。
-7. 全部原文拒绝时才在accepted备用摘要上回退；bm25-v1不回退。
-8. 结合当前revision效用排序，取一条；无匹配返回空与原因。
-9. 写Application，再从begin工具返回Experience／Application／reasons。
+4. 生产默认evidence-v1还要求每事实≥1有效引用；检查归属、index/fact hash、证据digest及报告来源，无效则拒绝整条。显式历史bm25-v1/feedback-v1不新增这个门槛，冻结配方保持原行为。
+5. 读取当前条件文件，精确repoId／dependencyDigest／requiredFiles hash匹配。
+6. evidence-v1/feedback-v1排除当前revision、精确规范化任务摘要的irrelevant上下文。
+7. 对合格经验原文做BM25；有任何合格原文命中就只比较原文。
+8. 全部原文拒绝时才在accepted备用摘要上回退；bm25-v1不回退。
+9. 结合当前revision效用排序，取一条；无匹配返回空与原因。
+10. 写Application，再从begin工具返回Experience／Application／reasons。
 
 选择与Application写入未由一个覆盖所有输入的跨进程CAS事务保护，表也无task_id唯一约束。因此“每任务最多一条”是当前服务顺序调用行为，**不保证多进程竞争下exactly-once**。选择后到工具返回间的代码变化也无全仓冻结。G03/G04须固定新的原子边界／重复回执。
 
@@ -307,13 +317,14 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 |---|---|---|
 | begin | 查open后新UUID、写Task | 重复报错；无幂等key／后台重建 |
 | event | events.id冲突忽略 | 同key不同载荷不会诊断 |
-| propose | 新UUID＋revision1 | 重复提交可能生成不同经验 |
+| propose | 新UUID＋revision1，引用校验/历史/当前/引用同事务 | 重复提交仍可能生成不同经验 |
+| linkEvidence | expectedRevision＋完整引用集；相同幂等，其余允许变化原子追加 | 完整已验证来源锁定；无部分写入；来源不足不满足默认资格 |
 | verify | 异步运行后重查revision；报告＋新版本同事务 | 版本已变拒绝；进程中断无Job可恢复 |
 | select | 顺序检查已有Application后写入 | 重复返回空；跨进程／交付裂缝未解决 |
 | feedback | 同id同payload幂等；不同payload报错；停用同事务 | 更正需新id追加，按rowid而非时钟排序 |
 | revise | expectedRevision＋putExperience递增约束 | 陈旧写拒绝，保原历史 |
 | disable／restore | 事务内检查expectedRevision | stale返回冲突，旧反馈不禁新版 |
-| clean | 单SQL删过期events | 不删除证明历史；纠正引用目前不受保护 |
+| clean | 事务删过期events及无历史引用的过期evidence | 任何历史版引用继续保留，FK防止删除已引用来源 |
 | plugin unload | abort、等待pending、关库 | 进程被杀／机器断电不等于正常卸载 |
 
 目标G03采用task-scoped协调和输入摘要：同输入只允许一次外部调用资格，未知不得自动重开，提交前再核对revision／证据；需要把文件与DB裂缝显式记录为未完成。具体lease、锁、状态schema、重试／人工恢复和并发测试由新ADR固定。不能将实验脚本的wx资格文件直接宣称为生产协调器。
@@ -342,10 +353,11 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 | 方法／路由 | 输入／返回 | 错误与约束 |
 |---|---|---|
 | GET / | 静态面板 | CSP nonce、无外部资源 |
-| GET /api/state | tasks,experiences,histories,verifications,applications,feedback | 需Bearer；历史引用的证明也返回 |
+| GET /api/state | 原字段＋evidence,provenance | 需Bearer；每版完整性/引用/事实摘要与相关报告返回 |
 | POST /api/feedback | Feedback去createdAt→追加Feedback | 严格schema，未知应用拒绝 |
-| POST /api/cleanup | {}→removedEventSummaries | 删除30天前events |
-| POST /api/experience/:id/revise | revision,reason,candidate→新candidate | stale 409 |
+| POST /api/cleanup | {}→removedEventSummaries,removedUnreferencedSources | 事务清理30天前事件及未被任何历史版引用的来源 |
+| POST /api/experience/:id/revise | revision,reason,candidate,citations?→新candidate | 默认清空引用；UI保留未变事实引用；stale 409 |
+| POST /api/experience/:id/evidence | revision,citations→当前或新revision | 相同幂等；完整已验证来源锁定，owner须先检查反馈并显式修订；stale 409 |
 | POST /api/experience/:id/disable | revision,reason→新disabled | stale 409 |
 | POST /api/experience/:id/restore | revision,targetRevision,reason→新candidate | 不直接激活旧证明 |
 
@@ -387,8 +399,8 @@ Codex进程预算／取消／后代管道有专门测试；超时、缺完成、
 ## 14. 数据保留、运行资源与部署
 
 - DB默认在本机用户目录，首次创建目录mode0700意图不等于跨平台ACL保证；没有数据库加密、云同步或团队权限。
-- 事件30天由用户触发cleanup删除；没有后台自动过期worker。任务、证明、验收内容、历史、应用反馈不在普通清理范围。
-- 显式纠正在events，当前清理会删，逐条事实持久引用尚缺。G07须将“被引用最小证据”与“可清事件摘要”分离，并定义删除后降级，不能继续保留无来源的可用状态。
+- 过期事件及未引用来源由用户触发30天cleanup删除；没有后台自动过期worker。任务、证明、验收内容、历史、应用反馈不在普通清理范围。
+- T010将纠正文放入最小evidence、事件只记ID；任何历史版引用会保留来源，缺失/摘要错则默认资格拒绝。完全删除、遗忘和导出仍需G07；这不是永远保留全部纠正。
 - 脱敏为模式规则（常见token、赋值、邮件、本机路径），非语义隐私保证；不得把数据库、完整URL或原始报告提交Git。
 - 选择与面板目前扫描本仓库记录，无向量服务、分页、容量SLO或实测大库延迟保证。字段限长不是总存储／执行成本上限。
 - Node≥24.10，当前CI24.19.0；Python3.10／pytest9.1.1是已验证基线。跨环境来源重建需G06/G08，不仅是安装依赖声明。
@@ -424,8 +436,8 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | C01 | §7、14，observe／redact | dsh、core隐私检查 | 无完整轨迹 |
 | C02 | §5、8、12 | core真实Git／pytest | G01错误尝试归并 |
 | C03 | §5、8，Verification | core、codex acceptance preflight | 非完整环境manifest |
-| C04 | §5.4、12 | core仅task／proof | G01/G02逐条引用 |
-| C05 | §5.3、14，cleanEvidence | core清理后证明 | G07纠正保护 |
+| C04 | §5.2–5.3、7、9，evidence.ts | evidence逐条摘要/归属/报告改动，panel/DSH关联 | G01自动归并/G02语义核对 |
+| C05 | §5.3、14，cleanEvidenceWithRetention | evidence跨连接清理/FK/历史引用，core清理后证明 | G07彻底遗忘/导出 |
 | C06 | §5.1、8，snapshot | repository、core scope | 条件充分性待评价 |
 | E01–E02 | §5.2、12，Candidate／propose | domain严格schema源码核对；core候选拒选 | G02文字核对 |
 | E03 | §3、5、12 | core条件边界 | G02提炼约束 |
@@ -450,9 +462,9 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | U03 | §10–11 | panel鉴权／同源／stale | token持有者可信 |
 | U04 | §7、11–12 | dsh／面板分别验证 | G01/G05正常联动 |
 | D01–D02 | §5、11、14 | core脱敏／路径、panel | 非语义隐私保证 |
-| D03 | §5.3、14 | core清理后历史 | G07引用保留 |
+| D03 | §5.3、14 | evidence历史引用保留，core清理后历史 | G07完全删除/遗忘 |
 | D04 | §7、11–12 | dsh／core默认拒绝 | G02提炼授权 |
-| D05 | §5.3 | migration | 不支持旧程序混跑 |
+| D05 | §5.3 | migration v1/回滚/未知版，evidence v2逐表保留/幂等 | SQLite2不能混跑3 |
 | I01 | §1、7.3 | bundle／dsh／install-probe、T006d | 版本固定 |
 | I02 | §3、7.2 | dsh、core真实pytest | 运输状态非验收 |
 | I03 | §7.3、10 | dsh官方卸载移除工具/prompt；pending取消经源码核对 | 实际pending取消未专项运行；G03断电恢复 |
@@ -465,17 +477,17 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 
 ## 16. 缺口与实施依赖
 
-下面是设计backlog，**没有自动创建或完成这些实现Issue**。已有父[Issue #8](https://github.com/wang1299/dsh-evolve/issues/8)、[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)保持open。后续每项另固定范围、失败场景、任务分支和PR，不能把整张表塞进一个实现PR。
+下面是设计backlog。T010 / Issue #29已实现G01/G07显式来源切片，其余目标未自动创建或完成实现Issue。已有父[Issue #8](https://github.com/wang1299/dsh-evolve/issues/8)、[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)保持open。后续每项另固定范围、失败场景、任务分支和PR，不能把整张表塞进一个实现PR。
 
 | 缺口 | 问题／目标 | 依赖 | 必须新增的验收证据 |
 |---|---|---|---|
-| G01 任务证据归并 | 错误尝试、纠正、最终修复逐条溯源，最小EvidenceRef | 本基线，协同G07 | 真实任务边界、歧义拒绝、跨session隔离、主张缺证据 |
+| G01 任务证据归并 | T010已有显式纠正/验证逐条来源；自动错误尝试归并待实现 | 本基线，协同G07 | 真实任务边界、歧义拒绝、跨session隔离、主张缺证据 |
 | G02 授权自动提炼 | 官方DSH ExtractionPort，最小材料与主张核对 | G01、DSH接口任务设计、G03 | 授权关闭／预算／注入／无来源／重复输入，无模型虚构成功 |
 | G03 耐久协调恢复 | Job／Attempt、外部调用资格、并发去重、未知恢复 | G01，先定持久化ADR | 两进程竞争、关键点中断、重复事件、陈旧发布、无资格重开 |
 | G04 上下文与交付 | 最小DTO、硬预算、决策快照和重复回执 | G01/G03、现选择 | 超预算拒绝、版本漂移、返回失败、实际offered与unknown |
 | G05 正常DSH闭环 | 真实模型正常会话采集、复用、反馈／面板联动 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
 | G06 可公开收益评估 | 独立重建合成资产＋真实任务族配对重复 | 现v2/v3，G04/G05按评价入口 | 外部只读验收、三组控制、任务隔离、全部失败与人工指标 |
-| G07 保留与遗忘 | 引用证据保留、清理降级、导出／删除边界 | G01共同设计 | 纠正30天后仍可溯源，删除失效，无隐私副本残留声明越界 |
+| G07 保留与遗忘 | T010已保护历史引用最小来源/默认缺失拒绝；导出/彻底遗忘待设计 | G01共同设计 | 纠正30天后仍可溯源，删除失效，无隐私副本残留声明越界 |
 | G08 验证执行增强 | 后代树、总deadline、环境manifest／强隔离选择 | 当前验证器、独立ADR | 进程后代／逃逸风险场景、取消清理、环境漂移、资源边界 |
 | G09 主动过时检查 | 版本变化提示与待重验，不偷继承证明 | G01/G03、现scope | 文件／依赖变更、恢复、重新验证及通知去重 |
 | G10 面板与指标语义 | 历史反馈提示、单位、未知、分页／容量 | 当前面板，新增状态随G01–G04 | 旧版反馈不误导、单位不混算、大历史和真实用户交互 |
@@ -487,7 +499,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 - 编号需求／黄金场景→任务Issue→codex分支→必要失败用例→实现→相关检查→Draft PR→稳定SHA独立只读评审→修复／必要复审→CI及保护检查→squash合并。
 - 格式／公开工具／HTTP／授权／生命周期／执行边界变化先写ADR，说明兼容、迁移、失败恢复及验收；普通实现细节不机械审批。
 - 当前CI在Windows／Ubuntu固定Node24.19.0、Python3.10、pytest9.1.1，执行check、官方兼容、demo、pack及真实tgz组件安装；这不是完整发行应用或模型收益验收。
-- T009为纯文档，核对源码／测试／ADR、需求覆盖、链接／锚点及diff；不新增镜像文档的单元测试、不重跑模型或完整Web安装。当前头CI和独立设计评审仍需通过。
+- T009为历史纯文档交付。T010代码/迁移/接口变更执行53项本地检查、官方六工具/面板/真实Git-pytest、包安装及当前头CI，并由独立Agent审稳定SHA；没有新模型调用、完整Web安装重跑或收益结论。
 - 独立AI评审须写SHA、基线、范围、证据与影响，不充当GitHub正式批准；P0/P1及影响当前验收／数据／安全／主要路径的可复现P2必须修。
 - 计划、实现、验证、发布分别更新；不凭CI历史或测试数量合并，不上传私人报告、凭据或真实用户会话。
 

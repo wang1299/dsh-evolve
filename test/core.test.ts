@@ -8,7 +8,7 @@ import { applicability, snapshot } from '../src/repository.js';
 import { EvolveService, similarity } from '../src/service.js';
 import { Store } from '../src/store.js';
 import { parsePytest, passes, reproduces, verifiedCases } from '../src/verification.js';
-import { fixture } from './fixture.js';
+import { citeFact, fixture } from './fixture.js';
 
 test('pytest failure must be a real failing test; infrastructure, no collection and skips do not verify', () => {
   const xml = '<testsuites><testsuite tests="1" failures="1" errors="0" skipped="0"><testcase classname="acceptance" name="broken"><failure/></testcase></testsuite></testsuites>';
@@ -44,11 +44,11 @@ test('real source verification, reuse in another task, feedback, cleanup and rev
     assert.throws(() => service.requireTask(source.id, 'another-session'), /different session/);
     service.observe(source.sessionId, 'event-a', 'tool/result', 'pytest');
     service.observe(source.sessionId, 'event-a', 'tool/result', 'pytest');
-    service.correction(source.id, 'Rollback the transaction on exceptions.');
+    const correction = service.correction(source.id, 'Rollback the transaction on exceptions.');
     assert.equal(store.events(source.id).length, 2);
     await f.fix();
     const input = { title: 'database transaction rollback', strategy: 'Restore the balance before raising a transaction exception.', observedFacts: ['An exception left the balance incremented.'], inferences: ['Similar transactions may share the failure mode.'], recommendations: ['Check exception paths and run independent rollback acceptance tests.'], requiredFiles: ['contract.py'] };
-    const candidate = service.propose(source.id, input);
+    const candidate = service.propose(source.id, input, [citeFact(correction, input.observedFacts[0]!)]);
     assert.equal(candidate.status, 'candidate');
     const verified = await service.verify(candidate.id);
     assert.equal(verified.status, 'source_verified');

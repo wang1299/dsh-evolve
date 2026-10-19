@@ -17,10 +17,11 @@
 | T008a 长任务检索与离线消融 | T006c | PR #20已合并，37项两平台CI/实际安装/独立评审通过；误选和退步保留 | codex/t008-retrieval，Issue #19关闭 |
 | T008b 有来源的反馈检索记忆 | T008a | PR #22已合并，39项两平台CI/实际安装/独立评审通过，不属于收益实验 | codex/t008b-feedback-retrieval，Issue #21关闭 |
 | T008c feedback-v1真实模型初步对照 | T008b,T006c | 7/7次真实调用，积累通过、两题三组均2/2，Evolve提供经验但无验收改善；PR #24经44项两平台CI/实际安装/独立评审合并，Issue #23关闭 | codex/t008c-feedback-evaluation |
-| T009 详细需求与架构基线 | T001及当前实现/验证 | 文档v0.2：58项需求、15场景、当前/目标契约、追踪与G01–G10缺口；验收/当前头CI/评审见关联PR | codex/t009-design-baseline，Issue #27 |
+| T009 详细需求与架构基线 | T001及当前实现/验证 | PR #28经当前头两平台CI与独立评审合并，Issue #27关闭；58项需求、15场景与G01–G10追踪 | codex/t009-design-baseline |
+| T010 事实来源与历史保留 | T009，G01/G07切片 | SQLite v3最小证据/逐条引用、evidence-v1默认资格、六工具与面板；本地53项及界面通过；来源相同幂等，完整已验证来源锁定；当前头CI/包安装/独立评审见关联PR | codex/t010-evidence-provenance，Issue #29 |
 
-远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26已squash合并。当前交付T009需求与架构细化（Issue #27），实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
+远端：公开仓库wang1299/dsh-evolve。PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24/#26/#28已squash合并。当前交付T010事实来源与保留（Issue #29），实际CI／评审／合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。发布：无。
 
-后续实现从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)拆出独立任务：优先G01/G07证据与保留契约，再G02/G03提炼与恢复、G04上下文、G05正常DSH闭环；G06独立重建/收益评价，G08/G09/G10按执行、过时与界面风险推进。它们是设计backlog，尚未创建或完成实现Issue，T009不增加运行能力。父Issue #8/#15保持open。
+后续实现从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)拆出独立任务。T010仅完成G01/G07显式来源切片，自动错误尝试归并/提炼、耐久协调、彻底遗忘仍未完成；继续G03/G02、G04、G05，G06独立重建/收益评价，G08/G09/G10按风险推进。父Issue #8/#15保持open。
 
 已有Codex真实合成接入；未见真实任务集的收益实验仍未完成，历史两组预算不等，不能据此判断收益。GitHub main当前无保护及ruleset，未修改权限或伪造正式Review；仍按验收、必要CI与AI独立评审条件合并。

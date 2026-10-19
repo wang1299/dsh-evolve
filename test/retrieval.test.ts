@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { EvolveService } from '../src/service.js';
 import { Store } from '../src/store.js';
-import { fixture } from './fixture.js';
+import { citeFact, fixture } from './fixture.js';
 import { rankText, retrievalTokens } from '../src/retrieval.js';
 
 test('frozen diagnostic reproduces every selection on both splits while retaining wrong and missed results', async () => {
@@ -60,7 +60,8 @@ test('long task retains a verified match while evidence, scope, ambiguity and ne
     + 'record platform versions, run focused checks in a temporary checkout, explain the smallest patch and summarize outstanding limitations.';
   try {
     const source = service.begin('source', 'transaction rollback exception'); await f.fix();
-    const candidate = service.propose(source.id, { title: 'transaction rollback exception', strategy: 'Restore the original balance before raising the failed transaction exception.', observedFacts: ['Failure changed the balance'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] });
+    const correction = service.correction(source.id, 'Fixture correction: failure changed the balance; restore it.');
+    const candidate = service.propose(source.id, { title: 'transaction rollback exception', strategy: 'Restore the original balance before raising the failed transaction exception.', observedFacts: ['Failure changed the balance'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] }, [citeFact(correction, 'Failure changed the balance')]);
     const verified = await service.verify(candidate.id); service.finish(source.id);
     assert.equal(verified.status, 'source_verified');
     const next = service.begin('long', longTask);
