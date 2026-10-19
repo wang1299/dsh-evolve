@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T023在新的完整Windows官方0.2.0-rc.2 profile实际安装6742214产品包（24 JS匹配、七工具），全部宿主服务来自完整host。真正AgentLoop/固定进程内Adapter跑begin/纠正/修复提交/finish→后台pytest/自动candidate→下一正常provider输入中的数量提醒→实际list回执；7次Agent+1次提炼、模型HTTP0、candidate不激活。同库安装包CLI面板和撤销临时授权后的正常Web重启通过；实际失败和公开重建限制见[T023验收](development/T023-native-discovery.md)。这不是实际模型或未来收益证据。
+
 T022在原六工具上增量加入`evolve_list_candidates(taskId?)`，SQLite仍v5、既有工具输入不变。固定官方AssembleContext.agent/systemPrompt.context用于同session数量提醒；diagnostic assembly无Agent时不含数据。兼容探针增加共享关闭、session/cwd隔离和卸载边界，当前包为七工具；历史六工具验证记录保留。实际安装/浏览器/CI与评审结果见[T022任务](tasks/T022-candidate-discovery.md)及关联PR，不能以旧T021试装替代新包验证。
 
 T021新增实际tgz自动候选链路与三条负路径，逐文件检查24个产品JS并核对Loader模块身份；官方AgentLoop为真实组件，模型是固定脚本。另在全新Windows完整0.2.0-rc.2 profile实际安装、加载和重启，原profile不改。组件演练与完整应用加载证据分别记录，不构成真实模型完整学习；见[T021验收](development/T021-acceptance.md)。
