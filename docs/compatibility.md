@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T021新增实际tgz自动候选链路与三条负路径，逐文件检查24个产品JS并核对Loader模块身份；官方AgentLoop为真实组件，模型是固定脚本。另在全新Windows完整0.2.0-rc.2 profile实际安装、加载和重启，原profile不改。组件演练与完整应用加载证据分别记录，不构成真实模型完整学习；见[T021验收](development/T021-acceptance.md)。
+
 T020增加精确可选peer `@deepseek-ai/dsh-llm@0.2.0-rc.2`（运行代码只经宿主服务，不导入provider/Key）。compat使用真实LlmRuntime.prepareCall与一次性stream，合成Adapter覆盖精确路由/maxTokens、无伪造session/purpose、文本/usage、坏流、晚注册provider和卸载中断。默认六工具仍可在无LLM服务下运行。源码兼容与本轮实际包/CI记录见[T020任务](tasks/T020-auto-extraction.md)，不等于真实模型提炼质量。
 
 `npm run compat` 使用发行包真实Context、SessionStore、ToolRuntime、SystemPrompt，注册六个工具和提示区，执行开始/完成任务、记录纠正、提候选和关联事实来源、拒绝陈旧/跨session操作及未授权验证、采集最小工具结果元数据，并验证卸载移除工具和提示区。
