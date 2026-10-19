@@ -16,7 +16,10 @@ const callSchema = z.object({ id: z.string().uuid(), chargedMicroCny: z.number()
 const originalStateSchema = z.object({ schemaVersion: z.literal(1), budgetMicroCny: z.literal(5_000_000),
   calls: z.array(callSchema).max(16) }).strict();
 const supplementalStateSchema = originalStateSchema.extend({ schemaVersion: z.literal(2), policyId: z.literal('t015-snapshot-high-water-v1') });
-const stateSchema = z.union([originalStateSchema, supplementalStateSchema]);
+const singleSampleStateSchema = z.object({ schemaVersion: z.literal(3), policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']),
+  budgetMicroCny: z.number().int().min(budgetPolicy.reservationMicroCny).max(budgetPolicy.budgetMicroCny),
+  maxCalls: z.literal(1), receiptVersion: z.literal(2), calls: z.array(callSchema).max(1) }).strict();
+const stateSchema = z.union([originalStateSchema, supplementalStateSchema, singleSampleStateSchema]);
 export type BudgetState = z.infer<typeof stateSchema>;
 const receiptInputSchema = z.object({ reason: z.enum(usageReasons), httpStatus: z.number().int().min(100).max(599).nullable(),
   responseBytes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), snapshots: z.array(snapshotSchema).max(64),
@@ -36,17 +39,25 @@ export class DeepseekBudget {
   private poisoned = false;
   private readonly freshReservations = new Set<string>();
   constructor(readonly path: string, readonly policyId: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1',
-    readonly receiptVersion: 1 | 2 = 1) {
+    readonly receiptVersion: 1 | 2 = 1, readonly singleSampleBudgetMicroCny?: number) {
     if (receiptVersion !== 1 && receiptVersion !== 2) throw new Error('Unsupported receipt version');
+    if (singleSampleBudgetMicroCny !== undefined) {
+      if (!Number.isSafeInteger(singleSampleBudgetMicroCny) || singleSampleBudgetMicroCny < budgetPolicy.reservationMicroCny
+        || singleSampleBudgetMicroCny > budgetPolicy.budgetMicroCny) throw new Error('Invalid single-sample budget');
+      if (receiptVersion !== 2) throw new Error('Single-sample budget requires receipt version 2');
+    }
     mkdirSync(dirname(path), { recursive: true });
     this.lock = openSync(path + '.lock', 'wx');
     try {
       this.state = existsSync(path) ? stateSchema.parse(JSON.parse(readFileSync(path, 'utf8')))
-        : policyId === 't011-conservative-v1' ? { schemaVersion: 1, budgetMicroCny: 5_000_000, calls: [] }
+        : singleSampleBudgetMicroCny !== undefined ? { schemaVersion: 3, policyId, budgetMicroCny: singleSampleBudgetMicroCny, maxCalls: 1, receiptVersion: 2, calls: [] }
+          : policyId === 't011-conservative-v1' ? { schemaVersion: 1, budgetMicroCny: 5_000_000, calls: [] }
           : { schemaVersion: 2, policyId, budgetMicroCny: 5_000_000, calls: [] };
       if ((this.state.schemaVersion === 1 ? 't011-conservative-v1' : this.state.policyId) !== policyId) throw new Error('Budget policy mismatch');
+      if (this.state.schemaVersion === 3 ? singleSampleBudgetMicroCny !== this.state.budgetMicroCny || receiptVersion !== 2
+        : singleSampleBudgetMicroCny !== undefined) throw new Error('Single-sample budget identity mismatch');
       if (this.state.calls.some((c) => c.chargedMicroCny !== (c.usage ? c.usage.input * 2 + c.usage.output * 8 : budgetPolicy.reservationMicroCny))
-        || this.spent > budgetPolicy.budgetMicroCny) throw new Error('Invalid budget accounting');
+        || this.spent > this.state.budgetMicroCny) throw new Error('Invalid budget accounting');
       if (!existsSync(path)) this.persist();
     } catch (error) { closeSync(this.lock); unlinkSync(path + '.lock'); throw error; }
   }
@@ -72,7 +83,8 @@ export class DeepseekBudget {
   }
   reserve(): string {
     if (this.closed || this.poisoned) throw new Error('Budget unavailable');
-    if (this.state.calls.length >= budgetPolicy.maxCalls || this.spent + budgetPolicy.reservationMicroCny > budgetPolicy.budgetMicroCny) throw new Error('Budget exhausted');
+    if (this.state.calls.length >= (this.state.schemaVersion === 3 ? this.state.maxCalls : budgetPolicy.maxCalls)
+      || this.spent + budgetPolicy.reservationMicroCny > this.state.budgetMicroCny) throw new Error('Budget exhausted');
     const id = randomUUID();
     this.state.calls.push({ id, chargedMicroCny: budgetPolicy.reservationMicroCny, usage: null, createdAt: new Date().toISOString() });
     this.persist(); this.freshReservations.add(id); return id;

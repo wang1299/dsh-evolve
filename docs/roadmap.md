@@ -23,6 +23,7 @@
 | T012 模型可见引用契约 | T010/T011 | 原生嵌套schema、引用顺序和错误重放；59项两平台CI/独立评审通过，已合并PR #35；不声明模型修复效果 | codex/t012-tool-input-contract，Issue #33关闭 |
 | T013 数值用量回执 | T011/T012 | 已合并PR #36，65项两平台CI/必要增量独立复审；数值回执离线完成，真实采样待做；不回填旧unknown | codex/t013-numeric-receipts，Issue #34保持open |
 | T014 原生Agent脚本演练 | T010–T013 | 已合并PR #38，Issue #37关闭；5场景、70项两平台CI及必要独立复审，零付费，不是模型或收益证据 | codex/t014-agent-rehearsal |
+| T017 最小单次真实采样 | T016、用户新增最多3元 | Issue #43；准确单次预算/固定短提示/v2诊断，执行及最终门槛见[T017验收](development/T017-acceptance.md)，不复用旧资格 | codex/t017-messages-sample |
 | T016 未知usage结构诊断 | T013/T015、Issue #41 | 可选v2回执/固定拒绝位置/有限字段指纹，离线检查及最终CI/评审门槛见关联PR；没有新付费或真实字段认定 | codex/t016-usage-diagnostics |
 | T015 追加预算真实学习回归 | T012–T014、用户另授权5元 | PR #40 / Issue #39；一次live共2个HTTP，start usage未兼容、来源仍open/经验0，partial；代码77项两平台检查、付费前及结果独立核对通过，当前提交CI/合并门槛见PR | codex/t015-live-learning |
 
