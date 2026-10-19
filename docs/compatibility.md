@@ -30,6 +30,10 @@ Task/Experience v1、Verification v2和历史评价格式不变。新增evolve_l
 
 ## 本地接入（开发预览）
 
+### 离线原生AgentLoop演练（T014）
+
+`npm run dsh-rehearsal`通过固定0.2.0-rc.2真实AgentLoop连续执行六工具与来源/新任务验证；模型由唯一进程内固定脚本替代，未运行DeepSeek/SDK HTTP，也不证明模型理解经验。此前compat身份fixture探针继续保留；演练与错误引用/失败测试/关闭共享负路径见[T014验收](development/T014-acceptance.md)。新增包仅开发依赖，不能将本演练算作完整发行应用或真实模型端到端成功。
+
 构建安装包后，通过固定DSH版本将本地tgz装到独立测试profile；本机Windows完整CLI/Web试装已通过，日常模型学习仍待验收。当前包未发布到npm。
 
 源码工作区的可复现安装组件探针（另需pnpm）：

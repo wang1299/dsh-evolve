@@ -386,6 +386,7 @@ DSH Web认证与面板token不同：固定官方Web应从CLI打印的启动URL�
 | Codex来源执行器 | 只读CLI、受限JSON提案、宿主allowlist及hash | 独立pytest来源案例 | 复用本机登录，不桥接到DSH模型 |
 | v2配对 | 冻结任务／库／验收／策略／控制摘要 | 精确经验引用、实际调用与状态 | wx单次资格，不重开失败槽 |
 | v3反馈对照 | 1积累＋2任务×3组，最多7新调用 | 来源连续性、积累反馈和三组结果 | accepted注明基准验收，非用户原话 |
+| T014离线原生Agent | 固定0.2.0-rc.2实际AgentLoop＋唯一进程内脚本适配器 | 真实工具回执/同任务来源/新session交付及独立pytest | 11次脚本调用，无模型智能/SDK HTTP/收益结论，见[验收](development/T014-acceptance.md) |
 | 未来真实任务评价 | 公开重建套件、任务族隔离、重复及人工观测 | 成功／复发／返工／误用／成本 | G06，尚未完成 |
 
 当前真实CLI固定0.163.0-alpha.10.2，请求gpt-6.1-sol／low、HTTPS provider retry=0，90s期限；配对tool预算0，prompt32KiB／输出1MiB。只读结构化修复由宿主检查路径／原内容摘要后写入限定目标，验收目录不交给模型写。
