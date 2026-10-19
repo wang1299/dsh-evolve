@@ -18,6 +18,6 @@
 | T008b 有来源的反馈检索记忆 | T008a | PR #22已合并，39项两平台CI/实际安装/独立评审通过，不属于收益实验 | codex/t008b-feedback-retrieval，Issue #21关闭 |
 | T008c feedback-v1真实模型初步对照 | T008b,T006c | 7/7次真实调用，积累通过、两题三组均2/2，Evolve提供经验但无验收改善；执行头44项两平台CI/实际安装/预审通过；最终门槛见PR #24 | codex/t008c-feedback-evaluation，Issue #23 |
 
-远端：公开仓库wang1299/dsh-evolve。用户已恢复GitHub开发，PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22已squash合并。当前交付T008c初步模型对照，实际CI／评审／合并结果见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)，不以历史检查代替当前头。发布：无。
+远端：公开仓库wang1299/dsh-evolve。用户已恢复GitHub开发，PR #2/#9/#10/#11/#13/#14/#16/#17/#18/#20/#22/#24已squash合并。当前交付T006d完整CLI/Web试装文档（PR #26），实际CI／评审／合并结果见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)，不以历史检查代替当前头。发布：无。
 
 已有Codex真实合成接入；未见真实任务集的收益实验仍未完成，历史两组预算不等，不能据此判断收益。GitHub main当前无保护及ruleset，未修改权限或伪造正式Review；仍按验收、必要CI与AI独立评审条件合并。
