@@ -262,3 +262,15 @@ test('oversized UTF-8 evidence is rejected before qualification without partial 
     assert.equal(calls, 0); assert.equal(store.extraction.jobs()[0]!.reason, 'invalid_material'); assert.equal(store.extraction.grants()[0]!.used, 0);
   } finally { store.close(); }
 });
+
+test('synchronous event-loop blocking cannot let a completed response publish after its absolute deadline', async () => {
+  const r = await ready({ ...grant(), timeoutMs: 100 }); let calls = 0;
+  try {
+    await r.service.extraction.runNext(async () => {
+      calls++; const until = Date.now() + 150; while (Date.now() < until) { /* Delay the timer itself, not just its async callback. */ }
+      return response();
+    });
+    assert.equal(calls, 1); assert.equal(r.store.extraction.job(r.job.id)?.state, 'unknown'); assert.equal(r.store.experiences().length, 0);
+    assert.equal(r.store.extraction.grants()[0]!.used, 1);
+  } finally { r.store.close(); }
+});

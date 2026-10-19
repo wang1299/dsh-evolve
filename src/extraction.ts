@@ -97,11 +97,14 @@ export class ExtractionJobs {
         });
       } catch { this.store.extraction.block(queued.id, 'invalid_material'); return true; }
       if (!job) continue;
+      const expiresAt = Math.min(Date.now() + job.policy.timeoutMs, job.leaseUntil!);
       const deadline = AbortSignal.timeout(job.policy.timeoutMs);
       const cancel = signal ? AbortSignal.any([signal, deadline]) : deadline;
+      const checkDeadline = (): void => { cancel.throwIfAborted(); if (Date.now() >= expiresAt) throw new Error('Extraction deadline elapsed'); };
       let usage: ExtractionResult['usage'] = null;
       try {
         // Race enforces our publication deadline even if a faulty port ignores cancellation.
+        checkDeadline();
         const result = await cancelled(port({ policy: job.policy, material: material.text, signal: cancel }), cancel);
         const parsedUsage = result.usage === null ? null : extractionUsageSchema.safeParse(result.usage);
         if (parsedUsage !== null && !parsedUsage.success) throw new InvalidExtractionResponse();
@@ -109,12 +112,13 @@ export class ExtractionJobs {
         if (Buffer.byteLength(result.text, 'utf8') > EXTRACTION_OUTPUT_BYTES) throw new InvalidExtractionResponse();
         const output = extractionOutputSchema.safeParse(parseJson(result.text));
         if (!output.success) throw new InvalidExtractionResponse();
-        if (cancel.aborted) throw new Error('Extraction interrupted');
+        checkDeadline();
         const refresh = (): void => {
           try { if (digest(extractionMaterial(this.store, this.root, job).text) !== job.inputDigest) throw new Error('Changed'); }
           catch { throw new ExtractionMaterialChanged(); }
         };
         refresh();
+        checkDeadline();
         if (output.data.kind === 'abstain') {
           this.store.extraction.complete(job, Date.now(), 'abstained', 'model_abstained', usage); return true;
         }
@@ -129,7 +133,7 @@ export class ExtractionJobs {
         const citations: FactCitation[] = selected.map((f, factIndex) => ({ factIndex, factDigest: digest(f!.text), evidenceId: f!.evidenceId, evidenceDigest: f!.evidenceDigest }));
         this.store.extraction.complete(job, Date.now(), 'candidate', 'extracted', usage, () => {
           // Revalidate inside the same write transaction as candidate and citation publication.
-          cancel.throwIfAborted(); refresh();
+          checkDeadline(); refresh(); checkDeadline();
           this.store.putExperience(experience, validateCitations(this.store, experience, citations)); return experience.id;
         });
       } catch (error) {

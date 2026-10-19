@@ -22,7 +22,7 @@ maxCalls限制本插件逻辑调用，maxTokens是请求控制，不是人民币
 
 SQLite v5同事务增加extraction_grants和extraction_jobs；v4与早期历史JSON不改，旧程序拒绝v5。grant记录策略摘要、已占用次数。job以task唯一，关联T019 job、冻结策略、状态waiting/running/candidate/abstained/blocked/failed/unknown、有限reason、输入摘要、token/截止、候选ID、已报告数字usage及时间。不保存原始响应或异常正文。任务/证据包仍使用已有规范化引用和保留外键。
 
-首个SQL写获取跨连接写锁；grant条件扣额与job条件占用同事务。running不重试，过期转换unknown；发布必须同token、未过期，且候选、引用、终态同事务提交，失败回滚。调用总deadline和卸载取消，忽略AbortSignal的实现也不能迟到发布；官方适配器应响应signal以终止网络活动。不能证明取消等于服务端未计费。
+首个SQL写获取跨连接写锁；grant条件扣额与job条件占用同事务。数据库初始化先BEGIN IMMEDIATE再读版本/迁移，避免deferred共享读锁同时升级写锁的死锁，异常完整回滚。running不重试，过期转换unknown；发布必须同token、未过期，且候选、引用、终态同事务提交，失败回滚。调用总deadline同时检查绝对时间，不能仅依赖可能被同步操作延后的AbortSignal计时器；卸载取消，忽略AbortSignal的实现也不能迟到发布。官方适配器应响应signal以终止网络活动，不能证明取消等于服务端未计费。
 
 ## DSH／观察／验收
 
