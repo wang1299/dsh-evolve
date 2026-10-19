@@ -2,7 +2,7 @@
 
 ## 当前T015追加预算真实学习回归（2026-10-19）
 
-用户另授权最多5元；Issue #39 / Draft PR #40，设计[ADR018](../decisions/018-supplemental-live-validation.md)先于实现。新固定profile/单次资格/schema2账本、最大输入总数保守计费，原T011首次partial/未知预留不改。付费前P2（新增验收文件漂移）修复并独立增量复审通过，77项两平台CI通过，实际17个JS安装/零调用握手通过；一次live共2个HTTP，在message_start的未知usage结构保守拒绝，begin/纠正完成，来源open/经验0。新增4.465536元为最坏占额，SDK独立估算0.009626元不是账单或结算，未重跑；最终结果文档核对和当前头CI待完成；详见[T015验收](T015-acceptance.md)。已见合成任务的引导回归，不是收益评价。T014由PR #38经70项两平台检查及必要独立复审合并；以下保留当时阶段快照。
+用户另授权最多5元；Issue #39 / Draft PR #40，设计[ADR018](../decisions/018-supplemental-live-validation.md)先于实现。新固定profile/单次资格/schema2账本、最大输入总数保守计费，原T011首次partial/未知预留不改。付费前P2（新增验收文件漂移）修复并独立增量复审通过，77项两平台CI通过，实际17个JS安装/零调用握手通过；一次live共2个HTTP，在message_start的未知usage结构保守拒绝，begin/纠正完成，来源open/经验0。新增4.465536元为最坏占额，SDK独立估算0.009626元不是账单或结算，未重跑；最终结果文档已独立增量核对通过；代码头77项两平台检查通过，当前提交CI/合并状态见[PR #40](https://github.com/wang1299/dsh-evolve/pull/40)；详见[T015验收](T015-acceptance.md)。已见合成任务的引导回归，不是收益评价。T014由PR #38经70项两平台检查及必要独立复审合并；以下保留当时阶段快照。
 
 ## 当前T014原生Agent脚本演练（2026-10-19）
 
