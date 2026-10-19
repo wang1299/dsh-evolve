@@ -10,6 +10,8 @@ Issue [#37](https://github.com/wang1299/dsh-evolve/issues/37)，设计先于实�
 
 没有调用原T011实验/预算/资格或已安装SDK/Web profile，不读取Key。新增的AgentLoop、LLM、session projection仅是固定开发依赖，包的files/peer/SQLite格式/六工具不变。持久化仅全新合成仓库/学习库及有限报告，完整session/请求只在内存、不写会话日志；不自动删除旧数据。报告含生成的本机路径，仅用于本地，不能直接作为公开去敏报告上传。
 
+自审补齐合成用户输入：首轮prompt包含完整明确纠正文案，脚本必须先从实际user消息确认原文才record；不能仅把适配器自带常量当作用户已提供的材料。它仍是测试作者编写的合成纠正，不是真实用户学习证据。
+
 ## 使用
 
 源码安装依赖后运行：

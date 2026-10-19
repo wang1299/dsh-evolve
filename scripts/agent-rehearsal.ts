@@ -52,6 +52,9 @@ class ScriptedAdapter extends LlmAdapter {
       switch (this.sourceStep++) {
         case 0: return { name: 'evolve_begin_task', args: { summary } };
         case 1:
+          if (!options.messages.some((m) => m.role === 'user' && m.content.some((b) => b.type === 'text' && b.text.includes(correction)))) {
+            throw new Error('No explicit synthetic user correction');
+          }
           this.taskId = idSchema.parse(this.result(options, 'evolve_begin_task').taskId);
           return { name: 'evolve_record_correction', args: { taskId: this.taskId, note: correction } };
         case 2:
@@ -168,7 +171,8 @@ export async function rehearse(scenario: typeof scenarios[number] = 'happy'): Pr
     };
     const source = await create(sourceId); report.phase = 'source_proposal';
     const parse = (text: string): string => z.object({ code: z.string().max(4096) }).strict().parse(JSON.parse(text)).code;
-    const proposedCode = parse(await turn(source, 'Scripted fixture: begin, record the explicit correction, propose source repair JSON.', events));
+    const proposedCode = parse(await turn(source, 'Scripted fixture: begin, record this explicit synthetic user correction: "' + correction
+      + '". Then propose source repair JSON.', events));
     validateRepair(proposedCode, 'apply_change'); writeFileSync(join(f.repo, 'ledger.py'), proposedCode);
     git(f.repo, ['add', 'ledger.py']); git(f.repo, ['commit', '-m', 'scripted Agent source proposal']);
     const sourceFix = git(f.repo, ['rev-parse', 'HEAD']); report.sourceFix = sourceFix;
