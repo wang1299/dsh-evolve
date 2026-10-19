@@ -27,6 +27,24 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   const assembly = await ctx.systemPrompt.assemble();
   assert.ok(assembly.sections.some((s) => s.name === 'dsh-evolve:workflow'));
   assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 6);
+  const proposeSchema = assembly.tools.find((t) => t.name === 'evolve_propose_experience')!.parameters;
+  const linkSchema = assembly.tools.find((t) => t.name === 'evolve_link_fact_evidence')!.parameters;
+  const candidateSchema = (proposeSchema.properties as Record<string, Record<string, unknown>>).candidate!;
+  assert.equal(candidateSchema.type, 'object', 'Agent must see Candidate fields, not opaque JSON');
+  assert.equal(candidateSchema.additionalProperties, false);
+  assert.deepEqual(new Set(candidateSchema.required as string[]), new Set(['title', 'strategy', 'observedFacts', 'inferences', 'recommendations', 'requiredFiles']));
+  for (const schema of [proposeSchema, linkSchema]) {
+    const citations = (schema.properties as Record<string, Record<string, unknown>>).citations!;
+    assert.equal(citations.type, 'array');
+    const item = citations.items as Record<string, unknown>;
+    assert.equal(item.additionalProperties, false);
+    assert.deepEqual(new Set(item.required as string[]), new Set(['factIndex', 'factDigest', 'evidenceId', 'evidenceDigest']));
+    assert.equal((item.properties as Record<string, Record<string, unknown>>).factIndex!.type, 'integer');
+  }
+  assert.equal((linkSchema.properties as Record<string, Record<string, unknown>>).revision!.type, 'integer');
+  const workflow = assembly.sections.find((s) => s.name === 'dsh-evolve:workflow')!.text;
+  assert.match(workflow, /without citations/);
+  assert.match(workflow, /kind/);
   const result = await run('evolve_begin_task', { summary: 'database rollback' });
   assert.equal(result.isError, false, JSON.stringify(result));
   const task = service.store.tasks()[0]!;
@@ -38,12 +56,18 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   assert.equal(correctionResult.isError, false);
   const evidence = store.evidenceRecords()[0]!;
   assert.ok(JSON.stringify(correctionResult).includes(evidence.digest));
-  const proposal = await run('evolve_propose_experience', { taskId: task.id, candidate: { title: 'transaction rollback', strategy: 'Restore state.',
-    observedFacts: ['The explicit correction asks to restore state.'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] } });
+  const candidate = { title: 'transaction rollback', strategy: 'Restore state.',
+    observedFacts: ['The explicit correction asks to restore state.'], inferences: [], recommendations: [], requiredFiles: ['contract.py'] };
+  const receipt = { evidenceId: evidence.id, evidenceDigest: evidence.digest, kind: evidence.kind };
+  assert.equal((await run('evolve_propose_experience', { taskId: task.id, candidate, citations: [receipt] })).isError, true, 'T011 receipt is not a citation');
+  assert.equal(store.experiences().length, 0, 'invalid citations cannot leave a partial candidate');
+  const proposal = await run('evolve_propose_experience', { taskId: task.id, candidate });
   assert.equal(proposal.isError, false);
   const exp = store.experiences()[0]!; const citations = [citeFact(evidence, exp.observedFacts[0]!)];
   assert.ok(JSON.stringify(proposal).includes(citations[0]!.factDigest));
   const args = { experienceId: exp.id, revision: exp.revision, citations };
+  assert.equal((await run('evolve_link_fact_evidence', { ...args, citations: [receipt] })).isError, true);
+  assert.equal((await run('evolve_link_fact_evidence', { ...args, citations: [{ ...citations[0], factDigest: '0'.repeat(64) }] })).isError, true, 'native shape cannot bypass exact digest validation');
   assert.equal((await run('evolve_link_fact_evidence', args, { id: other.id } as Agent)).isError, true);
   assert.equal((await run('evolve_link_fact_evidence', args)).isError, false);
   assert.equal(service.provenance(store.experience(exp.id)!).complete, true);
