@@ -12,6 +12,8 @@ Issue [#39](https://github.com/wang1299/dsh-evolve/issues/39)，设计先于实�
 
 ## 固定执行方案
 
+付费前AI独立只读首审ea725201对38124da，并核对a51dc6c增量，发现1项成立P2：初始文件map不能发现新增验收Python文件。先加嵌套conftest失败用例，实际Missing expected rejection；再复用共享`acceptanceDigest`冻结完整source/target文件集合，消费资格及每次请求预留/发网前核验，实际两个proof也比对冻结摘要。新增真实离线HTTP回归确认首请求可结算、增加conftest后第二请求在新预留前拒绝。先前“link顶层taskId会被拒绝”的评审推测经实测不成立，已撤回；只去掉提示多余字段，不改插件schema或伪造阻塞修复。AI不是GitHub正式批准，修复后需必要增量复审。
+
 官方DSH0.2.0-rc.2 SDK-minimal独立profile，deepseek-flash，准备时官方别名版本DeepSeek-V4.1-Flash-1017；非思考、4096输出、16个串行HTTP上限、无重试。每请求预留2.232768元，新增总额最多5元；完整回执持久化后按2/8微元高峰价保守结算。未确认继续全额预留，不是实际账单，不从旧记录回填。
 
 来源ledger/目标cart是已见作者编写合成案例，沿用明确纠正和相似任务摘要。宿主AST限制代码提案、写入和提交；Agent调用六个原生工具、独立pytest在宿主完成。来源修复证明、纠正事实引用完整且任务关闭后才进入新session；目标记录适用/交付、原始失败及修复/回归、实际基准反馈。仅一次live，失败亦终止保留，不调题追加重跑。

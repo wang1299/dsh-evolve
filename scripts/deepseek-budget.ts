@@ -82,7 +82,8 @@ export function settledMessagesUsage(body: string): z.infer<typeof usageSchema> 
   return analyzeMessagesUsage(body, budgetPolicy).usage;
 }
 
-export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof fetch = fetch): Promise<{ baseURL: string; close: () => Promise<void> }> {
+export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof fetch = fetch,
+  beforeForward: () => Promise<void> = async () => {}): Promise<{ baseURL: string; close: () => Promise<void> }> {
   const path = '/run-' + randomUUID(); let active = false;
   const server = createServer(async (req, res) => {
     const fail = (status: number): void => { if (!res.headersSent) { res.writeHead(status, { 'content-type': 'application/json' }); res.end('{"error":"experiment_request_rejected"}'); } else res.destroy(); };
@@ -108,6 +109,7 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
         || (body.tools !== undefined && (!Array.isArray(body.tools) || body.tools.some((t: Record<string, unknown>) => t.type !== undefined
           || !['evolve_begin_task', 'evolve_finish_task', 'evolve_record_correction', 'evolve_propose_experience', 'evolve_verify_experience', 'evolve_link_fact_evidence'].includes(String(t.name)))))) throw new Error('Request policy');
       const key = req.headers['x-api-key']; if (typeof key !== 'string' || !key) throw new Error('Missing request credential');
+      await beforeForward(); // Recheck frozen acceptance before each reservation and paid HTTP.
       id = budget.reserve(); // Commit cost liability before any network call, including failed calls.
       receipt('awaiting_response'); // A failed diagnostic write must prevent forwarding.
       const response = await transport('https://api.deepseek.com/anthropic/v1/messages', { method: 'POST', body: raw,

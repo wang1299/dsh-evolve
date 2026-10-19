@@ -9,11 +9,11 @@ import { fixture } from '../test/fixture.js';
 import { digest } from '../src/domain.js';
 import { git } from '../src/repository.js';
 import { createService } from '../src/config.js';
-import { verifyRepair } from '../src/verification.js';
+import { acceptanceDigest, verifyRepair } from '../src/verification.js';
 import { DeepseekBudget, startBudgetRelay } from './deepseek-budget.js';
 
 import { deliveryEvidence, projectRoot, validateRepair } from './dsh-live.js';
-import { freezeFiles, validateQualification, consumeQualification } from './live-qualification.js';
+import { freezeFiles, validateQualification, validateAcceptance, consumeQualification } from './live-qualification.js';
 
 export const supplementalWork = join(projectRoot, '.probe-work/t015-live');
 export const supplementalBudgetPath = join(projectRoot, '.probe-work/t015-budget.json');
@@ -28,12 +28,12 @@ interface Rpc {
   request(method: string, params: object, signal?: AbortSignal): Promise<unknown>;
   onNotification(handler: (method: string, params: RecordValue) => void): void;
 }
-type Plan = { schemaVersion: 1; experiment: 't015'; addedBudgetMicroCny: 5_000_000; frozenFiles: Record<string, string>; hostRoot: string; dshHome: string; profile: string; repo: string; acceptance: string; targetAcceptance: string;
+type Plan = { schemaVersion: 1; experiment: 't015'; addedBudgetMicroCny: 5_000_000; frozenFiles: Record<string, string>; acceptanceDigests: Record<string, string>; hostRoot: string; dshHome: string; profile: string; repo: string; acceptance: string; targetAcceptance: string;
   sourceBase: string; configPath: string; archiveDigest: string; sourceCode: string; targetCode: string; prompts: { source: string; learn: string; transfer: string } };
-const readPlan = (): Plan => {
+const readPlan = async (): Promise<Plan> => {
   const plan = JSON.parse(readFileSync(join(work, 'plan.json'), 'utf8')) as Plan;
   if (plan.experiment !== 't015' || plan.addedBudgetMicroCny !== 5_000_000 || plan.profile !== 'evolve-t015' || plan.configPath !== join(work, 'evolve-config.json')) throw new Error('Plan belongs to another project');
-  validateQualification(work, plan);
+  await validateQualification(work, plan);
   return plan;
 };
 function environment(home: string, config: string): NodeJS.ProcessEnv {
@@ -54,7 +54,8 @@ async function prepare(hostRoot: string, dshHome: string, archive: string): Prom
   const targetAcceptance = join(f.home, 'target-acceptance'); mkdirSync(targetAcceptance);
   writeFileSync(join(targetAcceptance, 'test_acceptance.py'), 'import pytest\nfrom cart import reserve_stock\ndef test_failure_restores_stock():\n    stock={"remaining":9}\n    with pytest.raises(ValueError): reserve_stock(stock, fail=True)\n    assert stock["remaining"]==9\ndef test_success_reserves_stock():\n    assert reserve_stock({"remaining":9})==6\n');
   const sourceCode = readFileSync(join(f.repo, 'ledger.py'), 'utf8'); const configPath = join(work, 'evolve-config.json');
-  const plan: Plan = { schemaVersion: 1, hostRoot, dshHome, profile: 'evolve-t015', experiment: 't015', addedBudgetMicroCny: 5_000_000, frozenFiles: {}, repo: f.repo, acceptance: f.acceptance,
+  const plan: Plan = { schemaVersion: 1, hostRoot, dshHome, profile: 'evolve-t015', experiment: 't015', addedBudgetMicroCny: 5_000_000, frozenFiles: {},
+    acceptanceDigests: { [f.acceptance]: await acceptanceDigest(f.acceptance), [targetAcceptance]: await acceptanceDigest(targetAcceptance) }, repo: f.repo, acceptance: f.acceptance,
     targetAcceptance, sourceBase: git(f.repo, ['rev-parse', 'HEAD']), configPath, archiveDigest: digest(readFileSync(archive)), sourceCode, targetCode,
     prompts: {
       source: 'This is an explicitly guided synthetic integration experiment. First call evolve_begin_task with summary "database transaction rollback exception". Then record this explicit user correction with evolve_record_correction: "Restore the original balance when a transaction fails." Do not propose or verify an experience yet. Repair ledger.py below. You have no shell or file tools. End with only JSON {"code":"the entire corrected Python file"}; the host will validate and commit your proposal. Do not claim tests passed.\n' + sourceCode,
@@ -89,11 +90,11 @@ async function prepare(hostRoot: string, dshHome: string, archive: string): Prom
   process.stdout.write('Prepared isolated official SDK profile and synthetic tasks; zero model calls.\n');
 }
 async function run(live: boolean): Promise<void> {
-  const plan = readPlan(); if (digest(JSON.stringify(plan)) !== readFileSync(join(work, 'plan-digest.txt'), 'utf8')) throw new Error('Plan drift');
+  const plan = await readPlan(); if (digest(JSON.stringify(plan)) !== readFileSync(join(work, 'plan-digest.txt'), 'utf8')) throw new Error('Plan drift');
   if (git(plan.repo, ['rev-parse', 'HEAD']) !== plan.sourceBase || git(plan.repo, ['status', '--porcelain'])) throw new Error('Expected untouched synthetic source');
-  if (live) consumeQualification(work, plan);
+  if (live) await consumeQualification(work, plan);
   const budget = new DeepseekBudget(supplementalBudgetPath, 't015-snapshot-high-water-v1');
-  const relay = await startBudgetRelay(budget, live ? fetch : async () => { throw new Error('Offline handshake attempted a model call'); });
+  const relay = await startBudgetRelay(budget, live ? fetch : async () => { throw new Error('Offline handshake attempted a model call'); }, () => validateAcceptance(plan));
   const overlay = join(work, 'request-overlay.json');
   writeFileSync(overlay, JSON.stringify([{ id: 'llm-deepseek', config: { apiKeyEnv: 'DEEPSEEK_API_KEY', baseURL: relay.baseURL,
     reasoningEffort: 'off', thinking: 'disabled', maxTokens: 4096, streamIdleTimeoutMs: 60000,
@@ -142,7 +143,9 @@ async function run(live: boolean): Promise<void> {
         return evidence?.kind === 'correction' && evidence.taskId === source?.id && evidence.note === 'Restore the original balance when a transaction fails.';
       }) ?? false;
       report.sourceTaskId = source?.id; report.experience = exp; report.sourceBoundaryClosed = source?.state === 'closed'; report.correctionCited = correctionCited;
-      report.sourceRepairVerified = sourceProof?.verified === true && sourceProof.baseCommit === plan.sourceBase && sourceProof.fixCommit === git(plan.repo, ['rev-parse', 'HEAD']);
+      await validateAcceptance(plan);
+      report.sourceRepairVerified = sourceProof?.verified === true && sourceProof.baseCommit === plan.sourceBase && sourceProof.fixCommit === git(plan.repo, ['rev-parse', 'HEAD'])
+        && sourceProof.acceptanceDigest === plan.acceptanceDigests[plan.acceptance];
       report.sourceAccepted = exp?.status === 'source_verified' && provenance?.complete && report.sourceBoundaryClosed && correctionCited && report.sourceRepairVerified;
       if (!report.sourceAccepted || !exp || !source) throw new Error('Source learning incomplete');
       const transferSession = 't015-transfer-' + randomUUID(); report.phase = 'transfer_proposal';
@@ -154,8 +157,11 @@ async function run(live: boolean): Promise<void> {
       report.delivery = delivery; report.experienceOffered = report.experienceRecorded && delivery.returned && delivery.continued;
       writeFileSync(join(plan.repo, 'cart.py'), transferCode); git(plan.repo, ['add', 'cart.py']); git(plan.repo, ['commit', '-m', 'real DSH transfer repair proposal']);
       report.phase = 'transfer_acceptance';
+      await validateAcceptance(plan);
       const proof = await verifyRepair(plan.repo, task.id, task.baseCommit, git(plan.repo, ['rev-parse', 'HEAD']), { trusted: true, python,
         acceptanceDir: plan.targetAcceptance, regressionPath: 'tests', timeoutMs: 15000 });
+      await validateAcceptance(plan);
+      if (proof.acceptanceDigest !== plan.acceptanceDigests[plan.targetAcceptance]) throw new Error('Target acceptance changed');
       report.transferProof = proof; report.transferBoundaryClosed = task.state === 'closed'; report.transferAccepted = proof.verified && task.state === 'closed';
       if (app) service.feedback({ id: randomUUID(), applicationId: app.id, outcome: proof.verified ? 'accepted' : 'counterexample',
         note: 'Host synthetic benchmark feedback from independent pytest; guided integration, not a benefit comparison.', extraCost: null, humanRework: null });

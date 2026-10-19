@@ -1,10 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DeepseekBudget, startBudgetRelay, usageReceiptSchema } from '../scripts/deepseek-budget.js';
 import { analyzeMessagesUsage } from '../scripts/messages-usage.js';
+import { acceptanceDigest } from '../src/verification.js';
+import { validateAcceptance } from '../scripts/live-qualification.js';
 
 const policy = 't015-snapshot-high-water-v1' as const;
 const limits = { maxInputTokens: 1_100_000, maxOutputTokens: 4096 };
@@ -54,5 +56,22 @@ test('new HTTP relay persists the named numeric policy and conservative cache se
     const receipt = usageReceiptSchema.parse(JSON.parse(readFileSync(budget.path + '.receipts/' + budget.state.calls[0]!.id + '.json', 'utf8')));
     assert.equal(receipt.policyId, policy); assert.deepEqual(receipt.usage, { input: 120, output: 8 });
     assert.ok(!JSON.stringify(receipt).includes('secret'));
+  } finally { await relay.close(); budget.close(); }
+});
+
+test('acceptance file-set drift blocks the next real transport before any reservation', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'evolve-request-drift-'));
+  writeFileSync(join(root, 'test_original.py'), 'def test_ok(): assert True\n');
+  const plan = { acceptanceDigests: { [root]: await acceptanceDigest(root) } };
+  const budget = new DeepseekBudget(join(root, 'budget.json'), policy); let forwarded = 0;
+  const relay = await startBudgetRelay(budget, async () => {
+    forwarded++; return new Response(stream([{ output_tokens: 8 }]), { headers: { 'content-type': 'text/event-stream' } });
+  }, () => validateAcceptance(plan));
+  const send = () => fetch(relay.baseURL + '/v1/messages', { method: 'POST', headers: { 'x-api-key': 'fake' },
+    body: JSON.stringify({ model: 'deepseek-flash', stream: true, max_tokens: 4096, messages: [] }) });
+  try {
+    await (await send()).text(); assert.equal(forwarded, 1); assert.equal(budget.state.calls.length, 1);
+    writeFileSync(join(root, 'conftest.py'), '# newly added executable acceptance input\n');
+    assert.equal((await send()).status, 502); assert.equal(forwarded, 1); assert.equal(budget.state.calls.length, 1);
   } finally { await relay.close(); budget.close(); }
 });
