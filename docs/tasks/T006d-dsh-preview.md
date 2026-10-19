@@ -1,6 +1,6 @@
 # T006d：完整DSH本地测试安装
 
-2026-10-19，实施前方案。父Issue #8，基线7e115bd。只验证官方`@deepseek-ai/dsh@0.2.0-rc.2`完整CLI/Web安装和启动，不把它当Desktop或自主模型学习验收。
+2026-10-19，实施前方案。Issue #25，父Issue #8，基线7e115bd。只验证官方`@deepseek-ai/dsh@0.2.0-rc.2`完整CLI/Web安装和启动，不把它当Desktop或自主模型学习验收。后续实际记录见[T006d安装](../development/T006d-installation.md)。
 
 ## 实施
 

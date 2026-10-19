@@ -10,7 +10,8 @@
 | T006a 实际tgz安装组件探针 | T003,T004,T005 | PR #16已合并；修复首轮YAML失败后，15项及实际安装／Loader两平台CI、必要复审通过，Issue #7关闭 | codex/t006a-install-probe |
 | T006b Codex CLI执行器 | T002,T005 | PR #17已合并，24项两平台CI及实际安装／独立映射通过；历史预算不等，不判断收益 | codex/t006b-remote，Issue #8部分进展 |
 | T006c 三组执行与诚实证据 | T006b,T005 | PR #18已合并，32项两平台CI、实际安装及独立评审通过；有效经验对照未完成 | codex/t006c-remote，Issue #8部分进展 |
-| T006 真实Agent实验与完整应用安装 | T003,T004,T005,T006a,T006b | Codex合成接入已有；真实任务收益、DSH模型回合和完整应用安装仍未完成 | Issue #8 |
+| T006d 完整CLI/Web独立试装 | T006a,T008c | Windows完整官方0.2.0-rc.2独立host/profile/tgz安装、实际Web组件运行及停止重启通过；文档交付CI/评审见关联PR | codex/t006d-dsh-preview，Issue #25 |
+| T006 真实Agent实验与完整应用安装 | T003,T004,T005,T006a,T006b | Codex合成接入及Windows完整CLI/Web试装已有；真实任务收益、DSH模型回合、Desktop/其他平台完整应用仍未完成 | Issue #8 |
 | T007 开发工具依赖更新 | 当前功能PR | PR #13已squash合并，13项两平台CI及独立只读评审通过，Issue #12关闭 | codex/t007-tooling |
 | T008 检索覆盖与有效经验对照 | T006c | T008a/b已交付；T008c两题三组有经验差异但无验收收益改善，更多真实任务和重复仍未完成 | Issue #15 |
 | T008a 长任务检索与离线消融 | T006c | PR #20已合并，37项两平台CI/实际安装/独立评审通过；误选和退步保留 | codex/t008-retrieval，Issue #19关闭 |
