@@ -6,7 +6,7 @@ import { mkdtemp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { digest, experienceSchema, taskSchema, verificationSchema, applicationSchema, feedbackSchema } from '../src/domain.js';
-import { feedbackControls, feedbackExperimentSchema, feedbackProtocolDigest, evaluateFeedbackExperiment, reserveFeedbackProtocol, type FeedbackExperiment } from '../src/feedback-experiment.js';
+import { feedbackControls, feedbackExperimentSchema, feedbackProtocolDigest, evaluateFeedbackExperiment, observedFeedbackRecurrence, reserveFeedbackProtocol, type FeedbackExperiment } from '../src/feedback-experiment.js';
 import { arms, feedbackPolicyDigests, type PairedExperiment } from '../src/paired-evaluation.js';
 import { evaluateExperiment } from '../src/evaluation.js';
 
@@ -101,4 +101,18 @@ test('live protocol reservation has one atomic winner and a new output path cann
   const winner = results.find((r) => r.status === 'fulfilled')!; if (winner.status !== 'fulfilled') throw new Error('No winner');
   const bytes = await readFile(winner.value, 'utf8'); await assert.rejects(reserveFeedbackProtocol(dir, 'new-directory'), /EEXIST/);
   assert.equal(await readFile(winner.value, 'utf8'), bytes);
+});
+
+test('feedback recurrence requires observed original failures and distinguishes skipped or missing outcomes', () => {
+  const { base, fixed } = proof(randomUUID());
+  assert.equal(observedFeedbackRecurrence(base, fixed), false);
+  assert.equal(observedFeedbackRecurrence(base, { ...fixed, cases: [{ id: base.cases[0]!.id, status: 'skipped' }], skipped: 1 }), null);
+  assert.equal(observedFeedbackRecurrence(base, { ...fixed, cases: [] }), null);
+  assert.equal(observedFeedbackRecurrence(base, { ...fixed, cases: [{ id: base.cases[0]!.id, status: 'error' }], errors: 1 }), null);
+  assert.equal(observedFeedbackRecurrence(base, { ...fixed, timedOut: true }), null);
+  assert.equal(observedFeedbackRecurrence({ ...base, cases: [], failures: 0 }, fixed), null);
+  assert.equal(observedFeedbackRecurrence(base, { ...fixed, cases: [{ id: base.cases[0]!.id, status: 'failed' }], exitCode: 1, failures: 1 }), true);
+  const two = { ...base, tests: 2, failures: 2, cases: [...base.cases, { id: 'second', status: 'failed' as const }] };
+  assert.equal(observedFeedbackRecurrence(two, { ...fixed, tests: 2, skipped: 1, cases: [...fixed.cases, { id: 'second', status: 'skipped' }] }), null);
+  assert.equal(observedFeedbackRecurrence(two, { ...fixed, tests: 2, failures: 1, skipped: 1, exitCode: 1, cases: [{ id: base.cases[0]!.id, status: 'failed' }, { id: 'second', status: 'skipped' }] }), true);
 });

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { applyCodexRepair, prepareCodexTask, repairProposalSchema, runCodex, type PreparedCodexTask } from '../src/codex-runner.js';
 import { digest, idSchema, relativePath, verificationSchema } from '../src/domain.js';
-import { evaluateFeedbackExperiment, feedbackControls, feedbackProtocolDigest, reserveFeedbackProtocol, type FeedbackExperiment } from '../src/feedback-experiment.js';
+import { evaluateFeedbackExperiment, feedbackControls, feedbackProtocolDigest, observedFeedbackRecurrence, reserveFeedbackProtocol, type FeedbackExperiment } from '../src/feedback-experiment.js';
 import { evaluateFeedbackStructure, experienceBankDigest, feedbackPolicyDigests, reservePairedRun, selectComparisonExperience, type Arm, type PairedExperiment, type PairedPlan, type PairedRun } from '../src/paired-evaluation.js';
 import { git, snapshot } from '../src/repository.js';
 import { EvolveService } from '../src/service.js';
@@ -121,10 +121,7 @@ if (Number(live) + Number(prepareOnly) + Number(fixture) !== 1 || !args.includes
           const proof = await verifyRepair(root, run.task.id, run.task.baseCommit, snapshot(root).commit, { ...service.policy, acceptanceDir: acceptance.get(c.id)!, regressionPath: 'tests/test_' + c.id + '.py' });
           if (proof.acceptanceDigest !== run.task.acceptanceDigest || digest(JSON.stringify(proof.environment)) !== envDigest) throw new Error('verification_input_changed');
           run.verification = proof; run.accepted = proof.verified; run.status = 'completed';
-          if (!proof.fixed.timedOut && [0, 1].includes(proof.fixed.exitCode ?? -1) && proof.fixed.errors === 0) {
-            const failed = new Set(proof.base.cases.filter((x) => x.status === 'failed').map((x) => x.id));
-            run.sameErrorRecurred = proof.fixed.cases.some((x) => failed.has(x.id) && x.status === 'failed');
-          }
+          run.sameErrorRecurred = observedFeedbackRecurrence(proof.base, proof.fixed);
         } catch (error) { run.status = 'failed'; const code = error instanceof Error ? error.message : ''; run.failure = /^[a-z_]{1,100}$/.test(code) ? code : 'host_execution_failed'; }
         finally { git(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', c.file]); await save(); }
       };

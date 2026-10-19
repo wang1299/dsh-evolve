@@ -1,9 +1,9 @@
 import { open } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { applicationSchema, digest, experienceSchema, feedbackSchema, hashSchema, idSchema, taskSchema, verificationSchema } from './domain.js';
+import { applicationSchema, digest, experienceSchema, feedbackSchema, hashSchema, idSchema, taskSchema, verificationSchema, type TestRun } from './domain.js';
 import { evaluateFeedbackStructure, feedbackPolicyDigests, pairedExperimentSchema } from './paired-evaluation.js';
-import { passes, verifiedCases } from './verification.js';
+import { passes, reproduces, verifiedCases } from './verification.js';
 
 export const feedbackProtocolDigest = 'a32c1298a859b02a57fd0520dbce8c46cefce986883c6749439b1a6b0f54dd49';
 export const feedbackControls = { model: 'gpt-6.1-sol', reasoningEffort: 'low', providerRetries: 0,
@@ -25,6 +25,16 @@ export const feedbackExperimentSchema = z.object({
   evaluation: pairedExperimentSchema.nullable(),
 }).strict();
 export type FeedbackExperiment = z.infer<typeof feedbackExperimentSchema>;
+
+export function observedFeedbackRecurrence(base: TestRun, fixed: TestRun): boolean | null {
+  const outcomes = new Map(fixed.cases.map((x) => [x.id, x.status]));
+  if (!reproduces(base) || new Set(base.cases.map((x) => x.id)).size !== base.cases.length
+    || outcomes.size !== fixed.cases.length || fixed.cases.length !== fixed.tests) return null;
+  const failed = base.cases.filter((x) => x.status === 'failed').map((x) => x.id);
+  if (failed.some((id) => outcomes.get(id) === 'failed')) return true;
+  if (fixed.timedOut || ![0, 1].includes(fixed.exitCode ?? -1) || fixed.errors !== 0) return null;
+  return failed.every((id) => outcomes.get(id) === 'passed') ? false : null;
+}
 
 /** A protocol's only live slot is not released on failure, interruption, or a new output directory. */
 export async function reserveFeedbackProtocol(directory: string, output: string): Promise<string> {
