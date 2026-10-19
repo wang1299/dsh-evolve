@@ -13,27 +13,31 @@ const usageSchema = z.object({ input: z.number().int().min(0).max(budgetPolicy.m
   output: z.number().int().min(0).max(budgetPolicy.maxOutputTokens) }).strict();
 const callSchema = z.object({ id: z.string().uuid(), chargedMicroCny: z.number().int().min(0),
   usage: usageSchema.nullable(), createdAt: z.string().datetime() }).strict();
-const stateSchema = z.object({ schemaVersion: z.literal(1), budgetMicroCny: z.literal(5_000_000),
+const originalStateSchema = z.object({ schemaVersion: z.literal(1), budgetMicroCny: z.literal(5_000_000),
   calls: z.array(callSchema).max(16) }).strict();
+const supplementalStateSchema = originalStateSchema.extend({ schemaVersion: z.literal(2), policyId: z.literal('t015-snapshot-high-water-v1') });
+const stateSchema = z.union([originalStateSchema, supplementalStateSchema]);
 export type BudgetState = z.infer<typeof stateSchema>;
 const receiptInputSchema = z.object({ reason: z.enum(usageReasons), httpStatus: z.number().int().min(100).max(599).nullable(),
   responseBytes: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), snapshots: z.array(snapshotSchema).max(64),
   otherEvents: z.number().int().min(0).max(1024 * 1024), usage: usageSchema.nullable() }).strict()
   .refine((r) => (r.reason === 'complete') === (r.usage !== null), 'Only complete usage can be eligible');
 export const usageReceiptSchema = receiptInputSchema.safeExtend({ schemaVersion: z.literal(1), callId: z.string().uuid(),
-  policyId: z.literal('t011-conservative-v1'), model: z.literal('deepseek-flash') });
+  policyId: z.enum(['t011-conservative-v1', 't015-snapshot-high-water-v1']), model: z.literal('deepseek-flash') });
 
 export class DeepseekBudget {
   readonly state: BudgetState;
   private readonly lock: number;
   private closed = false;
   private poisoned = false;
-  constructor(readonly path: string) {
+  constructor(readonly path: string, readonly policyId: 't011-conservative-v1' | 't015-snapshot-high-water-v1' = 't011-conservative-v1') {
     mkdirSync(dirname(path), { recursive: true });
     this.lock = openSync(path + '.lock', 'wx');
     try {
       this.state = existsSync(path) ? stateSchema.parse(JSON.parse(readFileSync(path, 'utf8')))
-        : { schemaVersion: 1, budgetMicroCny: 5_000_000, calls: [] };
+        : policyId === 't011-conservative-v1' ? { schemaVersion: 1, budgetMicroCny: 5_000_000, calls: [] }
+          : { schemaVersion: 2, policyId, budgetMicroCny: 5_000_000, calls: [] };
+      if ((this.state.schemaVersion === 1 ? 't011-conservative-v1' : this.state.policyId) !== policyId) throw new Error('Budget policy mismatch');
       if (this.state.calls.some((c) => c.chargedMicroCny !== (c.usage ? c.usage.input * 2 + c.usage.output * 8 : budgetPolicy.reservationMicroCny))
         || this.spent > budgetPolicy.budgetMicroCny) throw new Error('Invalid budget accounting');
       if (!existsSync(path)) this.persist();
@@ -53,7 +57,7 @@ export class DeepseekBudget {
   writeReceipt(id: string, input: unknown): void {
     if (!this.state.calls.some((call) => call.id === id)) throw new Error('Unknown budget call');
     const receipt = usageReceiptSchema.parse({ ...receiptInputSchema.parse(input), schemaVersion: 1, callId: id,
-      policyId: 't011-conservative-v1', model: budgetPolicy.model });
+      policyId: this.policyId, model: budgetPolicy.model });
     this.write(join(this.path + '.receipts', id + '.json'), receipt);
   }
   reserve(): string {
@@ -88,7 +92,7 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
     let id: string | undefined; let httpStatus: number | null = null; let responseBytes = 0;
     const result: Buffer[] = []; let failure: UsageReason = 'transport_error'; let terminalReceipt = false;
     const receipt = (reason?: UsageReason): z.infer<typeof usageSchema> | null => {
-      const analysis = analyzeMessagesUsage(Buffer.concat(result).toString('utf8'), budgetPolicy);
+      const analysis = analyzeMessagesUsage(Buffer.concat(result).toString('utf8'), budgetPolicy, budget.policyId);
       const usage = reason ? null : analysis.usage;
       budget.writeReceipt(id!, { ...analysis, ...(reason ? { reason } : {}), usage, httpStatus, responseBytes });
       terminalReceipt = reason !== 'awaiting_response';
