@@ -76,7 +76,9 @@ export function experienceBankDigest(store: Store): string {
   const experiences = store.experiences(); const feedback = store.feedback();
   const usedApplications = new Set(feedback.map((f) => f.applicationId));
   return digest(JSON.stringify({ experiences, proofs: experiences.map((e) => e.verificationId ? store.verification(e.verificationId) : null),
-    feedback, applications: store.applications().filter((a) => usedApplications.has(a.id)).sort((a, b) => a.id.localeCompare(b.id)) }));
+    feedback, applications: store.applications().filter((a) => usedApplications.has(a.id)).sort((a, b) => a.id.localeCompare(b.id)),
+    feedbackTasks: [...new Set(store.applications().filter((a) => usedApplications.has(a.id)).map((a) => a.taskId))].sort()
+      .map((id) => { const t = store.task(id); return t ? { id: t.id, summary: t.summary, scope: t.scope } : { id, missing: true }; }) }));
 }
 
 export function selectComparisonExperience(service: EvolveService, taskId: string, arm: Arm): {
@@ -84,11 +86,12 @@ export function selectComparisonExperience(service: EvolveService, taskId: strin
 } {
   const task = service.requireTask(taskId);
   if (task.state !== 'open') throw new Error('Task is closed');
+  if (service.store.feedback().some((f) => f.outcome === 'irrelevant')) throw new Error('Frozen bm25-v1 recipe does not support irrelevant feedback');
   if (arm === 'baseline') return { context: null, reasons: ['baseline_no_experience'] };
   let selected;
   let reasons: string[];
   if (arm === 'evolve') {
-    const result = service.select(taskId); selected = result.experience; reasons = result.reasons;
+    const result = service.select(taskId, 'bm25-v1'); selected = result.experience; reasons = result.reasons;
   } else {
     const experiences = service.store.experiences();
     const ranked = rankText(task.summary, experiences).filter((r) => r.reason === null);

@@ -5,6 +5,8 @@ import { EvolveService } from '../src/service.js';
 import { startPanel } from '../src/panel.js';
 import { fixture } from './fixture.js';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { Script } from 'node:vm';
 
 test('local panel authenticates data, rejects cross-site writes and preserves experience revisions', async () => {
   const f = await fixture(); const store = new Store(':memory:');
@@ -16,10 +18,19 @@ test('local panel authenticates data, rejects cross-site writes and preserves ex
     const page = await fetch(panel.origin); const html = await page.text();
     assert.equal(page.status, 200); assert.match(page.headers.get('content-security-policy')!, /frame-ancestors 'none'/);
     assert.ok(!html.includes(panel.token)); assert.ok(!html.includes(experience.title));
+    assert.match(html, /此任务不相关：保留经验/); assert.match(html, /策略无效：停用版本/);
+    assert.doesNotThrow(() => new Script(html.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)![1]!));
     assert.equal((await fetch(panel.origin + '/api/state')).status, 401);
     const headers = { Authorization: 'Bearer ' + panel.token, Origin: panel.origin, 'Content-Type': 'application/json' };
     const state = await fetch(panel.origin + '/api/state', { headers }); assert.equal(state.status, 200);
     assert.ok((await state.text()).includes(experience.id));
+    const app = { id: randomUUID(), taskId: task.id, experienceId: experience.id, revision: 1, reason: 'Synthetic panel association, not a real Agent application', createdAt: new Date().toISOString() };
+    store.putApplication(app);
+    const feedback = { id: randomUUID(), applicationId: app.id, outcome: 'irrelevant', note: 'Wrong context, no strategy counterexample.', extraCost: null, humanRework: 0 };
+    assert.equal((await fetch(panel.origin + '/api/feedback', { method: 'POST', headers: { ...headers, Origin: 'https://attacker.invalid' }, body: JSON.stringify(feedback) })).status, 403);
+    assert.equal((await fetch(panel.origin + '/api/feedback', { method: 'POST', headers, body: JSON.stringify(feedback) })).status, 200);
+    assert.equal(service.requireExperience(experience.id).status, 'candidate'); assert.equal(service.requireExperience(experience.id).revision, 1);
+    assert.equal(store.feedback()[0]!.outcome, 'irrelevant');
     const url = panel.origin + '/api/experience/' + experience.id + '/disable';
     const data = JSON.stringify({ revision: 1, reason: 'Owner rejected this experience' });
     assert.equal((await fetch(url, { method: 'POST', headers: { ...headers, Origin: 'https://attacker.invalid' }, body: data })).status, 403);

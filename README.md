@@ -18,7 +18,8 @@
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
 - 检索：T008a加入长任务BM25、弱匹配拒绝和版本化策略；普通检索对照使用同一算法。36条预先冻结合成查询的召回/误选/漏选与成本全部保留，尚不能证明Agent收益。见[离线诊断](docs/evaluation/retrieval-v1.md)。
-- 验证：T008a当前37项本地检查通过；此前PR #18的32项两平台CI、实际安装和独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
+- 反馈记忆：当前版本的已接受应用可提供最多8个备用检索表述；原文都不匹配时才尝试。owner标记“不相关”后，同一完整任务表述不再收到该经验；策略错误/反例仍停用版本。见[反馈检索设计](docs/decisions/010-feedback-retrieval.md)。
+- 验证：T008b的39项本地检查通过；此前PR #20的37项两平台CI、实际安装和独立评审已通过。当前交付的远端结果见[Actions](https://github.com/wang1299/dsh-evolve/actions)及关联PR，不以历史检查代替当前头验证。见[本轮记录](docs/development/status.md)。
 - GitHub：公开仓库已建立，任务Issue与聚焦PR正在依次推进。
 - npm、GitHub Release、线上部署：未发布。
 
@@ -43,6 +44,8 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 ```
 
 面板令牌只在本机终端显示，不要分享其完整地址。数据API仅限本机并需要令牌。经验恢复会产生待验证版本。
+
+面板反馈“此任务不相关”仅记住当前经验版本与相同任务表述；“策略无效/发现反例”会停用当前实际应用版本。旧数据可直接读取；写入新增`irrelevant`反馈后，旧程序不能解析该枚举，不支持混跑或直接降级。
 
 ## DSH接入与当前限制
 

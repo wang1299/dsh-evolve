@@ -12,6 +12,7 @@ TypeScript/Node.js 实现插件和核心，Python＋pytest 只作为目标仓库
 - store：SQLite、事务、版本、清理、历史；数据库不在 Git 跟踪内。
 - verification：固定 Git 快照、外部验收测试、子进程取消／超时／退出码、报告。
 - selection：作用域过滤、文本相似度、经验效用与拒绝应用；不进行模型训练。
+- feedback-retrieval：从当前版本同仓库的应用/owner反馈派生备用表述和精确上下文拒绝；原文BM25均拒绝时才回退，原因保留证据ID。不修改经验正文或存完整会话，见ADR-010。
 - dsh：官方工具、事件观察、prompt section；所有事件按 session/task 显式绑定，工具结果仅观察。
 - panel：本地面板；绑定 loopback，凭据保护写操作、检查来源，不开放任意命令或文件读取。
 - evaluation：基线、普通检索、完整机制三组结果格式，冻结评价任务、模型和预算，报告原始结果。
