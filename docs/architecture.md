@@ -167,7 +167,7 @@ v2→v3只增侧表/索引，不重写旧JSON/历史/报告/应用/反馈；旧s
 |---|---|---|
 | LearningJob／LearningAttempt（T019已实现） | 固定输入/摘要、任务边界、状态、token/lease、effectStarted、阶段/时间/原因 | 当前仅本地证据归并/pytest，不授予LLM调用资格 |
 | EvidenceBundle v1（T019已实现） | Job/输入摘要、验证ID/摘要、ready/incomplete、有限原因 | 输入持有有界版本/来源/事件/diff；ready非学习或语义证明 |
-| ExtractionPort | 经授权的最小证据包→候选及主张引用／拒绝 | DSH官方接口、模型预算、结构化输出与注入防护 |
+| ExtractionPort（T020已实现） | 经授权的最小证据包→候选及固定事实ID／拒绝 | 官方准备调用、逻辑额度、严格输出；真实质量/费用实验另验 |
 | ExperienceContext | 适用条件、策略、必要依据、精确revision／摘要 | DSH字节／token预算、截断顺序、交付回执 |
 | DecisionRecord | 快照／策略摘要、候选与拒绝、交付及后续结果 | 状态定义、幂等与并发提交边界 |
 

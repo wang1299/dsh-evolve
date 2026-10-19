@@ -12,9 +12,10 @@ if (command === 'evaluate' && flag === '--input' && configPath) {
 } else if (command === 'panel' && flag === '--config' && configPath) {
   const { service } = createService(loadConfig(resolve(configPath)));
   const stopWorker = service.jobs.start();
+  const stopExtraction = service.extraction.start(() => null);
   const panel = await startPanel(service);
   process.stdout.write(`DSH-Evolve local panel: ${panel.url}\nKeep this URL private. Learning data stays on this computer.\n`);
-  const stop = (): void => { void panel.close().then(stopWorker).then(() => { service.store.close(); process.exitCode = 0; }); };
+  const stop = (): void => { void panel.close().then(() => Promise.all([stopWorker(), stopExtraction()])).then(() => { service.store.close(); process.exitCode = 0; }); };
   process.once('SIGINT', stop); process.once('SIGTERM', stop);
 } else {
   process.stderr.write('Usage: dsh-evolve panel --config <local-config.json> | evaluate --input <results.json>\n'); process.exitCode = 1;
