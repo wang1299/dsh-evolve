@@ -12,7 +12,8 @@
 
 ## 开发状态
 
-- 自动证据整理：T019在显式结束任务后自动归并同任务纠正、工具事件元数据、版本、有限Python差异和测试报告；SQLite v4后台队列支持去重、重启恢复与陈旧任务拒绝，面板可查看证据包和处理历史。默认不运行测试，后台pytest须单独开启且有执行信任；不自动生成经验。见[设计](docs/decisions/022-task-evidence-jobs.md)与[验收](docs/development/T019-acceptance.md)。
+- 自动候选提炼：T020在独立授权后，把ready修复证据交给DSH已注册模型；宿主固定事实、来源与代码条件，模型生成策略或拒绝，结果仅为候选。SQLite v5保存调用资格、次数和结果，重启不退额、中断不自动重试。默认关闭，本轮仅合成模型验证；见[设计](docs/decisions/023-automatic-candidate-extraction.md)与[任务](docs/tasks/T020-auto-extraction.md)。
+- 自动证据整理：T019在显式结束任务后自动归并同任务纠正、工具事件元数据、版本、有限Python差异和测试报告；后台队列支持去重、重启恢复与陈旧任务拒绝，面板可查看证据包和处理历史。默认不运行测试，后台pytest须单独开启且有执行信任。见[设计](docs/decisions/022-task-evidence-jobs.md)与[验收](docs/development/T019-acceptance.md)。
 - 需求与架构：v0.2细化为58项编号需求、15个黄金验收场景、模块/数据/状态/接口/异常契约和完整追踪表；实现与目标分列，后续缺口见[架构总纲](docs/architecture.md)。T009交付门槛见[设计验收](docs/development/T009-design-acceptance.md)及关联PR。
 - 核心功能：已实现来源验证、候选与作用域选择、反馈及经验版本。T010新增按事实/经验版本绑定的纠正与测试来源、摘要/归属检查及历史引用保留；默认evidence-v1拒绝事实来源不完整的经验。见[设计](docs/decisions/013-fact-evidence.md)与[验收](docs/development/T010-acceptance.md)。
 - DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。正常DSH完整学习闭环、Desktop及其他平台完整应用仍待验证；真实SDK回合的partial结果见[T011记录](docs/development/T011-acceptance.md)，安装见[试装记录](docs/development/T006d-installation.md)。
@@ -52,9 +53,30 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 
 面板令牌只在本机终端显示，不要分享其完整地址。数据API仅限本机并需要令牌。经验恢复会产生待验证版本。
 
-SQLite已升级v4：v2/v3旧JSON和历史不改，v1沿用既有报告降级、追加候选并要求重验的迁移。新增本地Job/Attempt和证据包，已引用的最小来源继续保留；旧SQLite3及更早程序不能混跑或直接降级。本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
+SQLite已升级v5：v2/v3/v4旧JSON和历史不改，v1沿用既有报告降级、追加候选并要求重验的迁移。新增提炼Job及调用授权账目，已引用的最小来源继续保留；旧SQLite4及更早程序不能混跑或直接降级。本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
 
 完成现有`evolve_finish_task`后，后台自动整理本地证据。默认`backgroundVerification=false`，只复用已有匹配的验证报告；希望在没有候选经验时自动验证修复，需由owner在配置同时设置`backgroundVerification=true`和`executionTrusted=true`，并提供仓库外的`acceptanceDir`。DSH插件或CLI面板启动时恢复队列。没有报告/版本变化/材料超限时明确显示不完整；验证可能执行后中断为未知，不自动重跑。证据齐备不等于已经提炼或应用经验。
+
+### 开启自动候选提炼
+
+默认不发送材料。owner可以在DSH插件配置中添加以下对象（provider/model替换为**自己DSH已注册**的精确路由，grantId自行生成新UUID）：
+
+```json
+{
+  "extraction": {
+    "grantId": "57c09cc6-7bca-4a15-9c35-64e8041c3f54",
+    "provider": "your-registered-provider",
+    "model": "your-registered-model",
+    "maxCalls": 1,
+    "maxTokens": 2048,
+    "timeoutMs": 30000
+  }
+}
+```
+
+这会授权随后显式结束的任务发送最多32KiB的去敏摘要、Python差异、固定版本与测试／纠正事实；不会回填已关闭任务。每个任务仅一次提炼，ready且版本未变才调用；没有DSH模型服务或相应provider时等待。CLI面板只展示状态，不提供模型。修改配置后重新加载插件；删除extraction即可停止后续调用。分享经验、执行测试的开关分别独立。
+
+maxCalls是本插件**逻辑调用次数**，maxTokens是请求控制，不是人民币费用上限；DSH适配器／中间件可能有其他行为。调用前即保守占额，未知结果不退额或重跑，同grantId不能增额／改策略；新授权须换UUID。面板可查看占额与候选来源。候选不会自动激活，仍需检查并运行来源验证；当前未验证真实模型提炼质量或后续收益。
 
 面板反馈“此任务不相关”仅记住当前经验版本与相同任务表述；“策略无效/发现反例”会停用当前实际应用版本。旧数据可直接读取；写入新增`irrelevant`反馈后，旧程序不能解析该枚举，不支持混跑或直接降级。
 

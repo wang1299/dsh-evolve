@@ -208,7 +208,7 @@ test('newer failed source reports are retained instead of selecting an older suc
 test('v3 migration preserves historical JSON and failures roll back the v4 schema boundary', async () => {
   const f = await fixture(); const path = join(f.home, 'legacy-v3.sqlite'); let store = new Store(path);
   const service = new EvolveService(store, f.repo, policyFor(f.acceptance)); const task = service.begin('legacy', 'repair'); const source = service.correction(task.id, 'Restore balance.'); store.close();
-  const raw = new DatabaseSync(path); const drop = 'DROP TABLE learning_job_sources; DROP TABLE evidence_bundles; DROP TABLE learning_attempts; DROP TABLE learning_jobs;';
+  const raw = new DatabaseSync(path); const drop = 'DROP TABLE extraction_jobs; DROP TABLE extraction_grants; DROP TABLE learning_job_sources; DROP TABLE evidence_bundles; DROP TABLE learning_attempts; DROP TABLE learning_jobs;';
   raw.exec(drop + ' PRAGMA user_version=3'); const original = raw.prepare('SELECT body FROM evidence WHERE id=?').get(source.id)!.body;
   raw.exec('CREATE VIEW learning_jobs AS SELECT id FROM tasks'); raw.close();
   assert.throws(() => new Store(path));
@@ -216,7 +216,7 @@ test('v3 migration preserves historical JSON and failures roll back the v4 schem
   assert.equal(failed.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='learning_attempts'").get()!.n, 0);
   failed.exec('DROP VIEW learning_jobs'); failed.close();
   store = new Store(path); try { assert.ok(store.task(task.id)); assert.equal(store.learning.jobs().length, 0); } finally { store.close(); }
-  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 4);
+  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 5);
   assert.equal(checked.prepare('SELECT body FROM evidence WHERE id=?').get(source.id)!.body, original); checked.close();
 });
 

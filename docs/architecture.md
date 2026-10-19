@@ -12,7 +12,7 @@
 | npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 4 | v1/v2/v3事务迁移；新增本地Job/Attempt/包与来源保留引用，旧程序拒绝v4 |
+| SQLite | user_version 5 | v1–v4事务迁移；增加提炼Job/grant，保留旧JSON与来源；旧程序拒绝v5 |
 | EvidenceBundle／Job输入 | schemaVersion 1 | ADR022，有界本地材料；ready不提升经验状态 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
 | 实验预算账本 | v1／v2显式策略；v3单次预算 | ADR020/ADR021；v3记录准确金额/1请求/回执版本；t018-standard-tier-v1须回执2，原策略不改、不混开或改写旧预算 |
@@ -65,7 +65,7 @@ flowchart TB
 6. 一次来源成功不证明自然语言策略普遍正确，也不证明后续收益。
 7. 没有匹配是有效结果；不得为提高命中率取消条件或拒绝门槛。
 8. Application只记录选择返回路径；读取、遵循、因果收益无证据则未知。
-9. 执行、共享与未来提炼传输授权分别处理；事件观察不构成授权。
+9. 执行、共享与提炼传输授权分别处理；事件观察不构成授权。
 10. 失败、未运行、取消、漂移、无改善和未知成本必须保留区别。
 
 | 事实 | 唯一依据 | 不可替代来源 |
@@ -87,8 +87,9 @@ flowchart TB
 | evidence.ts | 最小纠正/报告及事实引用→摘要、完整性 | 校验task/repo/index/hash和来源；本地读取 | 出处一致不等于文字蕴含/真值 |
 | repository.ts | Git根／文件选择→快照、条件 | 只读Git及regular file | 非根、越界、缺文件拒绝 |
 | store.ts | 严格对象→当前／历史／查询 | 同步SQLite、SAVEPOINT事务 | 不支持未知版本，revision冲突 |
-| service.ts | 任务／候选／反馈→业务结果 | 编排store、快照、验证、选择；finish原子入队 | 无后台自动模型提炼 |
-| evidence-jobs.ts／learning-store.ts | 关闭任务→固定证据包 | 本地Job/Attempt、lease/fencing、受授权pytest、事务发布 | 外部模型调用/提炼未接入；验证中断unknown不重跑 |
+| service.ts | 任务／候选／反馈→业务结果 | 编排store、快照、验证、选择；finish原子入队 | 模型/面板不能授权或自证成功 |
+| evidence-jobs.ts／learning-store.ts | 关闭任务→固定证据包 | 本地Job/Attempt、lease/fencing、受授权pytest、事务发布 | 验证中断unknown不重跑；ready不提升经验 |
+| extraction.ts／extraction-store.ts／dsh-extraction.ts | ready包＋owner grant→候选或拒绝 | 固定事实/条件、官方LLM端口、额度与原子发布 | 默认关闭；逻辑次数非费用硬上限，候选不激活 |
 | verification.ts | commit对＋策略→报告 | 临时目录、Python子进程 | 未信任拒绝；基础设施异常可能无报告 |
 | retrieval.ts | 摘要／候选文字→分数及拒绝 | 纯本地BM25 | 无语义理解／训练 |
 | feedback-retrieval.ts | 同版应用反馈→备用表述／精确排除 | 从本地记录派生，不改经验正文 | 错误accepted可污染 |
@@ -170,7 +171,7 @@ v2→v3只增侧表/索引，不重写旧JSON/历史/报告/应用/反馈；旧s
 | ExperienceContext | 适用条件、策略、必要依据、精确revision／摘要 | DSH字节／token预算、截断顺序、交付回执 |
 | DecisionRecord | 快照／策略摘要、候选与拒绝、交付及后续结果 | 状态定义、幂等与并发提交边界 |
 
-最小Evidence/FactCitation由T010落地，T019增加Job/Attempt/证据包；ExtractionPort、ExperienceContext、DecisionRecord仍为目标，不是现行工具可接收的字段。自动错误尝试理解、更多来源种类和主张语义核对仍属G01/G02，严格schema继续拒绝未知输入。
+最小Evidence/FactCitation由T010落地，T019增加Job/Attempt/证据包；T020增加ExtractionPort与提炼Job/grant；ExperienceContext、DecisionRecord仍为目标，不是现行工具可接收的字段。自动错误尝试理解、更多来源种类和主张语义核对仍属G01/G02，严格schema继续拒绝未知输入。
 
 ## 6. 状态机与生命周期
 
@@ -199,7 +200,7 @@ Task状态为`[*]→open→closed`；当前无重开／嵌套任务。observe、
 
 本地Job经历queued→running→succeeded/failed/unknown。finish同事务写closed和唯一task Job；输入固定任务摘要/版本/来源，正常六工具及Task JSON不变。未开始验证的过期lease可重新queued，最多3次attempt；已持久化effectStarted后中断为终态unknown，不能自动重放。随机token/lease条件写入和事务发布拒绝旧worker。报告/来源/包/Job终态原子提交；owner配置backgroundVerification和executionTrusted均true且当前授权/版本仍匹配才允许pytest，没有LLM接口。完整持久化、恢复、保留与界限见[ADR022](decisions/022-task-evidence-jobs.md)。
 
-v4新增learning_jobs、learning_attempts、learning_job_sources、evidence_bundles；后两者外键引用Job及最小Evidence。v2/v3原JSON和历史不重写，v1沿用原迁移；旧程序拒绝v4，不允许混跑/直接降级。Job和包不自动生成经验。面板鉴权状态响应增加learningJobs/evidenceBundles/learningAttempts，owner只能查看，未开放重试/提权HTTP接口；DSH bind及CLI面板启动/关闭worker。
+v4新增learning_jobs、learning_attempts、learning_job_sources、evidence_bundles；后两者外键引用Job及最小Evidence。v2/v3原JSON和历史不重写，v1沿用原迁移；T020进一步迁移到v5增加extraction_grants/extraction_jobs，v4原记录不改；旧程序拒绝v5，不允许混跑/直接降级。Job和包本身不提升经验；自动候选见§12。面板鉴权状态响应增加learningJobs/evidenceBundles/learningAttempts，owner只能查看，未开放重试/提权HTTP接口；DSH bind及CLI面板启动/关闭worker。
 
 启动调度只依据完整的任务／证据边界。idle可唤醒检查，不能封闭任务、产生事实或授予accepted。缺来源、授权、预算或版本一致性时只产候选／拒绝记录。提取输出不直接授予source_verified。
 
@@ -349,6 +350,8 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 | dataDir | 可选，默认home/.dsh/evolve/<repoId> | 数据不跟随DSH_HOME |
 | executionTrusted | false | 允许运行受信任仓库pytest |
 | shareWithModel | false | 允许返回存储经验，不授权原始材料提炼 |
+| backgroundVerification | false | 与executionTrusted同时开启才允许后台pytest |
+| extraction | 缺省关闭 | grant UUID/已注册provider/model/maxCalls 1–100/maxTokens 128–4096/timeoutMs 100–120000；授权随后结束任务的有限材料传输 |
 | acceptanceDir | 可选，默认dataDir/acceptance-not-configured | 必须另配有效仓库外验收 |
 | python | python | owner选的解释器 |
 | regressionPath | tests，验证时安全相对路径 | 固定回归目标 |
@@ -375,16 +378,16 @@ rejected／counterexample对当前实际应用版停用；irrelevant只精确排
 
 DSH Web认证与面板token不同：固定官方Web应从CLI打印的启动URL完成认证bootstrap；新的裸根URL可能401。不能把本机token写到README、PR或截图中。完整安装／模型体验范围见T006d记录。
 
-## 12. 自动提炼的目标设计
+## 12. 自动候选提炼的当前契约
 
-**以下未实现，不能作为当前使用说明。**
+T020实现见[ADR023](decisions/023-automatic-candidate-extraction.md)。这是G02/G03的有限切片；正常真实模型学习与收益仍待验证。
 
-1. G01把显式纠正、失败、最终commit、验证报告归并成最小证据包，逐条主张指向EvidenceRef；歧义归属交回owner，不跨任务补绑。
-2. G02通过独立授权的ExtractionPort提交最小材料；不传完整会话、任意工具输出或凭据；模型输出严格候选／来源引用或拒绝。
-3. 文字主张核对与运行证明分开：不在证据中的观察改为推断／删除；一次成功限定条件，不生成无条件规则。
-4. G03记录输入摘要、外部调用资格和持久状态。中断未知不自动重试；重复证据不重复发布；陈旧版本不覆盖。
-5. 模型提炼失败不阻塞开发；保留候选或拒绝及最小诊断。只由确定性验证器授予source_verified。
-6. 需要以固定DSH官方类型／服务探针验证所选LLM／后台扩展面，再接真实模型会话；不能由当前没有llm inject的适配层推断已支持。
+1. finish在关闭任务和T019证据入队的同一事务中，按独立owner extraction策略创建task唯一资格；缺省关闭，已关闭任务不回填。策略为grant UUID、注册provider/model、maxCalls、maxTokens、timeoutMs，不能通过工具或面板开启。
+2. ExtractionJobs只处理同repo、T019 succeeded且bundle ready的任务；重新校验任务／输入／来源／报告摘要、最新匹配报告及干净修复HEAD／依赖。取1–20个实际改变且仍存在的Python文件哈希作为scope；不切换或回滚用户工作区。
+3. 模型输入是最多32KiB的去敏摘要／Python差异／版本／事实目录，不含会话、任意工具输出、完整报告或Key。宿主渲染测试计数／有限失败用例标识／实际明确纠正。严格输出candidate(title,strategy,factIds,inferences,recommendations)或abstain；不接受自由事实、任意引用或状态字段。宿主按factIds构造原样事实和精确FactCitation，模型策略仍未获语义／收益证明。
+4. v5 extraction_grants固定策略摘要与已占用次数；extraction_jobs关联唯一task和证据Job、策略、状态、输入摘要、token/deadline、candidate引用、数字usage及时间。候选／引用／终态原子发布；只生成revision1 candidate、verificationId=null，不继承来源证明为自动激活。
+5. waiting等待证据或模型；不足／撤销／漂移为blocked；原子扣额并占用后running，结果为candidate/abstained/failed/unknown。过期、取消和未完成流保留unknown、不退额不重试，旧token不可发布。同grant重启不清零，同ID改策略拒绝。逻辑调用上限不是物理HTTP或人民币硬预算。
+6. DSH通过ctx.get('llm')及listProviders可选发现固定0.2.0-rc.2 LlmRuntime，prepareCall绑定注册代际，单次stream无工具／Agent循环／伪造session/purpose。输入/输出/块数/数字usage有界，完成必须stop。DSH启动worker并在卸载时取消、等待再关闭DB；CLI面板无模型仅查看。官方合成适配器兼容证据不能代替真实模型验证。
 
 不照搬参考项目固定turn／时间阈值、完整Skill Catalog或发布所有权协议。本产品调度以任务和证据完整性为依据，产物首先是本地版本化经验。
 
@@ -452,7 +455,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | C06 | §5.1、8，snapshot | repository、core scope | 条件充分性待评价 |
 | E01–E02 | §5.2、12，Candidate／propose | domain严格schema源码核对；core候选拒选 | G02文字核对 |
 | E03 | §3、5、12 | core条件边界 | G02提炼约束 |
-| E04–E05 | §5.4、10、12 | 尚无自动提取测试 | G02/G03授权／预算／幂等 |
+| E04–E05 | §5.4、10、12 | extraction、dsh-extraction：授权/额度/幂等/严格输出/unknown | 真实模型质量、货币预算实验另验 |
 | V01–V02 | §8，verifyRepair | core信任／隔离 | G08强隔离 |
 | V03–V04 | §8.2，verifiedCases／passes | core失败身份／skip／无收集 | 受信任pytest |
 | V05 | §5.2、8 | core报告／demo | G06独立公开重建 |
@@ -474,7 +477,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | U04 | §7、11–12 | dsh／面板分别验证 | G01/G05正常联动 |
 | D01–D02 | §5、11、14 | core脱敏／路径、panel | 非语义隐私保证 |
 | D03 | §5.3、14 | evidence历史引用保留，core清理后历史 | G07完全删除/遗忘 |
-| D04 | §7、11–12 | dsh／core默认拒绝 | G02提炼授权 |
+| D04 | §7、11–12 | dsh／core／extraction默认拒绝与授权撤销 | 真实配置/模型用户体验待验 |
 | D05 | §5.3 | migration v1/回滚/未知版，evidence v2逐表保留/幂等 | SQLite2不能混跑3 |
 | I01 | §1、7.3 | bundle／dsh／install-probe、T006d | 版本固定 |
 | I02 | §3、7.2 | dsh、core真实pytest | 运输状态非验收 |
@@ -493,8 +496,8 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | 缺口 | 问题／目标 | 依赖 | 必须新增的验收证据 |
 |---|---|---|---|
 | G01 任务证据归并 | T019已自动归并显式关闭任务的最小事件/版本/纠正/pytest；任意错误尝试理解仍待实现 | 本基线，协同G07 | T019负路径/归属/有界省略；真实模型语义另验 |
-| G02 授权自动提炼 | 官方DSH ExtractionPort，最小材料与主张核对 | G01、DSH接口任务设计、G03 | 授权关闭／预算／注入／无来源／重复输入，无模型虚构成功 |
-| G03 耐久协调恢复 | T019本地Job/Attempt/lease/fencing和unknown边界已实现；LLM调用资格/提炼发布待设计 | G01、ADR022 | T019两进程/中断/重复/陈旧发布；不能外推LLM调用 |
+| G02 授权自动提炼 | T020官方DSH ExtractionPort、宿主事实/引用/条件与严格候选已实现；真实质量待验 | G01、ADR023、G03 | extraction/dsh-extraction离线负路径；不推断真实质量 |
+| G03 耐久协调恢复 | T019本地恢复＋T020外部调用资格/额度/原子发布已实现，模型中断不重跑 | G01、ADR022/023 | 两进程/重启/取消/陈旧发布离线验证；物理HTTP与服务端费用另验 |
 | G04 上下文与交付 | 最小DTO、硬预算、决策快照和重复回执 | G01/G03、现选择 | 超预算拒绝、版本漂移、返回失败、实际offered与unknown |
 | G05 正常DSH闭环 | T011引导SDK真实运行partial；正常采集/复用/反馈仍缺，#33/#34跟进工具与用量 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
 | G06 可公开收益评估 | 独立重建合成资产＋真实任务族配对重复 | 现v2/v3，G04/G05按评价入口 | 外部只读验收、三组控制、任务隔离、全部失败与人工指标 |

@@ -131,7 +131,7 @@ test('v2 upgrade preserves exact legacy records and withholds uncited experience
   const app = service.select(service.begin('old-target', candidate.title).id, 'feedback-v1').application!;
   service.feedback({ id: randomUUID(), applicationId: app.id, outcome: 'unknown', note: 'Historical result is unknown.', extraCost: null, humanRework: null });
   original.close();
-  const raw = new DatabaseSync(path); raw.exec('DROP TABLE learning_job_sources; DROP TABLE evidence_bundles; DROP TABLE learning_attempts; DROP TABLE learning_jobs; DROP TABLE fact_citations; DROP TABLE evidence; PRAGMA user_version=2');
+  const raw = new DatabaseSync(path); raw.exec('DROP TABLE extraction_jobs; DROP TABLE extraction_grants; DROP TABLE learning_job_sources; DROP TABLE evidence_bundles; DROP TABLE learning_attempts; DROP TABLE learning_jobs; DROP TABLE fact_citations; DROP TABLE evidence; PRAGMA user_version=2');
   const tables = ['tasks', 'experiences', 'revisions', 'verifications', 'applications', 'feedback', 'events'];
   const before = tables.map((table) => raw.prepare('SELECT * FROM ' + table).all()); raw.close();
   const upgraded = new Store(path);
@@ -144,7 +144,7 @@ test('v2 upgrade preserves exact legacy records and withholds uncited experience
   } finally { upgraded.close(); }
   const checked = new DatabaseSync(path);
   try {
-    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 4);
+    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 5);
     // Only the explicit new-target task was added after migration.
     assert.deepEqual(tables.slice(1).map((table) => checked.prepare('SELECT * FROM ' + table).all()), before.slice(1));
   } finally { checked.close(); }
