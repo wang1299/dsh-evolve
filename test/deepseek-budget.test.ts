@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DeepseekBudget, settledMessagesUsage, startBudgetRelay } from '../scripts/deepseek-budget.js';
@@ -40,6 +40,11 @@ test('relay checks actual wire requests, charges cache conservatively and never 
     assert.equal(budget.state.calls.length, 0); assert.equal(forwarded, 0);
     assert.equal(await (await send(request)).text(), sse()); assert.equal(forwarded, 1);
     assert.equal(budget.spent, 32 * 2 + 8 * 8);
+    const receipt = JSON.parse(readFileSync(budget.path + '.receipts/' + budget.state.calls[0]!.id + '.json', 'utf8'));
+    assert.equal(receipt.callId, budget.state.calls[0]!.id);
+    assert.equal(receipt.reason, 'complete');
+    assert.equal(receipt.httpStatus, 200);
+    assert.deepEqual(receipt.usage, { input: 32, output: 8 });
     assert.ok(!JSON.stringify(budget.state).includes('fixture-secret')); assert.ok(!JSON.stringify(budget.state).includes('synthetic fixture'));
     assert.throws(() => new DeepseekBudget(budget.path), /EEXIST/);
   } finally { await relay.close(); budget.close(); }
