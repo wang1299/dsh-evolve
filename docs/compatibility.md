@@ -14,7 +14,7 @@ Agent仅传入身份fixture，没有运行LLM主循环；不可将此探针描�
 
 ## 未验证
 
-- 真实DSH模型会话中的自主调用、候选提取质量和经验收益。
+- 正常DSH完整自主学习、候选提取质量和经验收益。T011官方SDK真实Agent已观察begin/纠正及有效源码提案，但候选失败、复用未开始，详见[T011](development/T011-acceptance.md)。
 - Desktop发行应用安装器、其他平台完整CLI/Web安装及跨版本兼容；Windows固定CLI/Web的已验证范围如上。
 - T010本地53项及六工具兼容通过，当前头两平台CI/实际tgz及独立评审见关联PR与[T010验收](development/T010-acceptance.md)。T006d完整Web为历史安装包，不自动扩展到本轮新代码；组件CI不等于真实DSH模型回合。
 
@@ -37,7 +37,7 @@ npm pack --pack-destination .probe-work
 npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
 ```
 
-报告和测试profile保存在`.probe-work/install-probe-*`，不会修改已有用户profile。Codex受限提案/宿主写入与外部pytest已另行实现；强安全隔离、真实DSH模型会话及真实任务收益仍待验证。
+报告和测试profile保存在`.probe-work/install-probe-*`，不会修改已有用户profile。Codex受限提案/宿主写入与外部pytest已另行实现；强安全隔离、正常DSH完整学习及真实任务收益仍待验证；T011有引导的真实SDK回合为partial。
 
 插件读取可选环境变量 `DSH_EVOLVE_CONFIG` 指向本地JSON配置，或由Cordis传入Config。未配置时以进程cwd为单仓库，关闭执行信任和模型共享。
 

@@ -228,7 +228,7 @@ observe只附到该session的open任务，无任务忽略。不保留任意参�
 
 verify使用工具signal与插件lifetime的合并取消信号；跟踪pending promises。卸载先标disposed、取消、等待settled，再关库；官方框架释放本组件工具和prompt。事件回调在disposed后不写入。
 
-真实官方服务探针覆盖注册／执行begin和finish／session隔离／卸载后工具及提示移除；没有调用验证工具或制造pending验证，取消/等待pending仅经源码核对，未作实际取消测试。bundle验证官方空profile组合，tgz探针覆盖独立消费安装。Windows完整官方CLI/Web试装见[T006d](development/T006d-installation.md)。真实DSH模型自主调用／提炼、Desktop及其他平台完整应用仍为G05，不得由fixture Agent替代。
+真实官方服务探针覆盖注册／执行begin和finish／session隔离／卸载后工具及提示移除；没有调用验证工具或制造pending验证，取消/等待pending仅经源码核对，未作实际取消测试。bundle验证官方空profile组合，tgz探针覆盖独立消费安装。Windows完整官方CLI/Web试装见[T006d](development/T006d-installation.md)。T011另用官方SDK真正Agent完成begin/纠正和有效修复提案，但候选引用失败、复用未开始（[记录](development/T011-acceptance.md)）。正常DSH完整自主学习、Desktop及其他平台完整应用仍为G05，不得由fixture或本次partial替代。
 
 ## 8. 来源验证管线
 
@@ -485,7 +485,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表完整覆盖58项；范�
 | G02 授权自动提炼 | 官方DSH ExtractionPort，最小材料与主张核对 | G01、DSH接口任务设计、G03 | 授权关闭／预算／注入／无来源／重复输入，无模型虚构成功 |
 | G03 耐久协调恢复 | Job／Attempt、外部调用资格、并发去重、未知恢复 | G01，先定持久化ADR | 两进程竞争、关键点中断、重复事件、陈旧发布、无资格重开 |
 | G04 上下文与交付 | 最小DTO、硬预算、决策快照和重复回执 | G01/G03、现选择 | 超预算拒绝、版本漂移、返回失败、实际offered与unknown |
-| G05 正常DSH闭环 | 真实模型正常会话采集、复用、反馈／面板联动 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
+| G05 正常DSH闭环 | T011引导SDK真实运行partial；正常采集/复用/反馈仍缺，#33/#34跟进工具与用量 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
 | G06 可公开收益评估 | 独立重建合成资产＋真实任务族配对重复 | 现v2/v3，G04/G05按评价入口 | 外部只读验收、三组控制、任务隔离、全部失败与人工指标 |
 | G07 保留与遗忘 | T010已保护历史引用最小来源/默认缺失拒绝；导出/彻底遗忘待设计 | G01共同设计 | 纠正30天后仍可溯源，删除失效，无隐私副本残留声明越界 |
 | G08 验证执行增强 | 后代树、总deadline、环境manifest／强隔离选择 | 当前验证器、独立ADR | 进程后代／逃逸风险场景、取消清理、环境漂移、资源边界 |

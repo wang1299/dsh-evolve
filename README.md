@@ -14,7 +14,7 @@
 
 - 需求与架构：v0.2细化为58项编号需求、15个黄金验收场景、模块/数据/状态/接口/异常契约和完整追踪表；实现与目标分列，后续缺口见[架构总纲](docs/architecture.md)。T009交付门槛见[设计验收](docs/development/T009-design-acceptance.md)及关联PR。
 - 核心功能：已实现来源验证、候选与作用域选择、反馈及经验版本。T010新增按事实/经验版本绑定的纠正与测试来源、摘要/归属检查及历史引用保留；默认evidence-v1拒绝事实来源不完整的经验。见[设计](docs/decisions/013-fact-evidence.md)与[验收](docs/development/T010-acceptance.md)。
-- DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。真实模型回合、Desktop及其他平台完整应用仍待验证。见[试装记录](docs/development/T006d-installation.md)。
+- DSH：固定0.2.0-rc.2，官方服务/安装探针通过；Windows完整官方CLI/Web已独立试装、在插件页显示运行中且重启后仍加载。正常DSH完整学习闭环、Desktop及其他平台完整应用仍待验证；真实SDK回合的partial结果见[T011记录](docs/development/T011-acceptance.md)，安装见[试装记录](docs/development/T006d-installation.md)。
 - 面板：本机经验查看、来源与版本、反馈、修订、停用和恢复，HTTP与浏览器交互已验证。
 - 评价：三组结果一致性、泄漏检查及v2执行器已实现；历史首轮三次均通过验收，但未选入经验，只验证执行链路，不能判断经验收益。见[T006c记录](docs/development/T006c-acceptance.md)。
 - 检索：T008a加入长任务BM25、弱匹配拒绝和版本化策略；普通检索对照使用同一算法。36条预先冻结合成查询的召回/误选/漏选与成本全部保留，尚不能证明Agent收益。见[离线诊断](docs/evaluation/retrieval-v1.md)。
@@ -22,7 +22,7 @@
 - 真实初步对照：1次积累通过后，两个新合成任务各运行三组，共7次真实Codex调用。Evolve两题均提供反馈经验，三组验收均2/2，未观察到成功率或复发率改善，增加输入成本；任务作者可见，只有一次重复。见[结果与限制](docs/development/T008c-acceptance.md)。
 - 验证：T008b已由PR #22完成39项两平台CI/实际安装和独立评审；T008c执行头44项本地及两平台CI、实际安装通过，两项预审阻塞已修复并复审。最终交付头见[PR #24](https://github.com/wang1299/dsh-evolve/pull/24)及[本轮记录](docs/development/status.md)，不以历史检查代替当前头验证。
 - 完整Web试装：T006d只有安装文档变化，本机已实际加载与停止重启；该文档交付的最终CI/独立审查见[PR #26](https://github.com/wang1299/dsh-evolve/pull/26)。
-- GitHub：T009设计基线已由PR #28合并；当前T010 / Issue #29交付事实来源与保留，CI/独立评审/合并状态见关联PR。
+- GitHub：T010已由PR #30合并；T011 / PR #32记录首次有预算的真实DSH验证，结果partial，待办#33/#34，CI/评审/合并状态见关联PR。
 - npm、GitHub Release、线上部署：未发布。
 
 ## 开发组织
@@ -53,7 +53,7 @@ SQLite已升级v3：v2旧记录不改写；v1沿用既有报告降级、追加�
 
 ## DSH接入与当前限制
 
-插件提供六个工具：开始/结束任务、记录纠正、提出候选、验证和关联事实来源。纠正与验证返回来源凭据，候选返回事实摘要；用`evolve_link_fact_evidence`按精确revision关联：相同引用保留原版本；已验证且来源完整的经验锁定来源，需owner检查反馈并显式修订后才能更换。其他来源变化产生新版本。引用只校验出处/归属/摘要，不自动认证主张语义。未配置模型时，仍可通过核心API和合成案例检查流程。真实模型自主调用与提取质量尚未验证。
+插件提供六个工具：开始/结束任务、记录纠正、提出候选、验证和关联事实来源。纠正与验证返回来源凭据，候选返回事实摘要；用`evolve_link_fact_evidence`按精确revision关联：相同引用保留原版本；已验证且来源完整的经验锁定来源，需owner检查反馈并显式修订后才能更换。其他来源变化产生新版本。引用只校验出处/归属/摘要，不自动认证主张语义。未配置模型时，仍可通过核心API和合成案例检查流程。T011真实DSH已观察到begin/纠正及有效源码修复，但候选引用输入被拒绝，首次结果为partial；经验提炼/复用仍未完成，见[真实记录](docs/development/T011-acceptance.md)。
 
 配置和固定版本边界见[兼容性](docs/compatibility.md)。执行验证及经验发送给当前DSH模型均默认关闭，由owner明确开启；HTTP和模型工具不能修改这些授权。当前面板是独立loopback页面，与DSH共享本地数据库。
 
