@@ -2,7 +2,7 @@
 
 | 任务 | 依赖 | 状态 | 分支 |
 |---|---|---|---|
-| T029 正常对话自动学习 | T019/T020/T027/T028 / Issue #67 | ADR031；受限未提交快照、执行片段和自动来源验证流程，开发中 | codex/t029-automatic-learning |
+| T029 正常对话自动学习 | T019/T020/T027/T028 / Issue #67 | ADR031；正常请求/未提交私有快照/一次提炼/候选独立再验/自动提供已实现；本地172通过1跳过、兼容8/8、实际包和浏览器通过，独立复审无阻塞。最终头CI与合并见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)；默认关闭，真实模型与收益未验证 | codex/t029-automatic-learning |
 | T028 用户学习动态与渐进详情 | T027 / Issue #65 | 已实现、159项本地检查/兼容8项/实际包演练/界面验证及独立复审通过；最终CI与合并见[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)，自动学习操作简化另拆任务 | codex/t028-learning-home |
 | T001 需求、架构、ADR、验收和开发基线 | 无 | 已合并PR #2，Issue #1关闭 | codex/t001-baseline |
 | T002 数据、来源验证、经验选择和生命周期 | T001 | 9项测试两平台CI和必要复审通过，已合并PR #9，Issue #3关闭 | codex/t002-core |
