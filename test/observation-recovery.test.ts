@@ -109,7 +109,7 @@ test('v5 migration keeps frozen JSON, links and grant usage while enforcing fore
   try {
     const check = new DatabaseSync(r.path);
     try {
-      assert.equal(check.prepare('PRAGMA user_version').get()!.user_version, 6);
+      assert.equal(check.prepare('PRAGMA user_version').get()!.user_version, 7);
       assert.deepEqual(check.prepare('SELECT * FROM learning_jobs').get(), beforeJob);
       assert.deepEqual(check.prepare('SELECT * FROM extraction_jobs').get(), beforeExtraction);
       assert.deepEqual(check.prepare('SELECT body FROM evidence_bundles').get(), beforeBundle);

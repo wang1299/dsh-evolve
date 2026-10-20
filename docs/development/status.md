@@ -1,5 +1,8 @@
 # 本轮实现与验证状态
 
+T026：owner显式新授权、单次新grant、v7原子迁移和面板尝试关联已实现；最终本地check151/151、官方兼容6/6、demo、实际包脚本学习四场景及安装CLI的v6副本迁移/幂等排队通过。独立AI审查发现面板P2，修复并复审无阻塞。最终CI/合并见[PR #62](https://github.com/wang1299/dsh-evolve/pull/62)及[T026验收](T026-acceptance.md)。旧unknown/已用次数/财务占额不变；真实模型执行另记，未发布。
+
+
 ## 当前T023完整宿主候选发现试装（2026-10-20）
 
 Issue [#55](https://github.com/wang1299/dsh-evolve/issues/55)，实施前范围28ebecb。产品代码与6742214相同：T022已由PR #54经141项/compat6/实际包四场景两平台CI和独立评审合并，#53关闭。新的完整固定Windows宿主中实际7次脚本Agent/1次提炼，后台原1失败→修复0/回归0、候选保持candidate，下一实际provider输入收到数量提醒并通过真实list回执发现ID；正常重启与同库安装包面板通过，旧数据保留。失败尝试/完整证据/最终门槛及公开重建限制见[T023验收](T023-native-discovery.md)和关联PR。无真实模型HTTP/费用/Key或旧预算访问；正常真实模型及收益仍待验证，以下为历史快照。

@@ -26,6 +26,6 @@ export function createService(input: Config): { service: EvolveService; config: 
     trusted: config.executionTrusted, python: config.python,
     acceptanceDir: config.acceptanceDir ? resolve(config.acceptanceDir) : join(dataDir, 'acceptance-not-configured'),
     regressionPath: config.regressionPath, timeoutMs: config.timeoutMs,
-  }, config.backgroundVerification, config.extraction);
+  }, config.backgroundVerification, config.extraction, config.shareWithModel);
   return { service, config };
 }
