@@ -18,7 +18,8 @@ test('local panel authenticates data, rejects cross-site writes and preserves ex
     const page = await fetch(panel.origin); const html = await page.text();
     assert.equal(page.status, 200); assert.match(page.headers.get('content-security-policy')!, /frame-ancestors 'none'/);
     assert.ok(!html.includes(panel.token)); assert.ok(!html.includes(experience.title));
-    assert.match(html, /此任务不相关：保留经验/); assert.match(html, /策略无效：停用版本/);
+    assert.match(html, /此任务不相关：保留经验/); assert.match(html, /策略无效/);
+    assert.match(html, /仅当所用版本仍为当前版本时/);
     assert.doesNotThrow(() => new Script(html.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)![1]!));
     assert.equal((await fetch(panel.origin + '/api/state')).status, 401);
     const headers = { Authorization: 'Bearer ' + panel.token, Origin: panel.origin, 'Content-Type': 'application/json' };
