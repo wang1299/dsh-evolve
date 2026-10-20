@@ -31,6 +31,12 @@ export class AutomaticLearning {
       if (dead) this.service.store.transaction(() => { if (this.service.store.automatic.transition(s.id, s.state, { state: 'unknown', reason: 'interrupted_process' })) this.closeCapture(s); });
     }
   }
+  /** Called with the persistent repository lock held by explicit task creation. */
+  blockCapturesForManual(): void {
+    for (const s of this.rows().filter(s => ['capturing', 'open'].includes(s.state))) {
+      this.service.store.automatic.transition(s.id, s.state, { state: 'blocked', reason: 'manual_task_started' }); this.closeCapture(s);
+    }
+  }
   begin(sessionId: string, turn: number, requests: { id: string; text: string }[]): Task | null {
     if (!this.enabled || !requests.length) return null;
     const store = this.service.store; const prior = this.forTurn(sessionId, turn);

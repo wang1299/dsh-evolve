@@ -39,11 +39,15 @@ export class EvolveService {
   }
   begin(sessionId: string, summary: string): Task {
     z.string().min(1).max(128).parse(sessionId); textSchema.parse(summary);
-    if (this.store.tasks().some((t) => t.sessionId === sessionId && t.state === 'open')) throw new Error('Session already has an open task');
-    const current = snapshot(this.root);
-    const task: Task = { schemaVersion: 1, id: randomUUID(), sessionId, summary: redact(summary),
-      scope: current.scope, baseCommit: current.commit, state: 'open', createdAt: new Date().toISOString() };
-    this.store.putTask(task); return task;
+    return this.store.transaction(() => {
+      this.store.automatic.lock(this.repoId);
+      if (this.store.tasks().some((t) => t.sessionId === sessionId && t.state === 'open')) throw new Error('Session already has an open task');
+      this.automatic.blockCapturesForManual();
+      const current = snapshot(this.root);
+      const task: Task = { schemaVersion: 1, id: randomUUID(), sessionId, summary: redact(summary),
+        scope: current.scope, baseCommit: current.commit, state: 'open', createdAt: new Date().toISOString() };
+      this.store.putTask(task); return task;
+    });
   }
   requireTask(id: string, sessionId?: string): Task {
     const task = this.store.task(idSchema.parse(id));

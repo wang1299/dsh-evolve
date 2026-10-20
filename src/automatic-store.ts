@@ -2,7 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
-import { digest, hashSchema, idSchema } from './domain.js';
+import { digest, hashSchema, idSchema, taskSchema } from './domain.js';
 import { workspaceVersionSchema } from './workspace-snapshots.js';
 
 export const segmentSchema = z.object({
@@ -42,10 +42,12 @@ export class AutomaticStore {
       const existing = this.rows().find(s => s.repoId === input.repoId && ((s.sessionId === input.sessionId && s.turn === input.turn) || s.messageKey === input.messageKey));
       if (existing) return { segment: existing, fresh: false };
       const active = this.rows().filter(s => s.repoId === input.repoId && ['capturing', 'open'].includes(s.state));
+      const manualActive = this.db.prepare('SELECT body FROM tasks WHERE id NOT IN (SELECT task_id FROM automatic_segments WHERE task_id IS NOT NULL)').all()
+        .some(r => { const t = taskSchema.parse(JSON.parse(String(r.body))); return t.scope.repoId === input.repoId && t.state === 'open'; });
       const now = new Date().toISOString();
       for (const old of active) this.write({ ...old, state: 'blocked', reason: 'concurrent_request', updatedAt: now });
       const s: AutomaticSegment = { ...input, id: randomUUID(), taskId: null, base: null, fixed: null, ownerPid: process.pid,
-        state: active.length ? 'blocked' : 'capturing', reason: active.length ? 'concurrent_request' : 'capturing_baseline', createdAt: now, updatedAt: now };
+        state: active.length || manualActive ? 'blocked' : 'capturing', reason: manualActive ? 'manual_task_active' : active.length ? 'concurrent_request' : 'capturing_baseline', createdAt: now, updatedAt: now };
       this.write(s); return { segment: s, fresh: true };
     });
   }
