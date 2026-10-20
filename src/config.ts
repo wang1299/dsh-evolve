@@ -11,10 +11,12 @@ export const configSchema = z.object({
   repoRoot: z.string().min(1), dataDir: z.string().min(1).optional(),
   executionTrusted: z.boolean().default(false), shareWithModel: z.boolean().default(false),
   backgroundVerification: z.boolean().default(false),
+  automaticLearning: z.boolean().default(false),
   extraction: extractionPolicySchema.optional(),
   acceptanceDir: z.string().min(1).optional(), python: z.string().min(1).default('python'),
   regressionPath: z.string().min(1).default('tests'), timeoutMs: z.number().int().min(100).max(120000).default(15000),
-}).strict();
+}).strict().refine(c => !c.automaticLearning || c.executionTrusted && c.backgroundVerification && c.shareWithModel && c.extraction !== undefined && c.acceptanceDir !== undefined,
+  'Automatic learning requires explicit execution, background verification, sharing, extraction and independent acceptance configuration');
 export type Config = z.input<typeof configSchema>;
 export function loadConfig(path: string): Config { return configSchema.parse(JSON.parse(readFileSync(path, 'utf8'))); }
 export function createService(input: Config): { service: EvolveService; config: z.output<typeof configSchema> } {
@@ -26,6 +28,6 @@ export function createService(input: Config): { service: EvolveService; config: 
     trusted: config.executionTrusted, python: config.python,
     acceptanceDir: config.acceptanceDir ? resolve(config.acceptanceDir) : join(dataDir, 'acceptance-not-configured'),
     regressionPath: config.regressionPath, timeoutMs: config.timeoutMs,
-  }, config.backgroundVerification, config.extraction, config.shareWithModel);
+  }, config.backgroundVerification, config.extraction, config.shareWithModel, config.automaticLearning);
   return { service, config };
 }

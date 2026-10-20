@@ -13,6 +13,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent';
 import { fixture } from '../test/fixture.js';
 import { installedLearning } from './installed-learning.js';
 import { installedScenarios } from './installed-learning-report.js';
+import { rehearseAutomatic } from './automatic-rehearsal.js';
 
 // Explicit, optional package verification. Uses synthetic data and never opens an owner's DSH profile.
 const archive = resolve(process.argv[2] ?? '.probe-work/dsh-evolve-0.1.0-alpha.0.tgz');
@@ -63,6 +64,10 @@ if (learning) {
     const expected = { happy: 'completed', 'invalid-extraction': 'extraction_invalid', 'sharing-off': 'sharing_disabled', 'failed-target': 'target_rejected' } as const;
     assert.equal(report.reason, expected[scenario]); assert.equal(report.phase, scenario === 'happy' ? 'passed' : 'partial');
   }
+  const automatic = await rehearseAutomatic(packageDir);
+  await writeFile(join(work, 'normal-dialogue-learning.json'), JSON.stringify(automatic, null, 2), { flag: 'wx' });
+  assert.equal(automatic.passed, true); assert.equal(automatic.evolveToolCalls, 0);
+  console.log('Installed normal-dialogue learning passed; zero evolve tools and model HTTP.');
   console.log('Installed automatic-learning rehearsal passed. Evidence:', work);
 } else {
 

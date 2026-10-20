@@ -7,6 +7,7 @@ export const observationSchema = z.object({ id: z.string().min(1).max(200), crea
 export const evidenceInputSchema = z.object({
   schemaVersion: z.literal(1), taskId: idSchema, repoId: hashSchema, taskDigest: hashSchema,
   baseCommit: shaSchema, fixCommit: shaSchema, dependencyDigest: hashSchema,
+  snapshotDigest: hashSchema.optional(),
   mode: z.enum(['collect', 'verify']), policyDigest: hashSchema,
   repositoryState: z.enum(['clean', 'dirty', 'unavailable']), diff: z.string().max(8000), diffTruncated: z.boolean(),
   sources: z.array(sourceRefSchema).max(32), omittedSources: z.number().int().nonnegative(),

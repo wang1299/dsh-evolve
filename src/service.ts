@@ -4,7 +4,8 @@ import { Store } from './store.js';
 import { applicability, snapshot } from './repository.js';
 import { candidateSchema, digest, feedbackSchema, idSchema, redact, textSchema, RevisionConflict,
   type Application, type Candidate, type Evidence, type Experience, type Feedback, type Scope, type Task } from './domain.js';
-import { verifyRepair, type VerificationPolicy } from './verification.js';
+import { verifyRepair, verifyWorkspaceRepair, type VerificationPolicy } from './verification.js';
+import { AutomaticLearning } from './automatic-learning.js';
 import { rankText, retrievalPolicy } from './retrieval.js';
 import { contextKey, feedbackMemory, rankFeedback, type ContextEvidence } from './feedback-retrieval.js';
 import { correctionEvidence, factProvenance, validateCitations, verificationEvidence } from './evidence.js';
@@ -27,11 +28,14 @@ export function similarity(query: string, text: string): number {
 export class EvolveService {
   readonly jobs: EvidenceJobs;
   readonly extraction: ExtractionJobs;
+  readonly automatic: AutomaticLearning;
   private readonly repoId: string;
-  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy, backgroundVerification = false, extractionPolicy?: ExtractionPolicy, private readonly modelSharingAllowed = false) {
-    this.jobs = new EvidenceJobs(store, root, policy, backgroundVerification);
+  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy, backgroundVerification = false, extractionPolicy?: ExtractionPolicy, private readonly modelSharingAllowed = false, automaticLearning = false) {
+    if (automaticLearning && (!policy.trusted || !backgroundVerification || !extractionPolicy || !modelSharingAllowed)) throw new Error('Automatic learning requires explicit execution, background verification, sharing and extraction authorization');
+    this.jobs = new EvidenceJobs(store, root, policy, backgroundVerification, verifyRepair, automaticLearning);
     this.repoId = snapshot(root).scope.repoId;
-    this.extraction = new ExtractionJobs(store, root, extractionPolicy);
+    this.extraction = new ExtractionJobs(store, root, extractionPolicy, automaticLearning);
+    this.automatic = new AutomaticLearning(this, automaticLearning);
   }
   begin(sessionId: string, summary: string): Task {
     z.string().min(1).max(128).parse(sessionId); textSchema.parse(summary);
@@ -50,6 +54,8 @@ export class EvolveService {
   }
   finish(id: string): Task {
     const task = this.requireTask(id); if (task.state === 'closed') return task;
+    const automatic = this.store.automatic.forTask(id);
+    if (automatic && automatic.state !== 'queued') throw new Error('Automatic capture closes from the host boundary');
     const closed = { ...task, state: 'closed' as const };
     return this.store.transaction(() => {
       this.store.putTask(closed); const job = this.jobs.enqueue(closed); this.extraction.enqueue(closed, job.id); return closed;
@@ -147,15 +153,20 @@ export class EvolveService {
       this.store.putExperience(next, citations); return next;
     });
   }
-  async verify(experienceId: string, signal?: AbortSignal): Promise<Experience> {
+  async verify(experienceId: string, signal?: AbortSignal, expectedRevision?: number): Promise<Experience> {
     const experience = this.requireExperience(experienceId); const revision = experience.revision;
+    if (expectedRevision !== undefined && revision !== expectedRevision) throw new RevisionConflict();
     const task = this.requireTask(experience.sourceTaskId);
     if (experience.status === 'disabled') throw new Error('Disabled experience must be revised before verification');
     const current = snapshot(this.root, Object.keys(experience.scope.requiredFiles));
     if (applicability(experience.scope, current.scope)) throw new Error('Candidate scope changed; revise before verification');
-    const report = await verifyRepair(this.root, task.id, task.baseCommit, current.commit, this.policy, signal);
+    const segment = this.store.automatic.forTask(task.id);
+    const report = segment?.base && segment.fixed && this.automatic.snapshots
+      ? await verifyWorkspaceRepair(this.root, task.id, segment.base, segment.fixed, this.automatic.snapshots, this.policy, signal)
+      : await verifyRepair(this.root, task.id, task.baseCommit, current.commit, this.policy, signal);
     return this.store.transaction(() => {
       if (this.requireExperience(experienceId).revision !== revision) throw new Error('Experience changed during verification');
+      if (segment?.fixed && !this.automatic.snapshots!.matches(segment.fixed)) throw new Error('Workspace changed during candidate verification');
       const citations = validateCitations(this.store, experience, this.store.citations(experienceId, revision));
       this.store.putVerification(report);
       this.store.putEvidence(verificationEvidence(report));

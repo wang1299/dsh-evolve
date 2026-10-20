@@ -5,6 +5,7 @@ import { join, relative, isAbsolute, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { digest, redact, relativePath, shaSchema, verificationSchema, type TestRun, type Verification } from './domain.js';
 import { git, snapshot } from './repository.js';
+import { WorkspaceSnapshots, type WorkspaceVersion } from './workspace-snapshots.js';
 
 export interface VerificationPolicy {
   trusted: boolean;
@@ -114,6 +115,35 @@ export async function verifyRepair(
   git(root, ['merge-base', '--is-ancestor', baseCommit, fixCommit]);
   if (baseCommit === fixCommit) throw new Error('Repair must change the source commit');
   if (current.commit !== fixCommit) throw new Error('Repair commit must be the current repository HEAD');
+  return verifyPair(root, taskId, baseCommit, fixCommit, policy, current.scope.dependencyDigest,
+    (commit, target) => materialize(root, commit, target),
+    redact(git(root, ['diff', '--no-ext-diff', '--no-textconv', baseCommit, fixCommit, '--', '*.py']), 8000), {}, () => {}, signal);
+}
+
+/** The version SHAs here refer to the private snapshot store, never the user's HEAD. */
+export async function verifyWorkspaceRepair(root: string, taskId: string, base: WorkspaceVersion, fixed: WorkspaceVersion,
+  snapshots: WorkspaceSnapshots, policy: VerificationPolicy, signal?: AbortSignal): Promise<Verification> {
+  const check = (): void => {
+    snapshots.validate(base); snapshots.validate(fixed);
+    if (!snapshots.matches(fixed)) throw new Error('Workspace changed since the frozen repair');
+    if (base.commit === fixed.commit || base.dependencyDigest !== fixed.dependencyDigest) throw new Error('Snapshot repair must change code with unchanged dependencies');
+  };
+  if (!policy.trusted) throw new Error('Explicit repository execution trust is required');
+  if (!Number.isInteger(policy.timeoutMs) || policy.timeoutMs < 100 || policy.timeoutMs > 120000) throw new Error('Invalid timeout');
+  relativePath.parse(policy.regressionPath); signal?.throwIfAborted(); check();
+  snapshots.assertExternalAcceptance(await realpath(policy.acceptanceDir));
+  const load = async (commit: string, target: string): Promise<void> => {
+    for (const f of snapshots.files(commit)) { await mkdir(resolve(target, f.path, '..'), { recursive: true }); await writeFile(join(target, f.path), f.bytes); }
+  };
+  return verifyPair(root, taskId, base.commit, fixed.commit, policy, fixed.dependencyDigest, load,
+    redact(snapshots.diff(base.commit, fixed.commit), 8000),
+    { captureMethod: 'tracked-python-snapshot-v1', repositoryHead: fixed.sourceHead, baseContentDigest: base.digest, fixedContentDigest: fixed.digest }, check, signal);
+}
+
+async function verifyPair(root: string, taskId: string, baseCommit: string, fixCommit: string, policy: VerificationPolicy,
+  dependencyDigest: string, load: (commit: string, target: string) => Promise<void>, diff: string,
+  capture: Record<string, string>, check: () => void, signal?: AbortSignal): Promise<Verification> {
+  const current = snapshot(root);
   const acceptanceRoot = await realpath(policy.acceptanceDir);
   const rel = relative(current.root, acceptanceRoot);
   if (!isAbsolute(rel) && rel !== '..' && !rel.startsWith('..' + (process.platform === 'win32' ? '\\' : '/'))) {
@@ -126,7 +156,7 @@ export async function verifyRepair(
   try {
     const baseDir = join(workspace, 'base'); const fixDir = join(workspace, 'fixed'); const testsDir = join(workspace, 'acceptance');
     await mkdir(baseDir); await mkdir(fixDir); await mkdir(testsDir);
-    await materialize(root, baseCommit, baseDir); await materialize(root, fixCommit, fixDir);
+    await load(baseCommit, baseDir); await load(fixCommit, fixDir);
     for (const file of files) { await mkdir(resolve(testsDir, file.path, '..'), { recursive: true }); await writeFile(join(testsDir, file.path), file.bytes); }
     const config = join(workspace, 'pytest.ini'); await writeFile(config, '[pytest]\n');
     const acceptanceArgs = [testsDir, '-q', '-c', config, '--import-mode=importlib', '-p', 'no:cacheprovider'];
@@ -136,12 +166,13 @@ export async function verifyRepair(
     const regression = await runPytest(policy.python, regressionArgs, fixDir, join(workspace, 'regression.xml'), policy.timeoutMs, signal);
     const after = await acceptanceFiles(testsDir);
     if (digest(after.map((f) => `${f.path}:${digest(f.bytes)}`).join('\n')) !== acceptanceDigest) throw new Error('Acceptance evidence changed during verification');
+    check();
     const verified = verifiedCases(base, fixed) && passes(regression);
     const environment = {
       node: process.version,
       python: execFileSync(policy.python, ['--version'], { encoding: 'utf8', windowsHide: true }).trim(),
       pytest: execFileSync(policy.python, ['-m', 'pytest', '--version'], { encoding: 'utf8', windowsHide: true }).trim(),
-      platform: process.platform, dependencyDigest: current.scope.dependencyDigest,
+      platform: process.platform, dependencyDigest, ...capture,
     };
     return verificationSchema.parse({
       schemaVersion: 2, id: randomUUID(), sourceTaskId: taskId, repoId: current.scope.repoId, baseCommit, fixCommit, acceptanceDigest,
@@ -151,7 +182,7 @@ export async function verifyRepair(
         [policy.python, '-m', 'pytest', policy.regressionPath, '-q', '--import-mode=importlib'],
       ], base, fixed, regression, verified,
       reason: verified ? 'Original test failure reproduced; repair and regression tests passed' : 'Incomplete source verification; retain as candidate',
-      diff: redact(git(root, ['diff', '--no-ext-diff', '--no-textconv', baseCommit, fixCommit, '--', '*.py']), 8000), createdAt: new Date().toISOString(),
+      diff, createdAt: new Date().toISOString(),
     });
   } finally {
     // workspace is created exclusively by mkdtemp in this function; never accept a caller cleanup path.

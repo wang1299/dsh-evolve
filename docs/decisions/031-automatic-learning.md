@@ -30,7 +30,7 @@ SQLite v9增加automatic_segments和协调锁；旧表、旧report格式、unkno
 
 EvidenceJobs对自动Task从不可变片段取得两份快照并冻结输入；复用现有耐久Job/Attempt和单次提炼资格。ExtractionJobs在来源/当前代码二次核对后仅生成candidate。automaticLearning的新明确授权允许随后运行独立候选验证：重放测试、检查当前适用范围/全部事实出处/修订号，成功才source_verified；不直接继承提炼前报告为激活资格，不证明策略语义或未来收益。失败/反例/版本变化保持候选或停用。并发验证只有一个持久资格，开始后崩溃不重跑。
 
-正常请求通过官方动态systemPrompt.context提供至多一条经验的小型DTO，沿用现有选择算法、共享开关及Application记录；提供参考不是模型采用/因果收益。面板显示自动学习进度和缺口，技术快照/处理历史按需展开。
+正常请求在pre-step已接纳消息中附加至多一条经验的小型DTO，source.kind使用官方可扩展的dsh-evolve-experience，沿用选择算法、共享开关及Application记录；不冒充人类输入，也不唤醒新回合。固定版本先assemble/render动态context再进入pre-step，故该处新增任务不能依赖早已完成的context装配；原候选数量提醒仍使用动态context。提供参考不是模型采用/因果收益。面板显示自动学习进度和缺口，技术快照/处理历史按需展开。
 
 ## 验收和限制
 
