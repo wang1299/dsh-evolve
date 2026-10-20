@@ -6,7 +6,7 @@ import { extractionJobSchema, extractionPolicySchema, extractionUsageSchema,
 
 export const extractionTablesSql = `
   CREATE TABLE IF NOT EXISTS extraction_grants(id TEXT PRIMARY KEY, policy_digest TEXT NOT NULL, max_calls INTEGER NOT NULL, used INTEGER NOT NULL);
-  CREATE TABLE IF NOT EXISTS extraction_jobs(id TEXT PRIMARY KEY, task_id TEXT NOT NULL UNIQUE REFERENCES tasks(id),
+  CREATE TABLE IF NOT EXISTS extraction_jobs(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id),
     repo_id TEXT NOT NULL, evidence_job_id TEXT NOT NULL UNIQUE REFERENCES learning_jobs(id), grant_id TEXT NOT NULL REFERENCES extraction_grants(id),
     policy TEXT NOT NULL, policy_digest TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL,
     input_digest TEXT, token TEXT, lease_until INTEGER, candidate_id TEXT REFERENCES experiences(id), usage TEXT,
@@ -34,9 +34,9 @@ export class ExtractionStore {
       const grant = this.db.prepare('SELECT * FROM extraction_grants WHERE id=?').get(policy.grantId)!;
       if (grant.policy_digest !== hash || grant.max_calls !== policy.maxCalls) throw new Error('Extraction grant configuration is immutable; use a new explicitly authorized grant ID');
       const now = new Date().toISOString();
-      this.db.prepare(`INSERT INTO extraction_jobs VALUES(?,?,?,?,?,?,?,'waiting','evidence_pending',NULL,NULL,NULL,NULL,NULL,?,?) ON CONFLICT(task_id) DO NOTHING`)
+      this.db.prepare(`INSERT INTO extraction_jobs VALUES(?,?,?,?,?,?,?,'waiting','evidence_pending',NULL,NULL,NULL,NULL,NULL,?,?) ON CONFLICT(evidence_job_id) DO NOTHING`)
         .run(randomUUID(), taskId, repoId, evidenceJobId, policy.grantId, body, hash, now, now);
-      return this.parse(this.db.prepare('SELECT * FROM extraction_jobs WHERE task_id=?').get(taskId)!);
+      return this.parse(this.db.prepare('SELECT * FROM extraction_jobs WHERE evidence_job_id=?').get(evidenceJobId)!);
     });
   }
   recover(repoId: string, now: number): void {

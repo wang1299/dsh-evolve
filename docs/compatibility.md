@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T025引入SQLite v6与owner CLI显式证据恢复，七个DSH模型工具不变。迁移保留旧JSON/Job/Bundle/grant用量，旧程序拒绝v6。升级需停止所有旧宿主和面板、备份数据库，再安装实际验收包；禁止混跑或直接降级。诊断摘要截断不等于缺少必需来源，仍须独立可执行验证。当前实现验证与安装状态见[T025](tasks/T025-observation-recovery.md)；下文T020–T023的v5记录为历史范围，不代表新包已安装或真实恢复成功。
+
 T023在新的完整Windows官方0.2.0-rc.2 profile实际安装6742214产品包（24 JS匹配、七工具），全部宿主服务来自完整host。真正AgentLoop/固定进程内Adapter跑begin/纠正/修复提交/finish→后台pytest/自动candidate→下一正常provider输入中的数量提醒→实际list回执；7次Agent+1次提炼、模型HTTP0、candidate不激活。同库安装包CLI面板和撤销临时授权后的正常Web重启通过；实际失败和公开重建限制见[T023验收](development/T023-native-discovery.md)。这不是实际模型或未来收益证据。
 
 T022在原六工具上增量加入`evolve_list_candidates(taskId?)`，SQLite仍v5、既有工具输入不变。固定官方AssembleContext.agent/systemPrompt.context用于同session数量提醒；diagnostic assembly无Agent时不含数据。兼容探针增加共享关闭、session/cwd隔离和卸载边界，当前包为七工具；历史六工具验证记录保留。实际安装/浏览器/CI与评审结果见[T022任务](tasks/T022-candidate-discovery.md)及关联PR，不能以旧T021试装替代新包验证。

@@ -12,7 +12,7 @@
 | npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 5 | v1–v4事务迁移；增加提炼Job/grant，保留旧JSON与来源；旧程序拒绝v5 |
+| SQLite | user_version 6 | v1–v5事务迁移；保留旧JSON、Job、Bundle和grant；追加一次显式恢复关联；旧程序拒绝v6 |
 | EvidenceBundle／Job输入 | schemaVersion 1 | ADR022，有界本地材料；ready不提升经验状态 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
 | 实验预算账本 | v1／v2显式策略；v3单次预算 | ADR020/ADR021；v3记录准确金额/1请求/回执版本；t018-standard-tier-v1须回执2，原策略不改、不混开或改写旧预算 |
@@ -22,6 +22,8 @@
 | DSH／Cordis | 0.2.0-rc.2／4.0.5 | 固定发行包与运行证据，不追master |
 
 历史ADR状态是当时快照；现行覆盖结合[兼容性](compatibility.md)、[开发状态](development/status.md)和本文件。重要决策变更需显式替代ADR，不删除历史。
+
+T025现行补充（ADR027）：诊断事件保留128条及遗漏计数，摘要截断本身不阻止独立修复验证；必需来源遗漏等阻塞不变。`recover-evidence`仅供owner CLI显式排队一次特定旧阻塞恢复，无模型工具/HTTP入口。SQLite v6新增learning_recoveries关联，原Job/Bundle/提炼历史保留；初始入队仍按task幂等，恢复可追加一个同task新Job及独立提炼Job，沿用原grant且不重置额度。初始化迁移采用BEGIN IMMEDIATE、表重建、外键检查、提交后开启外键，连接返回前不可调用。下文T019/T020的单task Job/v4/v5描述是原始实现记录，由本段与ADR027更新；未知或已经开始的执行不重试。
 
 ## 2. 系统上下文与信任边界
 
@@ -149,7 +151,7 @@ flowchart TB
 | events | id；task_id、created_at、body | INSERT OR IGNORE去重；纠正只记evidenceId |
 | evidence | id；task_id、created_at、body | 严格模式，不同载荷同ID拒绝，最小来源不可变 |
 | fact_citations | (experience_id,revision,fact_index,evidence_id)；两个digest | 仅随新经验revision插入；证据ID索引用于清理 |
-| learning_jobs／learning_attempts | 唯一task；(job_id,number)及唯一token | 固定输入，条件领取/续租/fencing，最多3次本地恢复 |
+| learning_jobs／learning_attempts | 普通入队按task幂等；(job_id,number)及唯一token | 固定输入，条件领取/续租/fencing，最多3次本地恢复；ADR027允许owner追加一次独立恢复Job |
 | learning_job_sources | (job_id,evidence_id)，两侧外键 | queued及历史包固定最小来源，清理不得删除 |
 | evidence_bundles | job_id主键/外键；严格v1 body | 与报告/来源/Job终态同事务一次发布 |
 

@@ -52,6 +52,25 @@ export class EvidenceJobs {
     }
     return proofs; // Frozen insertion order; a clock rollback cannot hide a later negative report.
   }
+  recover(task: Task, expectedJobId: string, validateExtraction: () => void): LearningJob {
+    const old = this.store.learning.job(expectedJobId);
+    if (!old || old.input.taskId !== task.id || old.input.repoId !== this.repoId) throw new Error('Recovery source does not belong to task');
+    return this.store.learning.appendRecovery(old.id, () => {
+      const bundle = this.store.learning.bundle(old.id); const input = old.input;
+      if (old.state !== 'succeeded' || old.effectStarted || !bundle || bundle.status !== 'incomplete'
+        || bundle.inputDigest !== old.inputDigest || bundle.verificationId !== null || !bundle.reasons.includes('events_omitted')
+        || !bundle.reasons.includes('no_source_verification') || bundle.reasons.some(r => r !== 'events_omitted' && r !== 'no_source_verification')
+        || !input.omittedObservations || input.omittedSources || input.diffTruncated || input.repositoryState !== 'clean' || input.mode !== 'verify'
+        || !this.backgroundVerification || !this.policy.trusted || input.policyDigest !== this.policyDigest()) throw new Error('Evidence state is not eligible for recovery');
+      if (this.validate(old).length) throw new Error('Recovery cannot replace an existing source verification');
+      const sources = this.store.taskEvidence(task.id);
+      if (sources.length !== input.sources.length || sources.some(e => !input.sources.some(r => r.id === e.id && r.digest === e.digest))) throw new Error('Frozen sources changed');
+      const current = snapshot(this.root);
+      if (current.commit !== input.fixCommit || current.scope.dependencyDigest !== input.dependencyDigest
+        || git(this.root, ['status', '--porcelain', '--untracked-files=no'])) throw new Error('Repair version changed');
+      validateExtraction();
+    });
+  }
   async runNext(signal?: AbortSignal): Promise<boolean> {
     if (signal?.aborted) return false;
     const leaseMs = Math.max(30000, this.policy.timeoutMs * 3 + 60000);
@@ -69,7 +88,9 @@ export class EvidenceJobs {
       if (input.baseCommit === input.fixCommit) reasons.push('no_commit_change');
       if (input.repositoryState === 'dirty') reasons.push('dirty_tree');
       if (input.repositoryState === 'unavailable') reasons.push('capture_unavailable');
-      if (input.omittedSources) reasons.push('sources_omitted'); if (input.omittedObservations) reasons.push('events_omitted');
+      if (input.omittedSources) reasons.push('sources_omitted');
+      // Tool metadata is diagnostic, not a source of acceptance. Keep omission counts
+      // in frozen input; only independent executable proof can establish repair success.
       if (input.diffTruncated) reasons.push('diff_truncated');
       if (!proof && !reasons.length && input.mode === 'verify') {
         if (!this.backgroundVerification || !this.policy.trusted || this.policyDigest() !== input.policyDigest) reasons.push('policy_changed');

@@ -16,13 +16,15 @@ export class Store {
   constructor(path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path);
-    this.db.exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
+    // SQLite's table rebuild procedure requires disabling enforcement before BEGIN.
+    // No caller can access this connection until checks, commit and re-enabling finish.
+    this.db.exec('PRAGMA foreign_keys=OFF; PRAGMA busy_timeout=5000;');
     try {
       // Serialize initialization before any schema read. Deferred savepoint readers can
       // otherwise deadlock upgrading to a write lock even with busy_timeout enabled.
       this.db.exec('BEGIN IMMEDIATE');
       const version = this.db.prepare('PRAGMA user_version').get()?.user_version;
-      if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) throw new Error('Unsupported database schema version');
+      if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6) throw new Error('Unsupported database schema version');
       this.transaction(() => { this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS experiences(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, body TEXT NOT NULL);
@@ -41,15 +43,31 @@ export class Store {
       if (version === 1) this.migrateV1();
       this.db.exec(learningTablesSql);
       this.db.exec(extractionTablesSql);
-      this.db.exec('PRAGMA user_version=5');
+      if (version !== 0 && version !== 6) this.migrateV6();
+      if (this.db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('Database foreign key validation failed');
+      this.db.exec('PRAGMA user_version=6');
       });
       this.db.exec('COMMIT');
+      this.db.exec('PRAGMA foreign_keys=ON');
+      if (this.db.prepare('PRAGMA foreign_keys').get()?.foreign_keys !== 1) throw new Error('Foreign key enforcement unavailable');
     } catch (error) {
       try { this.db.exec('ROLLBACK'); } catch { /* BEGIN itself may have failed. */ }
       this.db.close(); throw error;
     }
     this.learning = new LearningStore(this.db, fn => this.transaction(fn));
     this.extraction = new ExtractionStore(this.db, fn => this.transaction(fn));
+  }
+  private migrateV6(): void {
+    const learning = learningTablesSql.match(/CREATE TABLE IF NOT EXISTS learning_jobs[\s\S]*?;/)![0];
+    const extraction = extractionTablesSql.match(/CREATE TABLE IF NOT EXISTS extraction_jobs[\s\S]*?;/)![0];
+    this.db.exec(learning.replace('IF NOT EXISTS learning_jobs', 'learning_jobs_v6'));
+    this.db.exec(extraction.replace('IF NOT EXISTS extraction_jobs', 'extraction_jobs_v6'));
+    this.db.exec(`INSERT INTO learning_jobs_v6 SELECT * FROM learning_jobs;
+      INSERT INTO extraction_jobs_v6 SELECT * FROM extraction_jobs;
+      DROP TABLE extraction_jobs; DROP TABLE learning_jobs;
+      ALTER TABLE learning_jobs_v6 RENAME TO learning_jobs;
+      ALTER TABLE extraction_jobs_v6 RENAME TO extraction_jobs;`);
+    this.db.exec(learningTablesSql); this.db.exec(extractionTablesSql);
   }
   private migrateV1(): void {
     this.transaction(() => {
@@ -77,6 +95,9 @@ export class Store {
     return row ? schema.parse(JSON.parse(String(row.body))) : null;
   }
   task(id: string): Task | null { return this.parse(taskSchema, this.db.prepare('SELECT body FROM tasks WHERE id=?').get(id)); }
+  lockTask(id: string): void {
+    if (this.db.prepare('UPDATE tasks SET body=body WHERE id=?').run(id).changes !== 1) throw new Error('Unknown task');
+  }
   tasks(): Task[] { return this.db.prepare('SELECT body FROM tasks').all().map((r) => taskSchema.parse(JSON.parse(String(r.body)))); }
   putTask(task: Task): void {
     this.db.prepare('INSERT INTO tasks VALUES(?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body').run(task.id, JSON.stringify(taskSchema.parse(task)));

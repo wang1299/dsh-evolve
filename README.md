@@ -4,6 +4,10 @@
 
 **状态：本地开发预览，未发布。** 当前分支的已实现能力与验证记录见 [路线](docs/roadmap.md)。完整产品需求见 [产品定义](docs/product.md)。
 
+T025：诊断事件摘要仍最多128条并记录遗漏，不再仅因摘要截断跳过独立修复验证。owner可对特定尚未执行的旧阻塞追加一次证据恢复；原记录和grant额度保留，未知执行不重放。SQLite升级v6，需停止旧宿主/面板并备份后升级，禁止混跑/直接降级。代码、本地检查与实际包离线演练已有证据，最终CI/评审/合并见[PR #60](https://github.com/wang1299/dsh-evolve/pull/60)及[验收](docs/development/T025-acceptance.md)。当前预览安装不自动升级，实际模型案例恢复另行记录。
+
+已升级后，owner可用 `dsh-evolve recover-evidence --config <本地配置> --task-id <任务ID> --expected-job <原证据JobID>` 显式排队一次符合条件的旧阻塞恢复。该命令不启动worker、不执行pytest或模型；随后由已授权的宿主处理。其他失败、unknown、已开始的执行、版本/来源变化或额度不足会被拒绝。不要修改数据库、重置grant或自动重试。
+
 ## 第一版
 
 单仓库 Python＋pytest Bug 修复：记录失败和修正 → 隔离验证 → 结构化经验 → 相似任务应用 → 反馈、修订和停用 → 最小经验面板。
@@ -57,7 +61,7 @@ node dist/src/cli.js panel --config <打印的目录>/config.json
 
 面板令牌只在本机终端显示，不要分享其完整地址。数据API仅限本机并需要令牌。经验恢复会产生待验证版本。
 
-SQLite已升级v5：v2/v3/v4旧JSON和历史不改，v1沿用既有报告降级、追加候选并要求重验的迁移。新增提炼Job及调用授权账目，已引用的最小来源继续保留；旧SQLite4及更早程序不能混跑或直接降级。本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
+SQLite当前v6：v2–v5旧JSON和历史不改，v1沿用既有报告降级、追加候选并要求重验的迁移。提炼Job及调用授权账目、已引用的最小来源继续保留；旧SQLite5及更早程序不能混跑或直接降级。本机既有DSH预览安装未自动更新。历史实验仍显式固定原bm25-v1/feedback-v1，不代表新evidence-v1收益。
 
 完成现有`evolve_finish_task`后，后台自动整理本地证据。默认`backgroundVerification=false`，只复用已有匹配的验证报告；希望在没有候选经验时自动验证修复，需由owner在配置同时设置`backgroundVerification=true`和`executionTrusted=true`，并提供仓库外的`acceptanceDir`。DSH插件或CLI面板启动时恢复队列。没有报告/版本变化/材料超限时明确显示不完整；验证可能执行后中断为未知，不自动重跑。证据齐备不等于已经提炼或应用经验。
 

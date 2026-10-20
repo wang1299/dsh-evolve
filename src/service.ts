@@ -55,6 +55,24 @@ export class EvolveService {
       this.store.putTask(closed); const job = this.jobs.enqueue(closed); this.extraction.enqueue(closed, job.id); return closed;
     });
   }
+  /** Owner-only append recovery. This queues work and never executes pytest or a model. */
+  recoverEvidence(taskId: string, expectedJobId: string): ReturnType<EvidenceJobs['recover']> {
+    const task = this.requireTask(taskId); if (task.state !== 'closed') throw new Error('Recovery requires a closed task');
+    const policy = this.extraction.policy;
+    if (!policy) throw new Error('Recovery requires the original extraction policy');
+    return this.store.transaction(() => {
+      this.store.lockTask(task.id); // First operation is a write, before any recovery read.
+      const recovered = this.jobs.recover(task, expectedJobId, () => {
+        const old = this.store.extraction.jobs().find(j => j.evidenceJobId === expectedJobId);
+        const grant = this.store.extraction.grants().find(g => g.id === policy.grantId);
+        if (!old || old.state !== 'blocked' || old.reason !== 'evidence_incomplete' || old.inputDigest !== null
+          || old.candidateId !== null || old.usage !== null || old.policyDigest !== digest(JSON.stringify(policy))
+          || !grant || grant.policyDigest !== old.policyDigest || grant.used !== 0 || grant.used >= grant.maxCalls) throw new Error('Extraction has started, changed or lacks unused authorization');
+      });
+      if (!this.store.extraction.jobs().some(j => j.evidenceJobId === recovered.id)) this.extraction.enqueue(task, recovered.id);
+      return recovered;
+    });
+  }
   observe(sessionId: string, eventId: string, kind: string, name?: string): void {
     const tasks = this.store.tasks().filter((t) => t.sessionId === sessionId && t.state === 'open');
     if (tasks.length !== 1) return; const task = tasks[0]!;
