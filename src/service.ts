@@ -9,8 +9,8 @@ import { rankText, retrievalPolicy } from './retrieval.js';
 import { contextKey, feedbackMemory, rankFeedback, type ContextEvidence } from './feedback-retrieval.js';
 import { correctionEvidence, factProvenance, validateCitations, verificationEvidence } from './evidence.js';
 import { EvidenceJobs } from './evidence-jobs.js';
-import { ExtractionJobs } from './extraction.js';
-import type { ExtractionPolicy } from './extraction-domain.js';
+import { ExtractionJobs, extractionMaterial } from './extraction.js';
+import type { ExtractionJob, ExtractionPolicy } from './extraction-domain.js';
 
 function cleanCandidate(value: unknown): Candidate {
   const item = candidateSchema.parse(value);
@@ -28,7 +28,7 @@ export class EvolveService {
   readonly jobs: EvidenceJobs;
   readonly extraction: ExtractionJobs;
   private readonly repoId: string;
-  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy, backgroundVerification = false, extractionPolicy?: ExtractionPolicy) {
+  constructor(readonly store: Store, readonly root: string, readonly policy: VerificationPolicy, backgroundVerification = false, extractionPolicy?: ExtractionPolicy, private readonly modelSharingAllowed = false) {
     this.jobs = new EvidenceJobs(store, root, policy, backgroundVerification);
     this.repoId = snapshot(root).scope.repoId;
     this.extraction = new ExtractionJobs(store, root, extractionPolicy);
@@ -71,6 +71,32 @@ export class EvolveService {
       });
       if (!this.store.extraction.jobs().some(j => j.evidenceJobId === recovered.id)) this.extraction.enqueue(task, recovered.id);
       return recovered;
+    });
+  }
+  /** Owner-only fresh authorization. Unknown attempts and their grants are immutable. */
+  reauthorizeExtraction(taskId: string, expectedJobId: string): ExtractionJob {
+    const task = this.requireTask(taskId); const policy = this.extraction.policy;
+    if (task.state !== 'closed' || !policy || !this.policy.trusted || !this.modelSharingAllowed) throw new Error('Reauthorization requires a closed task and current owner execution/model-sharing authorization');
+    return this.store.transaction(() => {
+      this.store.lockTask(task.id);
+      const old = this.store.extraction.job(idSchema.parse(expectedJobId));
+      if (!old || old.taskId !== task.id || old.repoId !== task.scope.repoId) throw new Error('Invalid original extraction');
+      const links = this.store.extraction.reauthorizations();
+      if (links.some(r => r.newJobId === old.id)) throw new Error('Reauthorization chains are prohibited');
+      const link = links.find(r => r.originalJobId === old.id);
+      if (link) {
+        const existing = this.store.extraction.job(link.newJobId)!;
+        if (existing.policyDigest !== digest(JSON.stringify(policy))) throw new Error('Existing reauthorization uses a different grant or policy');
+        return existing;
+      }
+      const controls = (p: ExtractionPolicy): string => JSON.stringify({ ...p, grantId: '' });
+      const grant = this.store.extraction.grants().find(g => g.id === old.policy.grantId);
+      if (old.state !== 'unknown' || old.reason !== 'interrupted_model' || !old.inputDigest || old.candidateId !== null
+        || old.policyDigest !== digest(JSON.stringify(old.policy)) || policy.grantId === old.policy.grantId || policy.maxCalls !== 1
+        || controls(policy) !== controls(old.policy) || !grant || grant.used !== 1 || grant.maxCalls !== 1 || grant.policyDigest !== old.policyDigest
+        || this.store.extraction.grants().some(g => g.id === policy.grantId)) throw new Error('Reauthorization requires an unknown attempt and a fresh single-call grant with unchanged controls');
+      if (digest(extractionMaterial(this.store, this.root, old).text) !== old.inputDigest) throw new Error('Extraction material changed');
+      return this.store.extraction.appendReauthorization(old, policy);
     });
   }
   observe(sessionId: string, eventId: string, kind: string, name?: string): void {

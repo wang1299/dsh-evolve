@@ -7,11 +7,13 @@ import { extractionJobSchema, extractionPolicySchema, extractionUsageSchema,
 export const extractionTablesSql = `
   CREATE TABLE IF NOT EXISTS extraction_grants(id TEXT PRIMARY KEY, policy_digest TEXT NOT NULL, max_calls INTEGER NOT NULL, used INTEGER NOT NULL);
   CREATE TABLE IF NOT EXISTS extraction_jobs(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id),
-    repo_id TEXT NOT NULL, evidence_job_id TEXT NOT NULL UNIQUE REFERENCES learning_jobs(id), grant_id TEXT NOT NULL REFERENCES extraction_grants(id),
+    repo_id TEXT NOT NULL, evidence_job_id TEXT NOT NULL REFERENCES learning_jobs(id), grant_id TEXT NOT NULL REFERENCES extraction_grants(id),
     policy TEXT NOT NULL, policy_digest TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL,
     input_digest TEXT, token TEXT, lease_until INTEGER, candidate_id TEXT REFERENCES experiences(id), usage TEXT,
-    created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+    created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(evidence_job_id,grant_id));
   CREATE INDEX IF NOT EXISTS extraction_queue ON extraction_jobs(repo_id,state,created_at);
+  CREATE TABLE IF NOT EXISTS extraction_reauthorizations(original_job_id TEXT PRIMARY KEY REFERENCES extraction_jobs(id),
+    new_job_id TEXT NOT NULL UNIQUE REFERENCES extraction_jobs(id), created_at TEXT NOT NULL);
 `;
 export class ExtractionStore {
   constructor(private readonly db: DatabaseSync, private readonly transaction: <T>(fn: () => T) => T) {}
@@ -23,10 +25,33 @@ export class ExtractionStore {
   }
   job(id: string): ExtractionJob | null { const r = this.db.prepare('SELECT * FROM extraction_jobs WHERE id=?').get(id); return r ? this.parse(r) : null; }
   jobs(): ExtractionJob[] { return this.db.prepare('SELECT * FROM extraction_jobs ORDER BY created_at,id').all().map(r => this.parse(r)); }
+  reauthorizations(): { originalJobId: string; newJobId: string; createdAt: string }[] {
+    return this.db.prepare('SELECT * FROM extraction_reauthorizations ORDER BY created_at,original_job_id').all()
+      .map(r => ({ originalJobId: String(r.original_job_id), newJobId: String(r.new_job_id), createdAt: String(r.created_at) }));
+  }
   grants(): { id: string; policyDigest: string; maxCalls: number; used: number }[] {
     return this.db.prepare('SELECT * FROM extraction_grants ORDER BY id').all().map(r => ({ id: String(r.id), policyDigest: String(r.policy_digest), maxCalls: Number(r.max_calls), used: Number(r.used) }));
   }
   enqueue(taskId: string, repoId: string, evidenceJobId: string, inputPolicy: ExtractionPolicy): ExtractionJob {
+    return this.transaction(() => {
+      this.db.prepare('UPDATE tasks SET body=body WHERE id=?').run(taskId);
+      const old = this.db.prepare(`SELECT * FROM extraction_jobs j WHERE evidence_job_id=?
+        AND NOT EXISTS(SELECT 1 FROM extraction_reauthorizations r WHERE r.new_job_id=j.id) ORDER BY created_at,id LIMIT 1`).get(evidenceJobId);
+      if (!old) return this.insert(taskId, repoId, evidenceJobId, inputPolicy);
+      const parsed = this.parse(old); const policy = extractionPolicySchema.parse(inputPolicy);
+      if (policy.grantId === parsed.policy.grantId && digest(JSON.stringify(policy)) !== parsed.policyDigest) throw new Error('Extraction grant configuration is immutable');
+      return parsed;
+    });
+  }
+  /** Called only after the owner's validation under the task write lock. */
+  appendReauthorization(original: ExtractionJob, policy: ExtractionPolicy): ExtractionJob {
+    return this.transaction(() => {
+      const next = this.insert(original.taskId, original.repoId, original.evidenceJobId, policy);
+      this.db.prepare('INSERT INTO extraction_reauthorizations VALUES(?,?,?)').run(original.id, next.id, new Date().toISOString());
+      return next;
+    });
+  }
+  private insert(taskId: string, repoId: string, evidenceJobId: string, inputPolicy: ExtractionPolicy): ExtractionJob {
     const policy = extractionPolicySchema.parse(inputPolicy); const body = JSON.stringify(policy); const hash = digest(body);
     return this.transaction(() => {
       // This write locks before checking immutable grant configuration across connections.
@@ -34,9 +59,9 @@ export class ExtractionStore {
       const grant = this.db.prepare('SELECT * FROM extraction_grants WHERE id=?').get(policy.grantId)!;
       if (grant.policy_digest !== hash || grant.max_calls !== policy.maxCalls) throw new Error('Extraction grant configuration is immutable; use a new explicitly authorized grant ID');
       const now = new Date().toISOString();
-      this.db.prepare(`INSERT INTO extraction_jobs VALUES(?,?,?,?,?,?,?,'waiting','evidence_pending',NULL,NULL,NULL,NULL,NULL,?,?) ON CONFLICT(evidence_job_id) DO NOTHING`)
+      this.db.prepare(`INSERT INTO extraction_jobs VALUES(?,?,?,?,?,?,?,'waiting','evidence_pending',NULL,NULL,NULL,NULL,NULL,?,?)`)
         .run(randomUUID(), taskId, repoId, evidenceJobId, policy.grantId, body, hash, now, now);
-      return this.parse(this.db.prepare('SELECT * FROM extraction_jobs WHERE evidence_job_id=?').get(evidenceJobId)!);
+      return this.parse(this.db.prepare('SELECT * FROM extraction_jobs WHERE evidence_job_id=? AND grant_id=?').get(evidenceJobId, policy.grantId)!);
     });
   }
   recover(repoId: string, now: number): void {

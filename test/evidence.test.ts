@@ -144,7 +144,7 @@ test('v2 upgrade preserves exact legacy records and withholds uncited experience
   } finally { upgraded.close(); }
   const checked = new DatabaseSync(path);
   try {
-    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 6);
+    assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 7);
     // Only the explicit new-target task was added after migration.
     assert.deepEqual(tables.slice(1).map((table) => checked.prepare('SELECT * FROM ' + table).all()), before.slice(1));
   } finally { checked.close(); }
