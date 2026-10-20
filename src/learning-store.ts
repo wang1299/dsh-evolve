@@ -5,7 +5,7 @@ import { evidenceInputSchema, evidenceBundleSchema, learningJobSchema, attemptSc
   type EvidenceInput, type EvidenceBundle, type LearningJob, type LearningAttempt } from './learning-domain.js';
 
 export const learningTablesSql = `
-  CREATE TABLE IF NOT EXISTS learning_jobs(id TEXT PRIMARY KEY, task_id TEXT NOT NULL UNIQUE REFERENCES tasks(id),
+  CREATE TABLE IF NOT EXISTS learning_jobs(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id),
     repo_id TEXT NOT NULL, input_digest TEXT NOT NULL, input TEXT NOT NULL, state TEXT NOT NULL,
     attempts INTEGER NOT NULL, token TEXT, lease_until INTEGER, effect_started INTEGER NOT NULL,
     reason TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -15,6 +15,8 @@ export const learningTablesSql = `
   CREATE TABLE IF NOT EXISTS learning_job_sources(job_id TEXT NOT NULL REFERENCES learning_jobs(id),
     evidence_id TEXT NOT NULL REFERENCES evidence(id), PRIMARY KEY(job_id,evidence_id));
   CREATE TABLE IF NOT EXISTS evidence_bundles(job_id TEXT PRIMARY KEY REFERENCES learning_jobs(id), body TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS learning_recoveries(original_job_id TEXT PRIMARY KEY REFERENCES learning_jobs(id),
+    recovery_job_id TEXT NOT NULL UNIQUE REFERENCES learning_jobs(id), created_at TEXT NOT NULL);
 `;
 
 /** Internal same-host queue. Conditional writes fence every attempt, including local recovery. */
@@ -29,7 +31,7 @@ export class LearningStore {
     const row = this.db.prepare('SELECT * FROM learning_jobs WHERE id=?').get(id); return row ? this.parse(row) : null;
   }
   forTask(taskId: string): LearningJob | null {
-    const row = this.db.prepare('SELECT * FROM learning_jobs WHERE task_id=?').get(taskId); return row ? this.parse(row) : null;
+    const row = this.db.prepare('SELECT * FROM learning_jobs WHERE task_id=? ORDER BY rowid LIMIT 1').get(taskId); return row ? this.parse(row) : null;
   }
   jobs(): LearningJob[] { return this.db.prepare('SELECT * FROM learning_jobs ORDER BY created_at,id').all().map(r => this.parse(r)); }
   attempts(id: string): LearningAttempt[] {
@@ -44,11 +46,33 @@ export class LearningStore {
   enqueue(value: EvidenceInput): LearningJob {
     const input = evidenceInputSchema.parse(value); const body = JSON.stringify(input); const now = new Date().toISOString();
     return this.transaction(() => {
+      this.db.prepare('UPDATE tasks SET body=body WHERE id=?').run(input.taskId);
+      const old = this.forTask(input.taskId); if (old) return old;
       const id = randomUUID();
-      const inserted = this.db.prepare(`INSERT INTO learning_jobs VALUES(?,?,?,?,?,'queued',0,NULL,NULL,0,'queued',?,?)
-        ON CONFLICT(task_id) DO NOTHING`).run(id, input.taskId, input.repoId, digest(body), body, now, now);
+      const inserted = this.db.prepare(`INSERT INTO learning_jobs VALUES(?,?,?,?,?,'queued',0,NULL,NULL,0,'queued',?,?)`)
+        .run(id, input.taskId, input.repoId, digest(body), body, now, now);
       if (inserted.changes) for (const ref of input.sources) this.db.prepare('INSERT INTO learning_job_sources VALUES(?,?)').run(id, ref.id);
       return this.forTask(input.taskId)!;
+    });
+  }
+  recoveries(): { originalJobId: string; recoveryJobId: string; createdAt: string }[] {
+    return this.db.prepare('SELECT * FROM learning_recoveries ORDER BY rowid').all().map(r => ({
+      originalJobId: String(r.original_job_id), recoveryJobId: String(r.recovery_job_id), createdAt: String(r.created_at) }));
+  }
+  /** Internal owner recovery; callers must validate frozen provenance and authorization. */
+  appendRecovery(id: string, validate: () => void): LearningJob {
+    return this.transaction(() => {
+      this.db.prepare('UPDATE learning_jobs SET updated_at=updated_at WHERE id=?').run(id);
+      if (this.db.prepare('SELECT 1 FROM learning_recoveries WHERE recovery_job_id=?').get(id)) throw new Error('Recovery chains are not allowed');
+      const previous = this.db.prepare('SELECT recovery_job_id FROM learning_recoveries WHERE original_job_id=?').get(id);
+      if (previous) return this.job(String(previous.recovery_job_id))!;
+      validate(); const old = this.job(id); if (!old) throw new Error('Unknown source job');
+      const next = randomUUID(); const now = new Date().toISOString();
+      this.db.prepare(`INSERT INTO learning_jobs VALUES(?,?,?,?,?,'queued',0,NULL,NULL,0,'queued',?,?)`)
+        .run(next, old.input.taskId, old.input.repoId, old.inputDigest, JSON.stringify(old.input), now, now);
+      for (const ref of old.input.sources) this.db.prepare('INSERT INTO learning_job_sources VALUES(?,?)').run(next, ref.id);
+      this.db.prepare('INSERT INTO learning_recoveries VALUES(?,?,?)').run(id, next, now);
+      return this.job(next)!;
     });
   }
   claim(repoId: string, now: number, leaseMs: number): LearningJob | null {

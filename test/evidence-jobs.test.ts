@@ -216,7 +216,7 @@ test('v3 migration preserves historical JSON and failures roll back the v4 schem
   assert.equal(failed.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='learning_attempts'").get()!.n, 0);
   failed.exec('DROP VIEW learning_jobs'); failed.close();
   store = new Store(path); try { assert.ok(store.task(task.id)); assert.equal(store.learning.jobs().length, 0); } finally { store.close(); }
-  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 5);
+  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 6);
   assert.equal(checked.prepare('SELECT body FROM evidence WHERE id=?').get(source.id)!.body, original); checked.close();
 });
 
@@ -242,7 +242,9 @@ test('UTF-8 observation limits trim whole records and leave an explicit incomple
     service.finish(task.id); const job = store.learning.jobs()[0]!;
     assert.ok(Buffer.byteLength(JSON.stringify(job.input)) <= 128 * 1024); assert.ok(job.input.omittedObservations > 0);
     assert.equal(job.input.observations.length + job.input.omittedObservations, 128);
-    await service.jobs.runNext(); assert.ok(store.learning.bundle(job.id)!.reasons.includes('events_omitted'));
+    await service.jobs.runNext(); const bundle = store.learning.bundle(job.id)!;
+    assert.equal(bundle.status, 'incomplete'); assert.ok(bundle.reasons.includes('no_source_verification'));
+    assert.ok(!bundle.reasons.includes('events_omitted')); assert.equal(bundle.verificationId, null);
   } finally { store.close(); }
 });
 
@@ -254,6 +256,8 @@ test('legacy malformed event payloads are omitted without blocking task closure 
     service.finish(task.id); const job = store.learning.jobs()[0]!;
     assert.equal(job.input.observations.length, 0); assert.equal(job.input.omittedObservations, 1);
     assert.ok(!JSON.stringify(job).includes('private')); await service.jobs.runNext();
-    assert.ok(store.learning.bundle(job.id)!.reasons.includes('events_omitted'));
+    const bundle = store.learning.bundle(job.id)!;
+    assert.equal(bundle.status, 'incomplete'); assert.ok(bundle.reasons.includes('no_source_verification'));
+    assert.ok(!bundle.reasons.includes('events_omitted')); assert.equal(bundle.verificationId, null);
   } finally { store.close(); }
 });
