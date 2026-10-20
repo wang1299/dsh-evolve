@@ -90,3 +90,11 @@ test('negative feedback on an old application never claims that a newer version 
   await b.run('refresh()'); let text = b.descendants(b.get('activity')).map(e => e.textContent).join('\n'); assert.match(text, /策略无效/); assert.doesNotMatch(text, /已停用/);
   b.current.feedback[0]!.outcome = 'counterexample'; await b.run('refresh()'); text = b.descendants(b.get('activity')).map(e => e.textContent).join('\n'); assert.match(text, /反例/); assert.doesNotMatch(text, /已停用/);
 });
+
+test('automatic progress is visible in plain language and unknown is never presented as learned', async () => {
+  const b = browser(); const segments = [{ id: 'segment', taskId: 'source', state: 'qualifying', reason: 'verifying_candidate' }];
+  Object.assign(b.current, { automaticEnabled: true, automaticSegments: segments }); await b.run('refresh()');
+  let text = b.descendants(b.get('attention')).map(e => e.textContent).join('\n'); assert.match(text, /独立检查/);
+  segments[0]!.state = 'unknown'; segments[0]!.reason = 'qualification_interrupted'; await b.run('refresh()');
+  text = b.descendants(b.get('attention')).map(e => e.textContent).join('\n'); assert.match(text, /未自动重跑/); assert.doesNotMatch(text, /记下一条经验/);
+});

@@ -4,7 +4,9 @@
 
 **状态：本地开发预览，未发布。** 当前分支的已实现能力与验证记录见 [路线](docs/roadmap.md)。完整产品需求见 [产品定义](docs/product.md)。
 
-T028：面板默认展示学习动态、经验卡片和后续任务的参考记录。经验详情先呈现处理方法与适用范围，证据、事实编辑、版本管理和诊断按需展开；反馈使用任务名称，后台刷新保留未保存的编辑。当前仍以显式任务与来源验证驱动学习，正常对话自动识别错误/修正及后台资格检查的操作简化继续推进。设计与实际检查见[ADR030](docs/decisions/030-learning-home.md)及[T028验收](docs/development/T028-acceptance.md)。
+T029：新增正常对话自动学习，默认关闭。owner首次配置后，直接用户请求自动建立执行片段，未提交的受限Python修复可通过私有快照重放；后台完成来源验证、一次候选提炼和候选独立再验，后续请求可收到适用经验。无需指定evolve工具或复制ID。当前已用官方AgentLoop＋脚本模型跑通，不代表真实模型质量或收益；实际交付门槛见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)和[T029验收](docs/development/T029-acceptance.md)。SQLite当前v9，停止旧宿主/面板并备份后升级，不混跑旧程序。下面Txxx条目保留各阶段历史状态。
+
+T028：面板默认展示学习动态、经验卡片和后续任务的参考记录。经验详情先呈现处理方法与适用范围，证据、事实编辑、版本管理和诊断按需展开；反馈使用任务名称，后台刷新保留未保存的编辑。T029增加自动学习进度及原因，显式工具模式仍可用。设计与实际检查见[ADR030](docs/decisions/030-learning-home.md)及[T028验收](docs/development/T028-acceptance.md)。
 
 T027：修复完整DSH启动时后台提炼早于本机凭据服务就绪的竞态；等待阶段不占用grant，仅检查服务active，不读取Key。新增有界失败原因（准备/凭据/连接/超时/取消等），旧unknown不回填或重放。SQLite当前v8，升级前停止旧宿主和面板并备份。已通过完整官方CLI实际包的managed/env假密钥离线启动验证；真实模型复验另需明确授权。见[设计](docs/decisions/029-native-extraction-readiness.md)与[验收](docs/development/T027-acceptance.md)。
 
@@ -19,6 +21,16 @@ T025：诊断事件摘要仍最多128条并记录遗漏，不再仅因摘要截�
 单仓库 Python＋pytest Bug 修复：记录失败和修正 → 隔离验证 → 结构化经验 → 相似任务应用 → 反馈、修订和停用 → 最小经验面板。
 
 经验附带来源、代码与依赖条件。修复验证通过只证明来源修复有效；产品收益必须在未见任务上另外评价。允许没有合适经验时不注入。
+
+### 正常对话自动学习：首次配置，之后照常开发
+
+在既有本机配置中设置`automaticLearning: true`，同时明确配置`executionTrusted: true`、`backgroundVerification: true`、`shareWithModel: true`、仓库外`acceptanceDir`和`extraction`策略（DSH已有provider/model、grantId、maxCalls、maxTokens、timeoutMs）。缺少前置配置将拒绝开启；Agent/面板不能开启或增加额度。`maxCalls`是提炼逻辑次数，不是整个DSH会话的金额硬限。
+
+用户正常提出修复需求，明确纠正即可；正常回合结束只触发后台检查。只有独立验收能重现失败、修复后相同用例通过且回归通过，才进入提炼和候选再验证。没有变化会跳过；不确定、失败或额度不足会说明原因。反馈由用户自行记录，不伪造“已认可”。
+
+开启同时同意本机保存最多256字符去敏请求摘要、少量明确纠正（最多512字符）、消息标识及受限tracked Python/依赖代码快照，不保存完整会话/附件/工具输出。默认在dataDir的`private-snapshots.git`保存复现材料，不写用户Git index/HEAD，不自动提交用户代码。最多500文件/单文件512KiB/单份8MiB，128MiB为写前水位而非磁盘硬配额；快照按证据保留，目前没有自动彻底遗忘功能。
+
+当前边界：每个直接用户请求是执行片段，新增steering/交错请求可能停止学习；不做跨轮语义任务合并。新建Python、符号链接、不支持的变更和漂移会拒绝。独立验收需自行维护，执行受信任的仓库代码，不具备强沙箱。自动化设计和限制见[ADR031](docs/decisions/031-automatic-learning.md)。
 
 ## 开发状态
 

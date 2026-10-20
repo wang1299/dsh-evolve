@@ -24,7 +24,8 @@ class Scripted extends LlmAdapter {
   override async *stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
     options.signal?.throwIfAborted(); if (++this.calls > 8) throw new Error('Scripted call bound');
     let text: string;
-    if (!options.sessionId) {
+    if (options.sessionId?.startsWith('automatic-ignore')) text = 'Scripted no-op response to non-learning input.';
+    else if (!options.sessionId) {
       this.extractionCalls++; assert.ok(options.system?.includes('untrusted evidence'));
       text = JSON.stringify({ kind: 'candidate', title: 'transaction rollback failure restore balance', strategy: 'Save the prior balance and restore it before raising on failure.',
         factIds: ['verification:base', 'verification:fixed', 'verification:regression'], inferences: [], recommendations: [] });
@@ -78,6 +79,11 @@ export async function rehearseAutomatic(productDir?: string) {
     await ctx.plugin({ name: 'automatic-binding', inject: ['tools', 'sessions', 'systemPrompt'], apply: (child: Context) => bindDsh(child, service, true) }).await();
     ctx.on('tools/result', exec => { tools.push(exec.name); });
     const create = async (sessionId: SessionId): Promise<Agent> => { const h = await ctx.agents.create({ sessionId, meta: { cwd: f.repo }, agentOptions: { provider, model, maxTokens: 256 } }); handles.push(h); return h.agent; };
+    const pluginInput = await create(SessionId('automatic-ignore-plugin'));
+    pluginInput.followup(createUserMessage({ source: { kind: 'dsh-evolve-experience', form: 'notice', summary: 'Synthetic plugin input, not a human request' }, content: [{ type: 'text', text: 'Do not infer a human task from this plugin message.' }] }));
+    await pluginInput.whenIdle(); assert.equal(store.tasks().length, 0);
+    const child = await ctx.agents.create({ sessionId: SessionId('automatic-ignore-child'), meta: { cwd: f.repo, origin: 'subagent' }, agentOptions: { provider, model, maxTokens: 256 } }); handles.push(child);
+    await turn(child.agent, 'Synthetic subagent input'); assert.equal(store.tasks().length, 0);
     await turn(await create(sourceId), '修复 transaction rollback failure restore balance，失败时恢复状态。');
     assert.equal(store.tasks().length, 1); assert.equal(store.tasks()[0]!.state, 'closed');
     for (let n = 0; n < 1800 && ['queued', 'qualifying'].includes(store.automatic.rows()[0]?.state ?? ''); n++) await pause(50);
@@ -90,6 +96,6 @@ export async function rehearseAutomatic(productDir?: string) {
     assert.equal(proof.verified, true); assert.equal(adapter.extractionCalls, 1); assert.equal(store.extraction.grants()[0]!.used, 1);
     assert.equal(git(f.repo, ['rev-parse', 'HEAD']), head); assert.deepEqual(readFileSync(join(f.repo, '.git/index')), index); assert.equal(store.feedback().length, 0);
     return { passed: true, installedProduct: !!productDir, modelHttpRequests: 0, scriptedCalls: adapter.calls, extractionCalls: adapter.extractionCalls,
-      evolveToolCalls: 0, sourceVerified: true, targetReceivedContext: true, targetAcceptancePassed: proof.verified, userGitUnchanged: true, feedbackFabricated: false, benefitEvaluated: false };
+      evolveToolCalls: 0, nonHumanInputsIgnored: true, sourceVerified: true, targetReceivedContext: true, targetAcceptancePassed: proof.verified, userGitUnchanged: true, feedbackFabricated: false, benefitEvaluated: false };
   } finally { for (const h of handles.reverse()) await h.dispose(); await ctx.fiber.dispose(); }
 }

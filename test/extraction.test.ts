@@ -211,7 +211,7 @@ test('v4 migration preserves source JSON and rolls back partial v5 tables on fai
   const failed = new DatabaseSync(path); assert.equal(failed.prepare('PRAGMA user_version').get()!.user_version, 4);
   assert.equal(failed.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='extraction_grants'").get()!.n, 0);
   failed.exec('DROP VIEW extraction_jobs'); failed.close(); store = new Store(path); store.close();
-  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 8);
+  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 9);
   assert.equal(checked.prepare('SELECT body FROM tasks WHERE id=?').get(task.id)!.body, before); checked.close();
 });
 

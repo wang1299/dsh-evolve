@@ -503,15 +503,17 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表覆盖原58项及新增U
 
 ## 16. 缺口与实施依赖
 
+T029 / ADR031增量：WorkspaceSnapshots只向dataDir私有Git对象库写入受限tracked Python/依赖；AutomaticStore v9保存执行片段/唯一输入/同仓库锁；AutomaticLearning协调正常用户turn、原EvidenceJobs/ExtractionJobs和候选独立再验。EvidenceInput追加可选snapshotDigest绑定不可变来源，旧记录无该字段。报告SHA属于私有快照时environment明确captureMethod/repositoryHead/内容摘要。官方pre-step的已接纳消息使用有出处的MessageSourceMap扩展交付，避免早于pre-step完成的context装配漏掉首请求。详细字段/拒绝矩阵与限制见[ADR031](decisions/031-automatic-learning.md)。
+
 下面是设计backlog。T010 / Issue #29已实现G01/G07显式来源切片，其余目标未自动创建或完成实现Issue。已有父[Issue #8](https://github.com/wang1299/dsh-evolve/issues/8)、[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)保持open。后续每项另固定范围、失败场景、任务分支和PR，不能把整张表塞进一个实现PR。
 
 | 缺口 | 问题／目标 | 依赖 | 必须新增的验收证据 |
 |---|---|---|---|
-| G01 任务证据归并 | T019已自动归并显式关闭任务的最小事件/版本/纠正/pytest；任意错误尝试理解仍待实现 | 本基线，协同G07 | T019负路径/归属/有界省略；真实模型语义另验 |
+| G01 任务证据归并 | T019显式证据＋T029正常请求执行片段/未提交快照；跨轮语义归并仍待实现 | 本基线，协同G07 | T029重复/交错/来源/实际AgentLoop；真实语义另验 |
 | G02 授权自动提炼 | T020官方DSH ExtractionPort、宿主事实/引用/条件与严格候选已实现；真实质量待验 | G01、ADR023、G03 | extraction/dsh-extraction离线负路径；不推断真实质量 |
 | G03 耐久协调恢复 | T019本地恢复＋T020外部调用资格/额度/原子发布已实现，模型中断不重跑 | G01、ADR022/023 | 两进程/重启/取消/陈旧发布离线验证；物理HTTP与服务端费用另验 |
 | G04 上下文与交付 | 最小DTO、硬预算、决策快照和重复回执 | G01/G03、现选择 | 超预算拒绝、版本漂移、返回失败、实际offered与unknown |
-| G05 正常DSH闭环 | T011引导SDK真实运行partial；正常采集/复用/反馈仍缺，#33/#34跟进工具与用量 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
+| G05 正常DSH闭环 | T029正常请求零evolve工具脚本闭环；真实非脚本自动模式与收益仍待验 | G01–G04、固定发行版 | 一个完整真实模型案例及负路径，平台／模型／安装明列 |
 | G06 可公开收益评估 | 独立重建合成资产＋真实任务族配对重复 | 现v2/v3，G04/G05按评价入口 | 外部只读验收、三组控制、任务隔离、全部失败与人工指标 |
 | G07 保留与遗忘 | T010已保护历史引用最小来源/默认缺失拒绝；导出/彻底遗忘待设计 | G01共同设计 | 纠正30天后仍可溯源，删除失效，无隐私副本残留声明越界 |
 | G08 验证执行增强 | 后代树、总deadline、环境manifest／强隔离选择 | 当前验证器、独立ADR | 进程后代／逃逸风险场景、取消清理、环境漂移、资源边界 |

@@ -6,6 +6,8 @@ import { fixture } from './fixture.js';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { git } from '../src/repository.js';
+import { configSchema } from '../src/config.js';
+import { execFileSync } from 'node:child_process';
 
 const policy = () => ({ grantId: crypto.randomUUID(), provider: 'scripted-offline', model: 'fixture', maxCalls: 1, maxTokens: 256, timeoutMs: 5000 });
 async function setup() {
@@ -69,5 +71,54 @@ test('a manual task starting after automatic capture blocks the earlier segment'
     assert.equal(store.automatic.rows()[0]!.state, 'blocked'); assert.equal(store.task(automatic.id)!.state, 'closed');
     service.automatic.finish('automatic', 1); assert.equal(store.learning.jobs().length, 0);
     assert.equal(store.task(manual.id)!.state, 'open');
+  } finally { store.close(); }
+});
+
+test('automatic mode is explicitly opted in and old configuration cannot grant it implicitly', async () => {
+  assert.equal(configSchema.parse({ repoRoot: 'repository' }).automaticLearning, false);
+  assert.equal(configSchema.safeParse({ repoRoot: 'repository', automaticLearning: true }).success, false);
+  const f = await fixture(); const store = new Store(join(f.home, 'off.sqlite'));
+  try {
+    const service = new EvolveService(store, f.repo, { trusted: false, python: 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 15000 });
+    assert.equal(service.automatic.begin('off', 1, [{ id: 'off', text: 'Fix rollback' }]), null); assert.equal(store.tasks().length, 0); assert.equal(store.automatic.rows().length, 0);
+  } finally { store.close(); }
+});
+
+test('failed independent repair proof blocks automatic extraction without consuming a model call', async () => {
+  const { f, store, service } = await setup();
+  try {
+    service.automatic.begin('failed', 1, [{ id: 'failed', text: 'Fix rollback' }]);
+    await writeFile(join(f.repo, 'ledger.py'), 'def apply_change(state, fail=False):\n    state["balance"] += 1\n    if fail:\n        raise ValueError("still broken")\n    return state["balance"]\n');
+    service.automatic.finish('failed', 1); await service.jobs.runNext();
+    let calls = 0; await service.extraction.runNext(async () => { calls++; throw new Error('Must not run'); }); await service.automatic.runNext();
+    assert.equal(calls, 0); assert.equal(store.extraction.grants()[0]!.used, 0); assert.equal(store.experiences().length, 0);
+    assert.equal(store.automatic.rows()[0]!.state, 'blocked'); assert.equal(store.learning.bundles()[0]!.status, 'incomplete');
+  } finally { store.close(); }
+});
+
+test('a dead process capture becomes unknown on restart and repeated input never reopens it', async () => {
+  const { f, store, service, verification, extraction } = await setup();
+  service.automatic.begin('restart', 1, [{ id: 'restart', text: 'Fix rollback' }]);
+  const old = store.automatic.rows()[0]!;
+  const exitedPid = Number(execFileSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8', windowsHide: true }));
+  store.automatic.write({ ...old, ownerPid: exitedPid }); store.close();
+  const reopened = new Store(join(f.home, 'learning.sqlite'));
+  try {
+    const restarted = new EvolveService(reopened, f.repo, verification, true, extraction, true, true);
+    assert.equal(reopened.automatic.rows()[0]!.state, 'unknown'); assert.equal(reopened.task(old.taskId!)!.state, 'closed');
+    assert.equal(restarted.automatic.begin('restart', 1, [{ id: 'restart', text: 'Fix rollback' }]), null); assert.equal(await restarted.automatic.runNext(), false);
+    assert.equal(reopened.learning.jobs().length, 0); assert.equal(reopened.extraction.grants().length, 0);
+  } finally { reopened.close(); }
+});
+
+test('changed frozen snapshot metadata cannot authorize verification or extraction', async () => {
+  const { f, store, service } = await setup();
+  try {
+    service.automatic.begin('tampered', 1, [{ id: 'tampered', text: 'Fix rollback' }]);
+    await writeFile(join(f.repo, 'ledger.py'), 'def apply_change(state, fail=False):\n    before=state["balance"]\n    state["balance"]+=1\n    if fail:\n        state["balance"]=before\n        raise ValueError("failed")\n    return state["balance"]\n');
+    service.automatic.finish('tampered', 1); const s = store.automatic.rows()[0]!;
+    store.automatic.write({ ...s, fixed: { ...s.fixed!, digest: '0'.repeat(64) } }); await service.jobs.runNext();
+    assert.equal(store.learning.jobs()[0]!.effectStarted, false); assert.equal(store.learning.jobs()[0]!.reason, 'invalid_source');
+    let calls = 0; await service.extraction.runNext(async () => { calls++; throw new Error('Must not run'); }); assert.equal(calls, 0);
   } finally { store.close(); }
 });

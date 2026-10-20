@@ -20,7 +20,7 @@
 
 在dataDir下的private-snapshots.git保存私有Git对象/提交；用户仓库只执行只读Git命令。使用hash-object/mktree/commit-tree，不写用户index/HEAD/ref，不自动提交、stash或回滚用户代码。
 
-限tracked Python文件和既有依赖描述，最多500文件/8MiB、单文件512KiB；私有store累计上限128MiB。忽略/未跟踪文件不采集，出现未跟踪Python、符号链接、submodule或不支持的变更时拒绝自动学习。不复制目录中的其他文件。快照提交SHA属于本地私有对象库，报告明确标注captureMethod、原仓库HEAD和内容摘要，不能冒充用户提交。
+限tracked Python文件和既有依赖描述，最多500文件/8MiB、单文件512KiB；私有store使用128MiB写前水位，超出后拒绝新增。本次最多再写8MiB源码和Git元数据，因此不是磁盘硬配额。忽略/未跟踪文件不采集，出现未跟踪Python、符号链接、submodule或不支持的变更时拒绝自动学习。不复制目录中的其他文件。快照提交SHA属于本地私有对象库，报告明确标注captureMethod、原仓库HEAD和内容摘要，不能冒充用户提交。
 
 捕获前后核对文件集合/内容/依赖/HEAD，不完整或变化即拒绝。独立验证先将两份快照物化到专用目录，运行原始失败、修复后相同验收与回归；验收目录仍须在Agent仓库之外。Python执行保持既有授权边界，不宣称强沙箱。持久快照是复现材料，按现有证据保留，不自动删除；完全遗忘另属G07。模型只接收既有有界去敏diff/事实，无新完整代码上传。
 
