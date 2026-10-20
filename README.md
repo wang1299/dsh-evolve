@@ -4,6 +4,8 @@
 
 **状态：本地开发预览，未发布。** 当前分支的已实现能力与验证记录见 [路线](docs/roadmap.md)。完整产品需求见 [产品定义](docs/product.md)。
 
+T028：面板默认展示学习动态、经验卡片和后续任务的参考记录。经验详情先呈现处理方法与适用范围，证据、事实编辑、版本管理和诊断按需展开；反馈使用任务名称，后台刷新保留未保存的编辑。当前仍以显式任务与来源验证驱动学习，正常对话自动识别错误/修正及后台资格检查的操作简化继续推进。设计与实际检查见[ADR030](docs/decisions/030-learning-home.md)及[T028验收](docs/development/T028-acceptance.md)。
+
 T027：修复完整DSH启动时后台提炼早于本机凭据服务就绪的竞态；等待阶段不占用grant，仅检查服务active，不读取Key。新增有界失败原因（准备/凭据/连接/超时/取消等），旧unknown不回填或重放。SQLite当前v8，升级前停止旧宿主和面板并备份。已通过完整官方CLI实际包的managed/env假密钥离线启动验证；真实模型复验另需明确授权。见[设计](docs/decisions/029-native-extraction-readiness.md)与[验收](docs/development/T027-acceptance.md)。
 
 T026：新增owner CLI `dsh-evolve reauthorize-extraction --config <本地配置> --task-id <任务ID> --expected-job <未知提炼JobID>`。在独立明确授权后，配置一个从未使用的新grantId（maxCalls=1，其余模型控制与原尝试相同），为同一份当前有效的已验证证据追加一次尝试。旧unknown、旧grant与财务占额保留，无自动重试或恢复链。命令仅排队；执行仍需要owner信任、shareWithModel及DSH模型服务。逻辑授权不增加金额上限，详见[ADR028](docs/decisions/028-explicit-extraction-reauthorization.md)。代码验收与真实模型体验分别记录，尚未发布。
