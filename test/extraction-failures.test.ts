@@ -23,7 +23,7 @@ test('bounded model failures persist, never replay, and retain explicit single-a
     let store = new Store(target);
     try {
       const raw = new DatabaseSync(target);
-      assert.equal(raw.prepare('PRAGMA user_version').get()!.user_version, 8);
+      assert.equal(raw.prepare('PRAGMA user_version').get()!.user_version, 9);
       assert.deepEqual(['tasks', 'learning_jobs', 'evidence_bundles', 'extraction_jobs', 'extraction_grants'].map(t => raw.prepare('SELECT * FROM ' + t).all()), before); raw.close();
       const service = new EvolveService(store, f.repo, proofPolicy, true, extraction);
       let calls = 0;

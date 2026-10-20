@@ -1,7 +1,9 @@
 import { digest, redact, taskSchema, type Task, type Verification } from './domain.js';
 import { snapshot, git } from './repository.js';
 import { evidenceDigest, verificationEvidence } from './evidence.js';
-import { verifyRepair, type VerificationPolicy } from './verification.js';
+import { verifyRepair, verifyWorkspaceRepair, type VerificationPolicy } from './verification.js';
+import { WorkspaceSnapshots } from './workspace-snapshots.js';
+import { automaticProofDigest } from './automatic-store.js';
 import { evidenceInputSchema, LostJobLease, type EvidenceBundle, type EvidenceInput, type LearningJob } from './learning-domain.js';
 import type { Store } from './store.js';
 
@@ -10,24 +12,28 @@ export class EvidenceJobs {
   private wake: (() => void) | null = null;
   private readonly repoId: string;
   constructor(private readonly store: Store, private readonly root: string, private readonly policy: VerificationPolicy,
-    private readonly backgroundVerification = false, private readonly verifier = verifyRepair) { this.repoId = snapshot(root).scope.repoId; }
+    private readonly backgroundVerification = false, private readonly verifier = verifyRepair, private readonly automaticEnabled = false) { this.repoId = snapshot(root).scope.repoId; }
   private policyDigest(): string { return digest(JSON.stringify({ trusted: this.policy.trusted, python: this.policy.python,
     acceptanceDir: this.policy.acceptanceDir, regressionPath: this.policy.regressionPath, timeoutMs: this.policy.timeoutMs,
     backgroundVerification: this.backgroundVerification })); }
   enqueue(task: Task): LearningJob {
     const old = this.store.learning.forTask(task.id); if (old) return old;
     const current = snapshot(this.root);
+    const segment = this.store.automatic.forTask(task.id);
+    const privateStore = segment ? new WorkspaceSnapshots(this.store.automatic.snapshotDirectory!, this.root) : null;
+    if (segment && (segment.state !== 'queued' || !segment.base || !segment.fixed || !privateStore!.matches(segment.fixed))) throw new Error('Invalid automatic repair snapshots');
     let repositoryState: EvidenceInput['repositoryState'] = 'clean'; let diff = ''; let diffTruncated = false;
     try {
-      repositoryState = git(this.root, ['status', '--porcelain', '--untracked-files=no']) ? 'dirty' : 'clean';
-      const raw = git(this.root, ['diff', '--no-ext-diff', '--no-textconv', task.baseCommit, current.commit, '--', '*.py']);
+      // For an automatic segment this describes the frozen immutable snapshot pair.
+      repositoryState = segment ? 'clean' : git(this.root, ['status', '--porcelain', '--untracked-files=no']) ? 'dirty' : 'clean';
+      const raw = segment ? privateStore!.diff(segment.base!.commit, segment.fixed!.commit) : git(this.root, ['diff', '--no-ext-diff', '--no-textconv', task.baseCommit, current.commit, '--', '*.py']);
       diffTruncated = raw.length > 8000; diff = redact(raw, 8000);
     } catch { repositoryState = 'unavailable'; }
     const sources = this.store.taskEvidence(task.id).filter(e => e.repoId === task.scope.repoId);
     const events = this.store.boundedObservations(task.id);
     const input: EvidenceInput = { schemaVersion: 1, taskId: task.id, repoId: task.scope.repoId,
-      taskDigest: digest(JSON.stringify(taskSchema.parse(task))), baseCommit: task.baseCommit, fixCommit: current.commit,
-      dependencyDigest: current.scope.dependencyDigest,
+      taskDigest: digest(JSON.stringify(taskSchema.parse(task))), baseCommit: task.baseCommit, fixCommit: segment?.fixed?.commit ?? current.commit,
+      dependencyDigest: segment?.fixed?.dependencyDigest ?? current.scope.dependencyDigest, ...(segment ? { snapshotDigest: automaticProofDigest(segment) } : {}),
       mode: this.backgroundVerification && this.policy.trusted ? 'verify' : 'collect', policyDigest: this.policyDigest(),
       repositoryState, diff, diffTruncated, sources: sources.slice(-32).map(e => ({ id: e.id, kind: e.kind, digest: e.digest })),
       omittedSources: Math.max(0, sources.length - 32), observations: events.observations, omittedObservations: events.omitted };
@@ -41,6 +47,9 @@ export class EvidenceJobs {
     const task = this.store.task(job.input.taskId);
     if (!task || task.state !== 'closed' || task.scope.repoId !== job.input.repoId
       || digest(JSON.stringify(task)) !== job.input.taskDigest) throw new Error('Invalid closed task');
+    const segment = this.store.automatic.forTask(task.id);
+    if (segment ? !segment.base || !segment.fixed || segment.repoId !== this.repoId || job.input.snapshotDigest !== automaticProofDigest(segment)
+      || segment.base.commit !== job.input.baseCommit || segment.fixed.commit !== job.input.fixCommit : job.input.snapshotDigest !== undefined) throw new InvalidSource();
     const proofs: Verification[] = [];
     for (const ref of job.input.sources) {
       const source = this.store.evidence(ref.id);
@@ -92,15 +101,19 @@ export class EvidenceJobs {
       // Tool metadata is diagnostic, not a source of acceptance. Keep omission counts
       // in frozen input; only independent executable proof can establish repair success.
       if (input.diffTruncated) reasons.push('diff_truncated');
+      const segment = this.store.automatic.forTask(input.taskId);
+      if (segment && !this.automaticEnabled) reasons.push('policy_changed');
       if (!proof && !reasons.length && input.mode === 'verify') {
         if (!this.backgroundVerification || !this.policy.trusted || this.policyDigest() !== input.policyDigest) reasons.push('policy_changed');
         else {
           const current = snapshot(this.root);
-          if (current.commit !== input.fixCommit || current.scope.dependencyDigest !== input.dependencyDigest
+          const privateStore = segment ? new WorkspaceSnapshots(this.store.automatic.snapshotDirectory!, this.root) : null;
+          if (segment ? !privateStore!.matches(segment.fixed!) : current.commit !== input.fixCommit || current.scope.dependencyDigest !== input.dependencyDigest
             || git(this.root, ['status', '--porcelain', '--untracked-files=no'])) reasons.push('repository_changed');
           else {
             combined.throwIfAborted(); this.store.learning.beginVerification(job.id, job.token!, Date.now());
-            fresh = await this.verifier(this.root, input.taskId, input.baseCommit, input.fixCommit, this.policy, combined); proof = fresh;
+            fresh = segment ? await verifyWorkspaceRepair(this.root, input.taskId, segment.base!, segment.fixed!, privateStore!, this.policy, combined)
+              : await this.verifier(this.root, input.taskId, input.baseCommit, input.fixCommit, this.policy, combined); proof = fresh;
             if (proof.sourceTaskId !== input.taskId || proof.repoId !== input.repoId || proof.baseCommit !== input.baseCommit
               || proof.fixCommit !== input.fixCommit || proof.environment.dependencyDigest !== input.dependencyDigest) throw new InvalidSource();
           }

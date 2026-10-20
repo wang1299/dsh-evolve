@@ -5,6 +5,8 @@ import { extractionOutputSchema, extractionPolicySchema, extractionUsageSchema, 
   type ExtractionJob, type ExtractionPolicy, type ExtractionPort, type ExtractionResult } from './extraction-domain.js';
 import { git, snapshot } from './repository.js';
 import type { Store } from './store.js';
+import { automaticProofDigest } from './automatic-store.js';
+import { WorkspaceSnapshots } from './workspace-snapshots.js';
 
 interface Fact { id: string; text: string; evidenceId: string; evidenceDigest: string }
 interface Material { text: string; scope: Scope; facts: Fact[] }
@@ -40,11 +42,15 @@ export function extractionMaterial(store: Store, root: string, job: ExtractionJo
     return p?.baseCommit === input.baseCommit && p.fixCommit === input.fixCommit && p.environment.dependencyDigest === input.dependencyDigest;
   });
   if (matching.at(-1)?.id !== evidence.id) throw new Error('New verification supersedes frozen evidence');
-  const files = git(root, ['diff', '--name-only', '--diff-filter=ACMR', input.baseCommit, input.fixCommit, '--', '*.py']).split('\n').filter(Boolean);
+  const segment = store.automatic.forTask(task.id);
+  if (segment ? !segment.base || !segment.fixed || input.snapshotDigest !== automaticProofDigest(segment) : input.snapshotDigest !== undefined) throw new Error('Invalid automatic source');
+  const privateStore = segment ? new WorkspaceSnapshots(store.automatic.snapshotDirectory!, root) : null;
+  const files = segment ? privateStore!.changedFiles(input.baseCommit, input.fixCommit)
+    : git(root, ['diff', '--name-only', '--diff-filter=ACMR', input.baseCommit, input.fixCommit, '--', '*.py']).split('\n').filter(Boolean);
   if (!files.length || files.length > 20) throw new Error('No bounded code conditions');
   const current = snapshot(root, files);
-  if (current.scope.repoId !== job.repoId || current.commit !== input.fixCommit || current.scope.dependencyDigest !== input.dependencyDigest
-    || git(root, ['status', '--porcelain', '--untracked-files=no'])) throw new Error('Repair version changed');
+  if (current.scope.repoId !== job.repoId || current.scope.dependencyDigest !== input.dependencyDigest
+    || (segment ? !privateStore!.matches(segment.fixed!) : current.commit !== input.fixCommit || git(root, ['status', '--porcelain', '--untracked-files=no']))) throw new Error('Repair version changed');
   const facts: Fact[] = [];
   const add = (id: string, text: string, evidenceId = evidence.id, sourceDigest = evidence.digest): void => {
     facts.push({ id, text: redact(text), evidenceId, evidenceDigest: sourceDigest });
@@ -68,7 +74,7 @@ export function extractionMaterial(store: Store, root: string, job: ExtractionJo
 export class ExtractionJobs {
   readonly policy: ExtractionPolicy | undefined;
   private readonly repoId: string;
-  constructor(private readonly store: Store, private readonly root: string, inputPolicy?: ExtractionPolicy) {
+  constructor(private readonly store: Store, private readonly root: string, inputPolicy?: ExtractionPolicy, private readonly automaticEnabled = false) {
     this.policy = inputPolicy === undefined ? undefined : Object.freeze(extractionPolicySchema.parse(inputPolicy));
     this.repoId = snapshot(root).scope.repoId;
   }
@@ -79,6 +85,7 @@ export class ExtractionJobs {
     this.store.extraction.recover(this.repoId, Date.now());
     for (const queued of this.store.extraction.jobs().filter(j => j.repoId === this.repoId && j.state === 'waiting')) {
       if (signal?.aborted) return false;
+      if (this.store.automatic.forTask(queued.taskId) && !this.automaticEnabled) { this.store.extraction.block(queued.id, 'policy_revoked'); return true; }
       if (!this.policy || queued.policyDigest !== digest(JSON.stringify(this.policy)) || queued.policyDigest !== digest(JSON.stringify(queued.policy))) {
         this.store.extraction.block(queued.id, 'policy_revoked'); return true;
       }

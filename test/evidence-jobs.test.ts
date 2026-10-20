@@ -216,7 +216,7 @@ test('v3 migration preserves historical JSON and failures roll back the v4 schem
   assert.equal(failed.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='learning_attempts'").get()!.n, 0);
   failed.exec('DROP VIEW learning_jobs'); failed.close();
   store = new Store(path); try { assert.ok(store.task(task.id)); assert.equal(store.learning.jobs().length, 0); } finally { store.close(); }
-  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 8);
+  const checked = new DatabaseSync(path); assert.equal(checked.prepare('PRAGMA user_version').get()!.user_version, 9);
   assert.equal(checked.prepare('SELECT body FROM evidence WHERE id=?').get(source.id)!.body, original); checked.close();
 });
 

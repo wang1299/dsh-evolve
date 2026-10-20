@@ -130,7 +130,7 @@ test('v6 migration preserves all original extraction rows and rolls back failed 
   failed.exec('DROP TABLE extraction_jobs_v7'); failed.close(); const migrated = new Store(r.path);
   try {
     const check = new DatabaseSync(r.path);
-    try { assert.equal(check.prepare('PRAGMA user_version').get()!.user_version, 8);
+    try { assert.equal(check.prepare('PRAGMA user_version').get()!.user_version, 9);
       assert.deepEqual(tables.map(t => check.prepare('SELECT * FROM ' + t).all()), frozen);
       assert.deepEqual(check.prepare('PRAGMA foreign_key_check').all(), []);
     } finally { check.close(); }
