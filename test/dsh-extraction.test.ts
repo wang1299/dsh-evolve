@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { setTimeout as pause } from 'node:timers/promises';
-import { Context } from '@deepseek-ai/cordis';
+import { Context, Service } from '@deepseek-ai/cordis';
 import { LlmAdapter, LlmRuntime, resolveRetryPolicy, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm';
 import { SessionId, SessionStore } from '@deepseek-ai/dsh-session';
 import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt';
@@ -102,4 +102,39 @@ test('unloading native DSH cancels an in-flight extraction and settles worker be
   for (let i = 0; i < 100 && !signal; i++) await pause(20);
   assert.ok(signal); assert.equal(store.extraction.jobs()[0]!.state, 'running');
   await ctx.fiber.dispose(); assert.equal(signal.aborted, true); assert.throws(() => store.extraction.jobs(), /closed|open/i);
+});
+
+test('a prequeued extraction waits for the managed credential service to become active before consuming its grant', { timeout: 60000 }, async () => {
+  const f = await fixture(); const ctx = new Context();
+  await ctx.plugin(SystemPrompt, {}).await(); await ctx.plugin(ToolRuntime, { mode: 'native' }).await();
+  await ctx.plugin(SessionStore).await(); await ctx.plugin(LlmRuntime).await();
+  const store = new Store(':memory:'); const service = new EvolveService(store, f.repo,
+    { trusted: true, python: process.env.EVOLVE_PYTHON ?? 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 10000 }, true, policy());
+  const task = service.begin('prequeued-native', 'restore previous balance'); await f.fix(); service.finish(task.id); await service.jobs.runNext();
+  let ready = false; let release!: () => void; const initialize = new Promise<void>(r => { release = r; });
+  class ManagedCredentials extends Service {
+    constructor(child: Context) { super(child, 'credentials'); }
+    async [Service.init](): Promise<void> { await initialize; ready = true; }
+  }
+  const credentials = ctx.plugin(ManagedCredentials);
+  let calls = 0;
+  class NativeFixture extends LlmAdapter {
+    async *stream(): AsyncIterable<StreamChunk> {
+      calls++;
+      if (!ready) { yield { type: 'finish', reason: { kind: 'error', failure: { code: 'MISSING_CREDENTIAL', message: 'Synthetic managed store not initialized' } } }; return; }
+      yield* textChunks(JSON.stringify({ kind: 'candidate', title: 'Restore balance', strategy: 'Restore this transaction on failure.', factIds: ['verification:base'], inferences: [], recommendations: [] }));
+    }
+  }
+  ctx.llm.registerAdapter(['fixture'], new NativeFixture());
+  await ctx.plugin({ name: 'prequeued-binding', inject: ['tools', 'sessions', 'systemPrompt'], apply: (child: Context) => bindDsh(child, service, true) }).await();
+  try {
+    assert.equal(ctx.get('credentials'), undefined, 'A loading service is not available through strict get');
+    await pause(350);
+    assert.equal(calls, 0, 'The adapter must not run before managed credentials finish initialization');
+    assert.equal(store.extraction.grants()[0]!.used, 0); assert.equal(store.extraction.jobs()[0]!.state, 'waiting');
+    release(); await credentials.await();
+    for (let i = 0; i < 100 && store.extraction.jobs()[0]!.state === 'waiting'; i++) await pause(30);
+    assert.equal(calls, 1); assert.equal(store.extraction.grants()[0]!.used, 1);
+    assert.equal(store.extraction.jobs()[0]!.state, 'candidate');
+  } finally { release(); await credentials.await(); await ctx.fiber.dispose(); }
 });
