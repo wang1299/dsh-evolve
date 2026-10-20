@@ -16,7 +16,7 @@ import { Script } from 'node:vm';
 
 function renderEvidence(html: string, state: unknown): string {
   const script = html.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)![1]!;
-  const render = script.slice(script.indexOf('function renderEvidenceJobs()'), script.indexOf('let candidateRequest='));
+  const render = script.slice(script.indexOf('function renderEvidenceJobs()'), script.indexOf('async function refresh()'));
   class Element {
     children: Element[] = [];
     constructor(readonly tag: string, readonly text = '') {}
@@ -25,7 +25,7 @@ function renderEvidence(html: string, state: unknown): string {
     allText(): string { return this.text + this.children.map(c => c.allText()).join('\n'); }
   }
   const root = new Element('section');
-  new Script(render + '\nrenderEvidenceJobs();').runInNewContext({ state, $: () => root,
+  new Script(render + '\nrenderEvidenceJobs();').runInNewContext({ state, recordsSnapshot: '', $: () => root,
     node: (tag: string, text?: string) => new Element(tag, text), section: () => {} }, { timeout: 1000 });
   return root.allText();
 }
