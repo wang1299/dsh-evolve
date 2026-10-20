@@ -12,6 +12,8 @@
 
 ## 开发状态
 
+- 实验预算转发：T024修复消费者读完SSE终端帧后释放连接时，转发器提前取消上游的问题；只允许有界排空，仍须正常EOF和严格回执才结算，旧unknown不回填。离线预算针对检查15项通过；最终CI/评审与限制见[T024验收](docs/development/T024-acceptance.md)。不代表真实学习闭环通过。
+
 - 安装包自动学习演练：T021通过实际tgz/Loader和真实AgentLoop跑自动候选→显式验证→新会话回执→目标独立pytest→合成基准反馈，另保留坏提炼/关闭共享/无效目标三条负路径。新增独立Windows完整CLI/Web安装及重启核对，24个产品JS一致。模型为固定脚本，未验证真实模型质量；见[验收](docs/development/T021-acceptance.md)。
 
 - 自动候选提炼：T020在独立授权后，把ready修复证据交给DSH已注册模型；宿主固定事实、来源与代码条件，模型生成策略或拒绝，结果仅为候选。SQLite v5保存调用资格、次数和结果，重启不退额、中断不自动重试。默认关闭，本轮仅合成模型验证；见[设计](docs/decisions/023-automatic-candidate-extraction.md)与[任务](docs/tasks/T020-auto-extraction.md)。

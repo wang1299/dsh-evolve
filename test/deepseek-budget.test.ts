@@ -27,6 +27,52 @@ const sse = (input = 12, output = 8): string => [
 ].map((event) => 'data: ' + JSON.stringify(event) + '\n\n').join('');
 const ledger = (): DeepseekBudget => new DeepseekBudget(join(mkdtempSync(join(tmpdir(), 'evolve-budget-')), 'budget.json'));
 const request = { model: 'deepseek-flash', stream: true, max_tokens: 4096, messages: [{ role: 'user', content: 'synthetic fixture' }] };
+
+test('a consumer releasing terminal SSE permits bounded upstream EOF, never terminal-only settlement', async () => {
+  for (const kind of ['complete', 'partial', 'late-error', 'late-event'] as const) {
+    const budget = new DeepseekBudget(join(mkdtempSync(join(tmpdir(), 'evolve-disconnect-')), 'budget.json'), 't018-standard-tier-v1', 2);
+    let aborted = false;
+    const relay = await startBudgetRelay(budget, async (_url, init) => new Response(new ReadableStream<Uint8Array>({
+      start(controller) {
+        const wire = kind === 'partial' ? sse().split('\n\n')[0]! + '\n\n' : sse();
+        controller.enqueue(Buffer.from(wire));
+        const timer = setTimeout(() => {
+          if (kind === 'late-error') controller.error(new Error('synthetic upstream failed after terminal frame'));
+          else {
+            if (kind === 'late-event') controller.enqueue(Buffer.from('data: {}\n\n'));
+            controller.close();
+          }
+        }, 300);
+        init?.signal?.addEventListener('abort', () => {
+          aborted = true; clearTimeout(timer); controller.error(new Error('synthetic upstream canceled'));
+        }, { once: true });
+      },
+    }), { headers: { 'content-type': 'text/event-stream' } }));
+    try {
+      const response = await fetch(relay.baseURL + '/v1/messages', {
+        method: 'POST', headers: { 'x-api-key': 'offline-only-placeholder' }, body: JSON.stringify(request),
+      });
+      const reader = response.body!.getReader();
+      let observed = '';
+      while (!observed.includes(kind === 'partial' ? 'message_start' : 'message_stop')) {
+        const chunk = await reader.read(); assert.equal(chunk.done, false); observed += Buffer.from(chunk.value!).toString();
+      }
+      await reader.cancel(); // A real HTTP client releases the body before the server closes upstream.
+      const until = Date.now() + 3000;
+      while (readReceipt(budget).reason === 'awaiting_response' && Date.now() < until) await new Promise(resolve => setTimeout(resolve, 10));
+      const receipt = readReceipt(budget);
+      assert.notEqual(receipt.reason, 'awaiting_response');
+      assert.equal(aborted, kind === 'partial', 'Only cancellation before a valid terminal frame aborts upstream');
+      if (kind === 'complete') {
+        assert.equal(receipt.reason, 'complete'); assert.deepEqual(budget.state.calls[0]!.usage, { input: 32, output: 8 });
+        assert.equal(budget.spent, 128);
+      } else {
+        assert.equal(receipt.reason, kind === 'late-event' ? 'event_after_stop' : 'transport_error');
+        assert.equal(budget.state.calls[0]!.usage, null); assert.equal(budget.spent, budgetPolicy.reservationMicroCny);
+      }
+    } finally { await relay.close(); budget.close(); }
+  }
+});
 test('relay checks actual wire requests, charges cache conservatively and never persists secrets or payloads', async () => {
   const budget = ledger(); let forwarded = 0;
   const relay = await startBudgetRelay(budget, async (url, init) => {
