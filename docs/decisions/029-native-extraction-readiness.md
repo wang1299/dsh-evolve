@@ -18,6 +18,8 @@ Cordis Service构造时注册，提供者Fiber初始化完成后才active。`ctx
 
 保留unknown/failed状态与次数策略。仅扩展固定reason枚举：model_prepare_failed、model_route_changed、model_credentials_missing、model_transport_failed、model_timed_out、model_cancelled、model_incomplete。原生准备/流错误只映射这些宿主定义类别；未知SDK code回退interrupted_model。绝不保存异常正文、cause、任意code、响应或凭据；错误消息由固定类别构造。无效输出继续failed/invalid_response，版本漂移继续failed/invalid_material。
 
+这些类别仍是unknown而非成功或未计费证明；既有owner显式新授权入口允许识别它们，仍要求fresh单次grant、同材料/控制，最多一次直接追加、无链。旧unknown原因不回填。
+
 v8只标识reason读取契约变化，无新表/列。事务内验证外键并推进user_version；v7历史行原字节保留，不回填旧unknown原因或释放grant。旧程序拒绝v8，升级前停旧宿主和面板并备份。旧实验财务账本不修改。
 
 ## 验收与边界

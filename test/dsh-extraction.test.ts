@@ -8,7 +8,7 @@ import { SessionId, SessionStore } from '@deepseek-ai/dsh-session';
 import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt';
 import { ToolRuntime } from '@deepseek-ai/dsh-tools';
 import { dshExtractionPort } from '../src/dsh-extraction.js';
-import { InvalidExtractionResponse, type ExtractionPolicy } from '../src/extraction-domain.js';
+import { InvalidExtractionResponse, ExtractionModelFailure, type ExtractionPolicy } from '../src/extraction-domain.js';
 import { Store } from '../src/store.js';
 import { EvolveService } from '../src/service.js';
 import { bindDsh } from '../src/dsh.js';
@@ -65,6 +65,35 @@ test('native extraction rejects tools, truncated, malformed, oversized and trail
   } finally { await ctx.fiber.dispose(); }
 });
 
+test('native failure categories retain no raw provider errors, codes or secrets', async () => {
+  const ctx = new Context(); await ctx.plugin(LlmRuntime).await();
+  const secret = 'sk-private-fixture-message-DO-NOT-PERSIST';
+  const expected = { MISSING_CREDENTIAL: 'model_credentials_missing', TRANSPORT: 'model_transport_failed', TIMEOUT: 'model_timed_out',
+    ABORTED: 'model_cancelled', INVALID_PREPARED_CALL: 'model_route_changed', UNKNOWN_PRIVATE_CODE: 'interrupted_model', ['__proto__']: 'interrupted_model' };
+  try {
+    for (const [code, reason] of Object.entries(expected)) {
+      const adapter = new Adapter([{ type: 'finish', reason: { kind: 'error', failure: { code, message: secret } } }]);
+      const dispose = ctx.llm.registerAdapter(['fixture'], adapter);
+      await assert.rejects(dshExtractionPort(ctx.llm)({ policy: policy(), material: '{}', signal: new AbortController().signal }), error => {
+        assert.ok(error instanceof ExtractionModelFailure); assert.equal(error.reason, reason);
+        assert.ok(!String(error).includes(secret)); assert.ok(!JSON.stringify(error).includes(code)); assert.equal(error.cause, undefined); return true;
+      }); dispose();
+    }
+    class PreparationError extends LlmAdapter {
+      override async prepareCall(): Promise<never> { throw Object.assign(new Error(secret), { code: 'PRIVATE_UNKNOWN_CODE' }); }
+      stream(): AsyncIterable<StreamChunk> { throw new Error('Must not dispatch'); }
+    }
+    const dispose = ctx.llm.registerAdapter(['fixture'], new PreparationError());
+    await assert.rejects(dshExtractionPort(ctx.llm)({ policy: policy(), material: '{}', signal: new AbortController().signal }), error => {
+      assert.ok(error instanceof ExtractionModelFailure); assert.equal(error.reason, 'model_prepare_failed');
+      assert.ok(!String(error).includes(secret)); assert.equal(error.cause, undefined); return true;
+    }); dispose();
+    const empty = ctx.llm.registerAdapter(['fixture'], new Adapter([]));
+    await assert.rejects(dshExtractionPort(ctx.llm)({ policy: policy(), material: '{}', signal: new AbortController().signal }),
+      (error: unknown) => error instanceof ExtractionModelFailure && error.reason === 'model_incomplete'); empty();
+  } finally { await ctx.fiber.dispose(); }
+});
+
 test('normal DSH binding discovers a late LLM adapter and automatically extracts a candidate after ready repair evidence', { timeout: 60000 }, async () => {
   const f = await fixture(); const ctx = new Context();
   await ctx.plugin(SystemPrompt, {}).await(); await ctx.plugin(ToolRuntime, { mode: 'native' }).await();
@@ -77,6 +106,10 @@ test('normal DSH binding discovers a late LLM adapter and automatically extracts
     await pause(300); assert.equal(store.extraction.grants()[0]!.used, 0, 'No registered adapter must not consume a grant');
     const text = JSON.stringify({ kind: 'candidate', title: 'Rollback transaction', strategy: 'Restore previous state on exception.', factIds: ['verification:fixed'], inferences: [], recommendations: [] });
     const adapter = new Adapter(textChunks(text)); ctx.llm.registerAdapter(['fixture'], adapter);
+    await pause(300); assert.equal(adapter.calls.length, 0, 'Missing credentials service must keep extraction waiting');
+    assert.equal(store.extraction.grants()[0]!.used, 0);
+    // The scripted adapter needs no secret; model the active official service seam.
+    ctx.provide('credentials', {});
     for (let i = 0; i < 100 && store.extraction.jobs()[0]!.state === 'waiting'; i++) await pause(30);
     assert.equal(store.extraction.jobs()[0]!.state, 'candidate'); assert.equal(adapter.calls.length, 1); assert.equal(store.experiences()[0]!.status, 'candidate');
     assert.equal((await ctx.systemPrompt.assemble()).tools.filter(t => t.name.startsWith('evolve_')).length, 7);
@@ -86,6 +119,7 @@ test('normal DSH binding discovers a late LLM adapter and automatically extracts
 test('unloading native DSH cancels an in-flight extraction and settles worker before closing the database', { timeout: 60000 }, async () => {
   const f = await fixture(); const ctx = new Context();
   await ctx.plugin(SystemPrompt, {}).await(); await ctx.plugin(ToolRuntime, { mode: 'native' }).await(); await ctx.plugin(SessionStore).await(); await ctx.plugin(LlmRuntime).await();
+  ctx.provide('credentials', {}); // No secret used by the hanging scripted adapter.
   const store = new Store(':memory:'); const service = new EvolveService(store, f.repo,
     { trusted: true, python: process.env.EVOLVE_PYTHON ?? 'python', acceptanceDir: f.acceptance, regressionPath: 'tests', timeoutMs: 10000 }, true, policy());
   const task = service.begin(String(SessionId('cancel-native')), 'rollback'); await f.fix(); service.finish(task.id); await service.jobs.runNext();

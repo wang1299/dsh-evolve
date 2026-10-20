@@ -4,6 +4,8 @@
 
 ## 已验证
 
+T027当前SQLite为v8（新增固定失败reason，旧行不变）。旧程序拒绝v8；停止旧宿主/面板、备份后再升级，禁止混跑/直接降级。原生bindDsh后台提炼需要active credentials与llm/provider；完整官方DSH包含该服务，自建宿主若缺失则等待、不占用grant。Core和独立dshExtractionPort、七工具不增加强制依赖。154项本地/8项官方兼容及实际包完整原生managed/env离线启动验证见[T027](development/T027-acceptance.md)，不能当成真实模型成功。
+
 T026将数据库升级v7，加入owner CLI一次显式重新授权，七个DSH工具及模型适配接口不变。v6原行、旧unknown和已用grant保留。旧程序拒绝v7；先停止所有旧宿主/面板并备份后安装，不混跑或直接降级。新调用需要独立授权的新单次grant，不重置财务预算；详见[ADR028](decisions/028-explicit-extraction-reauthorization.md)。源码验收不代表既有运行环境自动升级或真实响应已通过。
 
 T025引入SQLite v6与owner CLI显式证据恢复，七个DSH模型工具不变。迁移保留旧JSON/Job/Bundle/grant用量，旧程序拒绝v6。升级需停止所有旧宿主和面板、备份数据库，再安装实际验收包；禁止混跑或直接降级。诊断摘要截断不等于缺少必需来源，仍须独立可执行验证。当前实现验证与安装状态见[T025](tasks/T025-observation-recovery.md)；下文T020–T023的v5记录为历史范围，不代表新包已安装或真实恢复成功。

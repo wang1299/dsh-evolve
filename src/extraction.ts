@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { digest, experienceSchema, redact, taskSchema, type Experience, type FactCitation, type Scope, type Task } from './domain.js';
 import { evidenceDigest, validateCitations } from './evidence.js';
-import { extractionOutputSchema, extractionPolicySchema, extractionUsageSchema, InvalidExtractionResponse,
+import { extractionOutputSchema, extractionPolicySchema, extractionUsageSchema, InvalidExtractionResponse, ExtractionModelFailure,
   type ExtractionJob, type ExtractionPolicy, type ExtractionPort, type ExtractionResult } from './extraction-domain.js';
 import { git, snapshot } from './repository.js';
 import type { Store } from './store.js';
@@ -139,7 +139,9 @@ export class ExtractionJobs {
       } catch (error) {
         const invalid = error instanceof InvalidExtractionResponse;
         const changed = error instanceof ExtractionMaterialChanged;
-        this.store.extraction.complete(job, Date.now(), invalid || changed ? 'failed' : 'unknown', invalid ? 'invalid_response' : changed ? 'invalid_material' : 'interrupted_model', usage);
+        const reason = invalid ? 'invalid_response' : changed ? 'invalid_material' : deadline.aborted || Date.now() >= expiresAt ? 'model_timed_out'
+          : signal?.aborted ? 'model_cancelled' : error instanceof ExtractionModelFailure ? error.reason : 'interrupted_model';
+        this.store.extraction.complete(job, Date.now(), invalid || changed ? 'failed' : 'unknown', reason, usage);
       }
       return true;
     }

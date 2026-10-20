@@ -10,7 +10,7 @@ import { contextKey, feedbackMemory, rankFeedback, type ContextEvidence } from '
 import { correctionEvidence, factProvenance, validateCitations, verificationEvidence } from './evidence.js';
 import { EvidenceJobs } from './evidence-jobs.js';
 import { ExtractionJobs, extractionMaterial } from './extraction.js';
-import type { ExtractionJob, ExtractionPolicy } from './extraction-domain.js';
+import { modelFailureReasons, type ExtractionJob, type ExtractionPolicy } from './extraction-domain.js';
 
 function cleanCandidate(value: unknown): Candidate {
   const item = candidateSchema.parse(value);
@@ -91,7 +91,7 @@ export class EvolveService {
       }
       const controls = (p: ExtractionPolicy): string => JSON.stringify({ ...p, grantId: '' });
       const grant = this.store.extraction.grants().find(g => g.id === old.policy.grantId);
-      if (old.state !== 'unknown' || old.reason !== 'interrupted_model' || !old.inputDigest || old.candidateId !== null
+      if (old.state !== 'unknown' || !modelFailureReasons.some(r => r === old.reason) || !old.inputDigest || old.candidateId !== null
         || old.policyDigest !== digest(JSON.stringify(old.policy)) || policy.grantId === old.policy.grantId || policy.maxCalls !== 1
         || controls(policy) !== controls(old.policy) || !grant || grant.used !== 1 || grant.maxCalls !== 1 || grant.policyDigest !== old.policyDigest
         || this.store.extraction.grants().some(g => g.id === policy.grantId)) throw new Error('Reauthorization requires an unknown attempt and a fresh single-call grant with unchanged controls');

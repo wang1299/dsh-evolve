@@ -12,7 +12,7 @@
 | npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 7 | v1–v6事务迁移；保留旧JSON、Job、Bundle和grant；显式证据恢复及一次新提炼授权关联；旧程序拒绝v7 |
+| SQLite | user_version 8 | v1–v7事务迁移；保留旧JSON、Job、Bundle和grant；新增固定失败reason；旧程序拒绝v8 |
 | EvidenceBundle／Job输入 | schemaVersion 1 | ADR022，有界本地材料；ready不提升经验状态 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
 | 实验预算账本 | v1／v2显式策略；v3单次预算 | ADR020/ADR021；v3记录准确金额/1请求/回执版本；t018-standard-tier-v1须回执2，原策略不改、不混开或改写旧预算 |
@@ -22,6 +22,8 @@
 | DSH／Cordis | 0.2.0-rc.2／4.0.5 | 固定发行包与运行证据，不追master |
 
 历史ADR状态是当时快照；现行覆盖结合[兼容性](compatibility.md)、[开发状态](development/status.md)和本文件。重要决策变更需显式替代ADR，不删除历史。
+
+T027现行补充（[ADR029](decisions/029-native-extraction-readiness.md)）：原生后台提炼在发现port时同时要求active credentials与llm/provider；用Cordis默认strict get检查生命周期，不resolve/describe Key、不使用固定延时；未就绪保持waiting且不占用grant。Core/独立port无此依赖，七工具不变。SQLite v8只扩展固定reason读取契约，保留全部原行；原生错误仅映射准备/路由/凭据/传输/超时/取消/不完整等类别，未知code回退interrupted_model，不保存原错误正文或cause。显式单次新授权可识别这些unknown类别，仍fresh grant、同材料/控制、一次追加且无链；旧unknown不补原因、不释放额度。
 
 T026现行补充（[ADR028](decisions/028-explicit-extraction-reauthorization.md)）：`reauthorize-extraction`仅供owner CLI对unknown提炼用新单次grant追加一次尝试，原始状态不变，无链或自动重放。服务方法还要求构造时显式传入modelSharingAllowed=true，createService从shareWithModel取得此值；仅当前执行信任有效才允许。SQLite v7新增extraction_reauthorizations，提炼Job按(evidence_job_id,grant_id)唯一；普通enqueue仍返回原始Job，不因配置更换自动增加尝试。面板只读展示全部尝试及父子关联；旧模型工具与HTTP写接口不变。财务硬预算独立检查，逻辑grant不能授权金额。下文v4–v6历史记录由本段及ADR028补充。
 
