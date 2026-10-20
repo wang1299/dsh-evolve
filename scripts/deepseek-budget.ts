@@ -115,9 +115,18 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
     const fail = (status: number): void => { if (!res.headersSent) { res.writeHead(status, { 'content-type': 'application/json' }); res.end('{"error":"experiment_request_rejected"}'); } else res.destroy(); };
     if (req.method !== 'POST' || req.url !== path + '/v1/messages' || active) { fail(429); return; }
     active = true; const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 60000);
-    res.on('close', () => { if (!res.writableFinished) controller.abort(); });
     let id: string | undefined; let httpStatus: number | null = null; let responseBytes = 0;
     const result: Buffer[] = []; let failure: UsageReason = 'transport_error'; let terminalReceipt = false;
+    res.on('close', () => {
+      if (res.writableFinished) return;
+      // SDK consumers may release the HTTP body after message_stop. Preserve the
+      // original deadline and drain upstream to EOF before deciding eligibility.
+      // Before a valid terminal frame, cancellation must still stop generation.
+      let terminal = false;
+      try { terminal = analyzeMessagesUsage(Buffer.concat(result).toString('utf8'), budgetPolicy, budget.policyId).usage !== null; }
+      catch { /* An unrecognized stream cannot justify continued generation. */ }
+      if (!terminal) controller.abort();
+    });
     const receipt = (reason?: UsageReason): z.infer<typeof usageSchema> | null => {
       const body = Buffer.concat(result).toString('utf8');
       const analysis = budget.receiptVersion === 2 ? diagnoseMessagesUsage(body, budgetPolicy, budget.policyId)
@@ -151,12 +160,13 @@ export async function startBudgetRelay(budget: DeepseekBudget, transport: typeof
       for await (const chunk of response.body) {
         responseBytes += chunk.length;
         if (responseBytes > 1024 * 1024) { failure = 'response_bound'; throw new Error('Response bound'); }
-        const data = Buffer.from(chunk); result.push(data); res.write(data);
+        const data = Buffer.from(chunk); result.push(data);
+        if (!res.destroyed) res.write(data);
       }
       if (controller.signal.aborted) throw new Error('Interrupted stream');
       const usage = receipt();
       if (usage) budget.settle(id, usage);
-      res.end();
+      if (!res.destroyed) res.end();
     } catch {
       if (id && !terminalReceipt) { try { receipt(failure); } catch { /* Liability is already durable; a poisoned writer cannot reopen budget. */ } }
       fail(502);
