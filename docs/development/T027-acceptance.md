@@ -1,6 +1,6 @@
 # T027 原生提炼启动竞态验收
 
-Issue [#63](https://github.com/wang1299/dsh-evolve/issues/63)，基线d444331ff9d4ea683134483757be7c4bf9635aec，设计[ADR029](../decisions/029-native-extraction-readiness.md)。
+Issue [#63](https://github.com/wang1299/dsh-evolve/issues/63)，交付[PR #64](https://github.com/wang1299/dsh-evolve/pull/64)，基线d444331ff9d4ea683134483757be7c4bf9635aec，设计[ADR029](../decisions/029-native-extraction-readiness.md)。
 
 ## 可复现原因
 
@@ -30,6 +30,8 @@ Issue [#63](https://github.com/wang1299/dsh-evolve/issues/63)，基线d444331ff9
 
 SQLite v8仅标识新的固定reason读取契约；不补写旧unknown原因、不释放grant或费用占额。原七工具不变；不含credentials服务的自建bindDsh宿主会等待，须补齐active官方服务生命周期。真实DSH包含该服务，缺少具体Key仍可能失败并占用一次逻辑资格。
 
-稳定提交独立只读AI评审、发现/修复与比较SHA、当前头Windows/Linux CI及保护/正式Review/合并门槛，记录在关联PR；未满足不得合并。AI评审不是正式GitHub批准。
+独立只读AI评审目标1d538f5b8188e4c690f2106944da961f8496c045（tree f820bd485064d6b40c3bc3d525254eb04dd6ceb1），比较基线为上文d444331。审查了dsh.ts端口发现的active门槛、dsh-extraction.ts固定错误类别、extraction.ts终态/不退额、service.ts显式新授权约束、store.ts v8原行保留及相应测试/安装fixture，未发现成立的P0/P1/P2阻塞。评审未重复全量或实际安装检查，未访问用户Key/真实会话；AI评审不是正式GitHub批准。
+
+文档增量及当前头Windows/Linux CI、保护/正式Review/合并门槛，记录在PR #64；未满足不得合并。
 
 原用户体验未在代码验收中重试，候选仍为0；升级实际预览另记。真实新调用需要独立明确授权，旧unknown不自动恢复、无重试链。没有发布npm、Release或部署，没有用户私有数据上传。
