@@ -1,5 +1,8 @@
 # 本轮实现与验证状态
 
+T027：已复现并修复原生提炼早于managed凭据服务active的竞态。只检查strict服务就绪，不读取Key；新增固定失败类别/v8，旧unknown与grant不变。本地check154/154、compat8/8、demo、实际包四场景及完整官方CLI managed/env两路径离线启动通过。最终稳定提交AI独立只读评审和两平台CI/合并见关联PR与[T027验收](T027-acceptance.md)。真实用户旧任务未重放，真实模型复验另需授权；未发布。
+
+
 T026：owner显式新授权、单次新grant、v7原子迁移和面板尝试关联已实现；最终本地check151/151、官方兼容6/6、demo、实际包脚本学习四场景及安装CLI的v6副本迁移/幂等排队通过。独立AI审查发现面板P2，修复并复审无阻塞。最终CI/合并见[PR #62](https://github.com/wang1299/dsh-evolve/pull/62)及[T026验收](T026-acceptance.md)。旧unknown/已用次数/财务占额不变；真实模型执行另记，未发布。
 
 

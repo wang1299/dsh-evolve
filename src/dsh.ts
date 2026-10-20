@@ -21,7 +21,9 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
   const stopWorker = service.jobs.start();
   const stopExtraction = service.extraction.start(() => {
     const llm = ctx.get('llm'); const policy = service.extraction.policy;
-    return llm && policy && llm.listProviders().some(p => p.id === policy.provider) ? dshExtractionPort(llm) : null;
+    // Providers can register before managed credentials finish loading. Strict get
+    // only exposes active service fibers; never resolve a key or consume quota here.
+    return llm && ctx.get('credentials') && policy && llm.listProviders().some(p => p.id === policy.provider) ? dshExtractionPort(llm) : null;
   });
   const lifetime = new AbortController(); const pending = new Set<Promise<unknown>>();
   const sessionForAgent = (agent?: Agent): string => {

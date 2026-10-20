@@ -29,6 +29,7 @@
 | T022 候选发现与提醒 | T020/T021、Issue #53 | 第七只读工具/同session数量context/面板顶部提醒及安装包无手填ID流程；最终门槛与限制见[T022验收](development/T022-acceptance.md)及关联PR | codex/t022-candidate-discovery |
 | T023 完整宿主内候选发现试装 | T022已合并6742214、Issue #55 | 新完整Windowsprofile/实际7次脚本Agent与1提炼/实际数量提醒与list回执、正常重启、同库面板；零模型HTTP，最终门槛/限制见[T023验收](development/T023-native-discovery.md) | codex/t023-native-discovery |
 | T024 SSE消费者断连收尾 | T013/T018、Issue #57 | 终端后有界排空、正常EOF再判定，终端前取消及异常仍保留预留；离线预算15项通过，最终门槛见[T024验收](development/T024-acceptance.md) | codex/t024-sse-disconnect |
+| T027 原生提炼启动竞态 | T020/T026，Issue #63 | active凭据服务门槛、固定失败原因/v8；本地154/兼容8、安装包与完整CLI两条离线路径通过；最终门槛见关联PR | codex/t027-native-extraction |
 | T026 未知提炼后的显式新授权 | T020/T025，Issue #61 | ADR028、v7、owner排队、旧记录保留；本地151/兼容6/安装检查与独立复审通过；最终CI/合并见[PR #62](https://github.com/wang1299/dsh-evolve/pull/62) | codex/t026-explicit-extraction |
 | T025 诊断事件截断与显式恢复 | T019/T020、Issue #59 | ADR027/v6、初始完整147项、最终增量5项/兼容6项、实际包离线演练与安装CLI恢复副本检查通过；独立评审无阻塞，最终门槛见[PR #60](https://github.com/wang1299/dsh-evolve/pull/60)；实际恢复另记、未发布 | codex/t025-observation-recovery |
 | T018 显式standard用量兼容 | T017、Issue #45 | PR #46已合并30ed213，Issue #45关闭；文档standard分支/回执2，其他值拒绝；100项两平台CI/实际包/独立评审通过，零新增模型调用 | codex/t018-standard-tier |

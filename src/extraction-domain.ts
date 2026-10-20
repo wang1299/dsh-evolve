@@ -26,9 +26,12 @@ export const extractionOutputSchema = z.discriminatedUnion('kind', [
   }).strict(),
 ]);
 export const extractionStateSchema = z.enum(['waiting', 'running', 'candidate', 'abstained', 'blocked', 'failed', 'unknown']);
+export const modelFailureReasons = ['model_prepare_failed', 'model_route_changed', 'model_credentials_missing', 'model_transport_failed',
+  'model_timed_out', 'model_cancelled', 'model_incomplete', 'interrupted_model'] as const;
+export type ModelFailureReason = typeof modelFailureReasons[number];
 export const extractionReasonSchema = z.enum(['evidence_pending', 'model_unavailable', 'model_started', 'extracted', 'model_abstained',
   'evidence_incomplete', 'evidence_failed', 'policy_revoked', 'quota_exhausted', 'invalid_material', 'repository_changed',
-  'invalid_response', 'interrupted_model']);
+  'invalid_response', ...modelFailureReasons]);
 export type ExtractionReason = z.infer<typeof extractionReasonSchema>;
 export const extractionJobSchema = z.object({
   id: idSchema, taskId: idSchema, repoId: hashSchema, evidenceJobId: idSchema,
@@ -43,3 +46,11 @@ export interface ExtractionRequest { policy: ExtractionPolicy; material: string;
 export interface ExtractionResult { text: string; usage: ExtractionUsage | null }
 export type ExtractionPort = (request: ExtractionRequest) => Promise<ExtractionResult>;
 export class InvalidExtractionResponse extends Error { constructor() { super('Invalid bounded extraction response'); } }
+/** Carries only a host-owned category; never retains provider error text or cause. */
+export class ExtractionModelFailure extends Error {
+  readonly reason: ModelFailureReason;
+  constructor(reason: ModelFailureReason) {
+    const safe = modelFailureReasons.includes(reason) ? reason : 'interrupted_model';
+    super('Extraction failed: ' + safe); this.reason = safe;
+  }
+}

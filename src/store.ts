@@ -24,7 +24,7 @@ export class Store {
       // otherwise deadlock upgrading to a write lock even with busy_timeout enabled.
       this.db.exec('BEGIN IMMEDIATE');
       const version = this.db.prepare('PRAGMA user_version').get()?.user_version;
-      if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7) throw new Error('Unsupported database schema version');
+      if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== 8) throw new Error('Unsupported database schema version');
       this.transaction(() => { this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS experiences(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, body TEXT NOT NULL);
@@ -43,10 +43,10 @@ export class Store {
       if (version === 1) this.migrateV1();
       this.db.exec(learningTablesSql);
       this.db.exec(extractionTablesSql);
-      if (version !== 0 && version !== 6 && version !== 7) this.migrateV6();
+      if (version !== 0 && version !== 6 && version !== 7 && version !== 8) this.migrateV6();
       if (version === 6) this.migrateV7();
       if (this.db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('Database foreign key validation failed');
-      this.db.exec('PRAGMA user_version=7');
+      this.db.exec('PRAGMA user_version=8');
       });
       this.db.exec('COMMIT');
       this.db.exec('PRAGMA foreign_keys=ON');
