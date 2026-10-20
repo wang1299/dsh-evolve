@@ -17,4 +17,10 @@ SQLite v6移除两张Job表的task唯一约束，普通入队在写锁内保持�
 - 恢复历史、幂等、未使用grant、禁止恢复链、已开始/unknown/额度使用/来源变化/授权撤销/版本变化拒绝、迁移原JSON保留/回滚与owner CLI零执行均有针对用例。
 - 无真实模型、Key或真实学习库参与代码验收。原体验仍保持旧版阻塞状态，不能宣称候选生成或完整学习成功。
 
-最终增量：类型检查、静态检查、构建与5项针对检查通过，包含两个实际Node CLI进程并发恢复同一任务、只追加一次且不执行验证/模型。兼容/实际包安装、两平台CI与稳定提交独立只读评审待补；完成前不合并或升级原体验库。AI评审不等于GitHub批准。
+最终增量：类型检查、静态检查、构建与5项针对检查通过，包含两个实际Node CLI进程并发恢复同一任务、只追加一次且不执行验证/模型。固定官方DSH兼容6/6通过。实际tgz/Loader/AgentLoop离线自动学习happy通过，invalid-extraction、sharing-off及failed-target保留预期partial负结果，model HTTP=0。
+
+另用实际安装包CLI在本机旧合成库的SQLite一致副本执行恢复：v5→v6、只追加排队、不启动worker，原incomplete/blocked与原grant使用量0保留；原体验库仍v5、单一原始Job未变，model HTTP=0。该副本不是原任务已恢复，也不是付费提炼成功。
+
+## 独立只读评审与交付
+
+源码目标a2cedffe07a5eda90f295010828a22390e2518a0，远端稳定映射b97734da3df94836aa7f05fc0782d61365c8c68a；同树62c42ef17f28d9e77111a9cf152a79def3beef92，基线e1827bbd1cdf10f102d81f544742328fcf049bdb。独立Agent核对迁移、写锁、幂等/历史、grant/unknown、验证门槛与测试，无成立的P0/P1/P2阻塞。未重复全量测试、访问网络、模型或真实预算/凭据/学习库。后续仅验收文档变化需必要增量复审；最终CI/正式Review/保护/合并见[PR #60](https://github.com/wang1299/dsh-evolve/pull/60)的实际记录。AI评审不等于GitHub批准；门槛完成前不得合并或升级原体验库。源码包仍未发布。
