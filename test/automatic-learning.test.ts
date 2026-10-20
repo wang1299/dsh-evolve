@@ -60,3 +60,14 @@ test('only narrowly explicit corrections become facts and extra steering blocks 
     assert.equal(store.evidenceRecords().length, 1);
   } finally { store.close(); }
 });
+
+test('a manual task starting after automatic capture blocks the earlier segment', async () => {
+  const { store, service } = await setup();
+  try {
+    const automatic = service.automatic.begin('automatic', 1, [{ id: 'earlier', text: 'Fix rollback' }]); assert.ok(automatic);
+    const manual = service.begin('manual-later', 'A different explicit task');
+    assert.equal(store.automatic.rows()[0]!.state, 'blocked'); assert.equal(store.task(automatic.id)!.state, 'closed');
+    service.automatic.finish('automatic', 1); assert.equal(store.learning.jobs().length, 0);
+    assert.equal(store.task(manual.id)!.state, 'open');
+  } finally { store.close(); }
+});
