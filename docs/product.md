@@ -355,6 +355,17 @@ T019实现本地证据包/恢复，T020实现独立授权的自动候选/外部�
 
 T009已由PR #28完成设计；T010实现G01/G07显式引用切片，不含自动归并/提炼，无模型调用或发布。[T010验收](development/T010-acceptance.md)记录实际测试/界面/安装/评审；历史T009[设计验收](development/T009-design-acceptance.md)和关联PR记录实际检查／评审／CI。
 
+### 11.1 学习进度与可理解性补充（T030）
+
+| 编号 | 用户需求与验收 | 实现／验证入口 |
+|---|---|---|
+| LC01 | 首页区分自动学习关闭、配置要求和提炼次数；本机连接不代表 DSH／模型在线 | learning-status、panel-client；ADR032 |
+| LC02 | 每个请求显示记录、修复验证、提炼和候选复核；失败／无变化／未知有原因和下一步，不被其他任务污染 | learning-status、panel-client、浏览器 |
+| LC03 | 恢复成功后的当前证据与新候选可见，原始失败和占额保留 | observation-recovery 真实恢复回归、learning-status 提炼授权链 |
+| LC04 | 独立面板能继续已有授权自动片段的候选独立复核，关闭／未知不推进，无模型端口和新 grant | panel-automatic CLI 子进程回归 |
+
+当前切片已实现，最终检查、评审和合并以 [T030 验收](development/T030-acceptance.md)／[PR #70](https://github.com/wang1299/dsh-evolve/pull/70) 为准，未发布。原生 DSH 前端、首次配置向导、宿主在线心跳及真实用户可用性评价仍待后续任务，本次不把说明页面描述为这些能力。
+
 ## 12. 文档粒度参考
 
 只读参考Run2Skill固定快照`cfd288ebd0839aa82e65b118d10a85b6b1b61f35`的[PRD](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/product/prd.md)、[架构](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/architecture/baseline.md)、[设计索引](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/design/README.md)：借鉴编号、契约、异常矩阵、验收追踪深度。未引入Skill发布／Catalog／所有权产品，未复制实现。参考范围变更见[ADR012](decisions/012-detailed-design-baseline.md)。

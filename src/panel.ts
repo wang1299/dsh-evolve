@@ -5,6 +5,7 @@ import type { EvolveService } from './service.js';
 import { idSchema, redact, textSchema, feedbackSchema, RevisionConflict } from './domain.js';
 import { factCitationsSchema } from './domain.js';
 import { renderPanel } from './panel-view.js';
+import { learningStatus } from './learning-status.js';
 
 const revisionBody = z.object({ revision: z.number().int().positive(), reason: textSchema }).strict();
 async function body(request: IncomingMessage): Promise<unknown> {
@@ -42,7 +43,7 @@ export async function startPanel(service: EvolveService): Promise<{ url: string;
           Object.fromEntries(versions.map((e) => [e.revision, { ...service.provenance(e), facts: service.facts(e) }]))]));
         const learningJobs = service.store.learning.jobs();
         send(200, { experiences, tasks: service.store.tasks(), applications: service.store.applications(), feedback: service.store.feedback(),
-          automaticEnabled: service.automatic.enabled, automaticSegments: service.store.automatic.rows(),
+          automaticEnabled: service.automatic.enabled, automaticSegments: service.store.automatic.rows(), learning: learningStatus(service),
           learningJobs, learningRecoveries: service.store.learning.recoveries(), evidenceBundles: service.store.learning.bundles(), learningAttempts: Object.fromEntries(learningJobs.map(j => [j.id, service.store.learning.attempts(j.id)])),
           extractionJobs: service.store.extraction.jobs(), extractionReauthorizations: service.store.extraction.reauthorizations(), extractionGrants: service.store.extraction.grants(),
           histories, evidence, provenance, verifications: Object.fromEntries([...proofIds].map((id) => [id, service.store.verification(id)])) }); return;

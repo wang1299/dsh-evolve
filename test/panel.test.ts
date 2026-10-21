@@ -25,6 +25,8 @@ test('local panel authenticates data, rejects cross-site writes and preserves ex
     const headers = { Authorization: 'Bearer ' + panel.token, Origin: panel.origin, 'Content-Type': 'application/json' };
     const state = await fetch(panel.origin + '/api/state', { headers }); assert.equal(state.status, 200);
     assert.ok((await state.text()).includes(experience.id));
+    const learning = await (await fetch(panel.origin + '/api/state', { headers })).json() as { learning: { version: number; automatic: boolean; quota: unknown } };
+    assert.equal(learning.learning.version, 1); assert.equal(learning.learning.automatic, false); assert.equal(learning.learning.quota, null);
     const app = { id: randomUUID(), taskId: task.id, experienceId: experience.id, revision: 1, reason: 'Synthetic panel association, not a real Agent application', createdAt: new Date().toISOString() };
     store.putApplication(app);
     const feedback = { id: randomUUID(), applicationId: app.id, outcome: 'irrelevant', note: 'Wrong context, no strategy counterexample.', extraCost: null, humanRework: 0 };

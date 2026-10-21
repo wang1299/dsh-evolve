@@ -11,6 +11,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import type { ExtractionPolicy } from '../src/extraction-domain.js';
+import { learningStatus } from '../src/learning-status.js';
 
 test('bounded diagnostic observations do not replace or prevent independent repair verification', async () => {
   const f = await fixture(); const store = new Store(':memory:');
@@ -75,6 +76,25 @@ test('explicit recovery appends once, preserves original history and shares the 
     assert.equal(JSON.stringify(r.store.learning.bundle(r.job.id)), originalBundle);
     assert.equal(JSON.stringify(r.store.extraction.jobs().find(j => j.evidenceJobId === r.job.id)), originalExtraction);
   } finally { other.close(); r.store.close(); }
+});
+
+test('learning progress follows recovered evidence through candidate and independent verification', async () => {
+  const r = await legacyBlocked();
+  try {
+    const oldBundle = JSON.stringify(r.store.learning.bundle(r.job.id));
+    const recovered = r.service.recoverEvidence(r.task.id, r.job.id);
+    await r.service.jobs.runNext(); assert.equal(r.store.learning.bundle(recovered.id)!.status, 'ready');
+    await r.service.extraction.runNext(async () => ({ text: JSON.stringify({ kind: 'candidate', title: 'Restore previous balance', strategy: 'Restore the captured balance on failure.', factIds: ['verification:base', 'verification:fixed'], inferences: [], recommendations: [] }), usage: null }));
+    const candidate = r.store.experiences()[0]!;
+    let progress = learningStatus(r.service).tasks.find(t => t.taskId === r.task.id)!;
+    assert.equal(progress.candidateId, candidate.id); assert.equal(progress.steps[1]!.state, 'done');
+    assert.equal(progress.steps[2]!.state, 'done'); assert.equal(progress.status, 'waiting');
+    await r.service.verify(candidate.id);
+    progress = learningStatus(r.service).tasks.find(t => t.taskId === r.task.id)!;
+    assert.equal(progress.status, 'ready'); assert.ok(progress.steps.every(s => s.state === 'done'));
+    assert.equal(JSON.stringify(r.store.learning.bundle(r.job.id)), oldBundle);
+    assert.equal(r.store.extraction.grants()[0]!.used, 1);
+  } finally { r.store.close(); }
 });
 
 test('recovery rejects started work, changed sources, revoked policy and dirty repositories without resetting grant', async () => {
