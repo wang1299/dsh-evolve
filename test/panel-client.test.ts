@@ -98,3 +98,23 @@ test('automatic progress is visible in plain language and unknown is never prese
   segments[0]!.state = 'unknown'; segments[0]!.reason = 'qualification_interrupted'; await b.run('refresh()');
   text = b.descendants(b.get('attention')).map(e => e.textContent).join('\n'); assert.match(text, /未自动重跑/); assert.doesNotMatch(text, /记下一条经验/);
 });
+
+test('learning center explains setup and each request, opens its candidate and preserves editing during progress updates', async () => {
+  const b = browser();
+  const progress = { version: 1, automatic: false, checks: [{ label: '允许后台验证修复', ready: true }], quota: { limit: 1, used: 1, remaining: 0, consistent: true },
+    tasks: [{ id: 'progress-one', taskId: 'source', title: '<img src=x onerror=alert(1)>', status: 'waiting', summary: '正在等待 DSH 模型。', next: '保持对应 DSH 运行。', candidateId: 'experience-one',
+      steps: [{ label: '记录变化', state: 'done' }, { label: '验证修复', state: 'done' }, { label: '提炼经验', state: 'pending' }, { label: '独立复核', state: 'pending' }] }] };
+  Object.assign(b.current, { learning: progress }); await b.run('refresh()');
+  assert.equal(b.get('learning-area').hidden, false); assert.match(b.get('learning-mode-title').textContent, /尚未开启/);
+  assert.match(b.get('learning-quota').textContent, /可提炼 0 次/);
+  assert.ok(b.descendants(b.get('learning-tasks')).some(e => e.tag === 'h3' && e.textContent === progress.tasks[0]!.title));
+  b.get('learning-setup').open = true;
+  const open = b.descendants(b.get('learning-tasks')).find(e => e.textContent === '查看这条经验 →')!;
+  await open.onclick!(); assert.equal(b.get('detail').hidden, false);
+  const strategy = b.control('处理策略'); strategy.value = 'Do not lose this edit'; b.get('detail').listeners.get('input')!(); strategy.focus();
+  progress.automatic = true; progress.tasks[0]!.status = 'unknown'; progress.tasks[0]!.summary = '结果尚不确定，未自动重跑。';
+  await b.run('refresh()'); assert.equal(b.get('learning-setup').open, true); assert.equal(b.control('处理策略'), strategy);
+  assert.equal(strategy.value, 'Do not lose this edit'); assert.match(b.get('learning-mode-title').textContent, /自动记录已开启/);
+  assert.ok(b.descendants(b.get('learning-tasks')).some(e => e.textContent.includes('未自动重跑')));
+  assert.equal(b.posts.length, 0);
+});

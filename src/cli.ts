@@ -23,11 +23,12 @@ if (command === 'evaluate' && flag === '--input' && configPath) {
   finally { service.store.close(); }
 } else if (command === 'panel' && flag === '--config' && configPath) {
   const { service } = createService(loadConfig(resolve(configPath)));
+  const stopAutomatic = service.automatic.start();
   const stopWorker = service.jobs.start();
   const stopExtraction = service.extraction.start(() => null);
   const panel = await startPanel(service);
   process.stdout.write(`DSH-Evolve local panel: ${panel.url}\nKeep this URL private. Learning data stays on this computer.\n`);
-  const stop = (): void => { void panel.close().then(() => Promise.all([stopWorker(), stopExtraction()])).then(() => { service.store.close(); process.exitCode = 0; }); };
+  const stop = (): void => { void panel.close().then(() => Promise.all([stopAutomatic(), stopWorker(), stopExtraction()])).then(() => { service.store.close(); process.exitCode = 0; }); };
   process.once('SIGINT', stop); process.once('SIGTERM', stop);
 } else {
   process.stderr.write('Usage: dsh-evolve panel --config <local-config.json> | evaluate --input <results.json> | <recover-evidence|reauthorize-extraction> --config <local-config.json> --task-id <id> --expected-job <id>\n'); process.exitCode = 1;

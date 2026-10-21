@@ -26,6 +26,8 @@ export function similarity(query: string, text: string): number {
   return [...q].filter((word) => t.has(word)).length / q.size;
 }
 export class EvolveService {
+  get sharingEnabled(): boolean { return this.modelSharingAllowed; }
+  get repositoryId(): string { return this.repoId; }
   readonly jobs: EvidenceJobs;
   readonly extraction: ExtractionJobs;
   readonly automatic: AutomaticLearning;

@@ -9,6 +9,7 @@ import type { Store } from './store.js';
 
 class InvalidSource extends Error {}
 export class EvidenceJobs {
+  get verificationEnabled(): boolean { return this.backgroundVerification; }
   private wake: (() => void) | null = null;
   private readonly repoId: string;
   constructor(private readonly store: Store, private readonly root: string, private readonly policy: VerificationPolicy,
