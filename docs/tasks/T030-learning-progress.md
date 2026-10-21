@@ -19,4 +19,4 @@
 
 ## 当前状态
 
-设计已记录，实现与验证进行中，未发布。
+设计、实现、失败复现、独立复审与代码头两平台 CI 已完成。最终文档头 CI 与合并见 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70)；本机保留的检查失败与全部限制见 [验收记录](../development/T030-acceptance.md)。未发布。

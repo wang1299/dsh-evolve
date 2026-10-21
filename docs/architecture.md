@@ -522,6 +522,14 @@ T029 / ADR031增量：WorkspaceSnapshots只向dataDir私有Git对象库写入受
 
 优先先定G01/G07证据保留边界，再实现G02/G03；G04之后验证G05正常产品体验。G06先补公开重建与测量，再扩大任务，不用更多模型调用代替缺失观测。G08按执行风险单独开发，G09/G10随相关状态推进；未做容量实验前不承诺数值SLO。
 
+### 16.1 学习进度投影与独立面板收尾（T030）
+
+ADR032 新增 `learning-status.ts`，从既有 Store 和本次服务配置派生 `learning` v1，追加到认证的 `GET /api/state`，不改变 SQLite v9。DTO 包含模式、配置布尔检查、当前 grant 的逻辑余量及最多 12 项近期任务进度。仓库身份复用服务创建时的标识，不为读取状态启动 Git；不解析模型凭据或返回私有路径、原始异常与授权标识。
+
+进度按 task/repo 归属，先沿 `learning_recoveries` 选择当前证据 Job，再排除被 `extraction_reauthorizations` 替代的提炼。按来源报告、候选当前版本与片段状态呈现四阶段；旧失败保留但不覆盖新链或别的任务。恢复链在现有写入 API 中被禁止。投影只读，不创建 Job、重试、验证或新授权。
+
+CLI panel 同时启动既有 AutomaticLearning、EvidenceJobs 和无模型端口的 ExtractionJobs；退出等待 worker 后才关闭 Store。协调器仍检查策略摘要、归属、活动捕获、引用和版本，仅推进已授权自动片段的候选。显式候选和 unknown 不被自动接管。来源通过不表示未来收益，配置就绪也不表示宿主在线。验证追踪：LC01–LC04，learning-status／panel-client／panel-automatic／observation-recovery 与实际浏览器；最终门槛见 T030 验收。
+
 ## 17. 开发、测试与设计变更门槛
 
 - 编号需求／黄金场景→任务Issue→codex分支→必要失败用例→实现→相关检查→Draft PR→稳定SHA独立只读评审→修复／必要复审→CI及保护检查→squash合并。
