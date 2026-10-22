@@ -16,7 +16,8 @@
   ],
   "exports": {
     ".": "./dist/src/dsh.js",
-    "./core": "./dist/src/service.js"
+    "./core": "./dist/src/service.js",
+    "./client": "./dist/src/client.js"
   },
   "bin": {
     "dsh-evolve": "./dist/src/cli.js"
@@ -24,19 +25,28 @@
   "dsh": {
     "bundle": {
       "patch": "cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test scripts",
-    "test": "tsc && node --test --test-concurrency=4 dist/test/*.test.js",
-    "check": "tsc --noEmit && eslint src test scripts && tsc && node --test --test-concurrency=4 dist/test/*.test.js",
+    "test": "tsc && node scripts/build-client.mjs && node --test --test-concurrency=4 dist/test/*.test.js",
+    "check": "tsc --noEmit && eslint src test scripts && tsc && node scripts/build-client.mjs && node --test --test-concurrency=4 dist/test/*.test.js",
     "compat": "tsc && node --test dist/test/dsh.test.js dist/test/bundle.test.js dist/test/dsh-extraction.test.js",
     "demo": "tsc && node dist/scripts/demo.js",
     "dsh-rehearsal": "tsc && node dist/scripts/agent-rehearsal.js",
     "panel": "node dist/src/cli.js panel",
-    "prepack": "tsc",
+    "prepack": "tsc && node scripts/build-client.mjs",
     "install-probe": "tsc && node dist/scripts/install-probe.js",
     "codex-demo": "tsc && node dist/scripts/codex-demo.js",
     "codex-retry": "tsc && node dist/scripts/codex-retry.js",
@@ -47,19 +57,32 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
     "@deepseek-ai/dsh-agent": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
     "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
     "@deepseek-ai/dsh-session": "0.2.0-rc.2",
     "@deepseek-ai/dsh-system-prompt": "0.2.0-rc.2",
     "@deepseek-ai/dsh-tools": "0.2.0-rc.2"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-llm": { "optional": true }
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-connection": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
     "@deepseek-ai/dsh-agent": "0.2.0-rc.2",
     "@deepseek-ai/dsh-agent-loop": "0.2.0-rc.2",
     "@deepseek-ai/dsh-app-boot": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
     "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
     "@deepseek-ai/dsh-plugin-manager": "0.2.0-rc.2",
     "@deepseek-ai/dsh-session": "0.2.0-rc.2",
@@ -67,11 +90,14 @@
     "@deepseek-ai/dsh-system-prompt": "0.2.0-rc.2",
     "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
     "@types/node": "24.10.1",
+    "@types/react": "18.3.1",
+    "esbuild": "0.28.2",
     "eslint": "10.13.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.2"
   },
   "dependencies": {
+    "react": "18.3.1",
     "zod": "4.1.12"
   }
 }
