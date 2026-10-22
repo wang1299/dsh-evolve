@@ -54,7 +54,10 @@ test('CLI panel independently qualifies an existing automatic candidate without 
   try {
     // Three independently bounded pytest runs plus queue and filesystem work.
     const deadline = Date.now() + seeded.config.timeoutMs * 3 + 20000;
-    while (store.experience(seeded.id)!.status === 'candidate' && Date.now() < deadline) await new Promise(done => setTimeout(done, 100));
+    // Verification publishes the experience before the worker records its terminal
+    // segment state. Wait for both publications, keeping the original deadline
+    // and all outcome assertions below.
+    while ((store.experience(seeded.id)!.status === 'candidate' || store.automatic.get(seeded.segmentId)!.state === 'qualifying') && Date.now() < deadline) await new Promise(done => setTimeout(done, 100));
     assert.equal(store.experience(seeded.id)!.status, 'source_verified');
     assert.equal(store.automatic.get(seeded.segmentId)!.state, 'learned');
     assert.equal(store.extraction.grants()[0]!.used, 1); assert.equal(store.extraction.jobs().length, 1); assert.equal(store.feedback().length, 0);
