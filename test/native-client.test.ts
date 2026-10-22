@@ -49,3 +49,29 @@ test('shipped client registers the official settings, main and conversation slot
   assert.deepEqual(entries.map(e => e.name), ['main', 'settings.plugins.tab', 'conversation.session.header.actions']);
   disposers.forEach(fn => fn()); assert.deepEqual(navigation, [null]);
 });
+
+test('a working-day of native polling never exhausts writes, and duplicate writes are not replayed', async () => {
+  let exported: { apply: (ctx: unknown) => void } | undefined; let main: () => { type: (props: unknown) => unknown; props: unknown };
+  let listener: (event: unknown) => void = () => undefined; let forwarded = 0;
+  const replies: { id: string; ok: boolean; message?: string }[] = [];
+  const contentWindow = { postMessage: (reply: typeof replies[number]) => replies.push(reply) }; const frame = { contentWindow, srcdoc: '' };
+  const info = { repositoryId: 'fixture-repo', repositoryName: 'fixture', version: 1 };
+  const connection = { rpc: { call: async (_channel: string, endpoint: string) => { if (endpoint === 'dsh-evolve-request') forwarded++; return { ok: true, value: info }; } } };
+  const effects: (() => void)[] = [];
+  const react = { createElement: (type: unknown, props: unknown) => ({ type, props }), useRef: () => ({ current: frame }), useState: (value: unknown) => [value === null ? info : value, () => undefined], useEffect: (fn: () => void) => { effects.push(fn); } };
+  const text = await readFile('dist/src/client.js', 'utf8');
+  new Script(text).runInContext(createContext({ crypto: { randomUUID }, AbortController,
+    window: { location: { origin: 'http://fixture' }, addEventListener: (_name: string, fn: typeof listener) => { listener = fn; }, removeEventListener: () => undefined,
+      __ModuleLoader__: { load: (entry: { factory: (require: () => unknown) => typeof exported }) => { exported = entry.factory(() => react); } } } }));
+  exported!.apply({ connection, layout: {}, slots: { inject: (_name: string, fn: () => void) => fn(), register: (options: { name: string }, view: typeof main) => { if (options.name === 'main') main = view; } }, effect: () => undefined });
+  const view = main!(); view.type(view.props); effects.forEach(fn => fn());
+  const bridge = frame.srcdoc.match(/const nativeBridge=(\{[^\n]+?\});/)![1]!; const channel = (JSON.parse(bridge) as { channel: string }).channel;
+  const send = async (method: string, id = randomUUID()) => { listener({ source: contentWindow, origin: 'null', data: { channel, id, path: '/api/state', method } }); await Promise.resolve(); await Promise.resolve(); return id; };
+  for (let i = 0; i < 4097; i++) await send('GET');
+  assert.equal(forwarded, 4097);
+  const id = await send('POST'); await send('POST', id); assert.equal(forwarded, 4098);
+  assert.ok(replies.some(r => r.id === id && !r.ok));
+  for (let i = 0; i < 4095; i++) await send('POST');
+  const full = await send('POST'); assert.ok(replies.some(r => r.id === full && !r.ok && r.message?.includes('上限')));
+  const beforeRead = forwarded; await send('GET'); assert.equal(forwarded, beforeRead + 1);
+});

@@ -28,19 +28,24 @@ function NativeView({ connection, layout, inSettings = false }: Face & { inSetti
   useEffect(() => {
     if (!info || !frame.current) return;
     const target = frame.current; const session = crypto.randomUUID(); const nonce = crypto.randomUUID().replaceAll('-', '');
-    const abort = new AbortController(); const seen = new Set<string>(); let live = true;
+    const abort = new AbortController(); const writes = new Set<string>(); const pending = new Set<string>(); let live = true;
     const listener = (event: MessageEvent) => {
       if (!live || event.source !== target.contentWindow || event.origin !== 'null') return;
-      const request = bridgeRequest(event.data, session); if (!request || seen.has(request.id)) return;
-      // Bound lifetime correlation memory. No write is ever retried under another ID.
-      if (seen.size >= 4096) return; seen.add(request.id);
+      const request = bridgeRequest(event.data, session); if (!request || pending.has(request.id)) return;
+      const refuse = (message: string) => target.contentWindow?.postMessage({ channel: session, id: request.id, ok: false, message }, '*');
+      // Read polling must not consume the bounded no-replay ledger for writes.
+      if (request.method === 'POST' && writes.has(request.id)) { refuse('此保存请求已经发送过，请刷新核对结果；不会重复执行。'); return; }
+      if (request.method === 'POST' && writes.size >= 4096) { refuse('本页保存次数已达上限，请核对结果后关闭并重新打开。'); return; }
+      if (pending.size >= 16) { refuse('请求较多，请等待当前操作完成后再试。'); return; }
+      if (request.method === 'POST') writes.add(request.id);
+      pending.add(request.id);
       void connection.rpc.call(channel, 'dsh-evolve-request', { repositoryId: info.repositoryId, path: request.path, method: request.method, ...(request.data === undefined ? {} : { data: request.data }) }, abort.signal)
         .then(result => {
           if (!live || event.source !== target.contentWindow) return;
           target.contentWindow?.postMessage({ channel: session, id: request.id, ok: result.ok, ...(result.ok ? { value: result.value } : { message: result.error.message }) }, '*');
         }).catch(() => {
           if (live) target.contentWindow?.postMessage({ channel: session, id: request.id, ok: false, message: request.method === 'POST' ? '保存回执中断，请刷新核对结果；不会自动重试。' : 'DSH 连接中断，请稍后刷新。' }, '*');
-        });
+        }).finally(() => { pending.delete(request.id); });
     };
     window.addEventListener('message', listener);
     target.srcdoc = renderPanel(nonce, { channel: session, parentOrigin: window.location.origin });
