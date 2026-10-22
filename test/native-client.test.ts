@@ -35,6 +35,30 @@ test('native child uses correlated messages without fetch, token exchange or unk
   assert.equal(bridgeRequest({ channel: 'fixture', id, path: '/api/state', method: 'GET' }, 'fixture')?.id, id);
 });
 
+test('native theme accepts only its parent and bounded appearance, and changes no form state', () => {
+  const html = renderPanel('theme-nonce', { channel: 'theme-channel', parentOrigin: 'http://host' });
+  assert.match(html, /--evolve-background/); assert.match(html, /\.hero>div:first-child\{display:none\}/);
+  assert.ok(!renderPanel('standalone').includes('.hero>div:first-child{display:none}'));
+  const script = html.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)![1]!;
+  const prefix = script.slice(0, script.indexOf('let state='));
+  const values = new Map<string, string>(); const style = { setProperty: (key: string, value: string) => values.set(key, value), colorScheme: '' };
+  const draft = { value: '尚未保存的人工修订', revision: 2 }; let listener: (event: object) => void = () => undefined;
+  const parent = { postMessage: () => assert.fail('Theme must not send requests') };
+  const context = createContext({ URLSearchParams, Map, Error, crypto: { randomUUID }, parent, setTimeout, clearTimeout,
+    CSS: { supports: (_key: string, color: string) => /^#[0-9a-f]{6}$/i.test(color) },
+    document: { documentElement: { style }, getElementById: () => assert.fail('Theme must not rebuild or read forms') },
+    window: { addEventListener: (_name: string, fn: typeof listener) => { listener = fn; } }, draft });
+  new Script(prefix).runInContext(context);
+  const appearance = { dark: true, fontSize: 15, background: '#171717', surface: '#222222', text: '#eeeeee', muted: '#aaaaaa', border: '#393939', accent: '#879bff', success: '#65be83', warning: '#e8b65b', danger: '#f58b8b' };
+  const send = (data: object, source: unknown = parent, origin = 'http://host') => listener({ source, origin, data: { channel: 'theme-channel', type: 'theme', appearance: data } });
+  send(appearance, { postMessage: () => undefined }); send(appearance, parent, 'http://attacker');
+  send({ ...appearance, extra: '#ffffff' }); send({ ...appearance, fontSize: 10000 }); send({ ...appearance, background: 'url(https://attacker)' });
+  assert.equal(values.size, 0);
+  send(appearance); assert.equal(values.get('--evolve-background'), '#171717'); assert.equal(style.colorScheme, 'dark');
+  send({ ...appearance, dark: false, background: '#ffffff' }); assert.equal(values.get('--evolve-background'), '#ffffff'); assert.equal(style.colorScheme, 'light');
+  assert.deepEqual(draft, { value: '尚未保存的人工修订', revision: 2 });
+});
+
 test('shipped client registers the official settings, main and conversation slots with scoped disposal', async () => {
   const text = await readFile('dist/src/client.js', 'utf8'); let module: { apply: (ctx: unknown) => void; inject: string[] } | undefined;
   const require = createRequire(import.meta.url);
@@ -46,7 +70,8 @@ test('shipped client registers the official settings, main and conversation slot
   module.apply({ connection: {}, slots: { inject: (_slot: string, fn: () => unknown) => fn(), register: (options: Record<string, unknown>) => { entries.push(options); return () => undefined; } },
     layout: { panelInfo: { getSnapshot: () => ({ activePanelId: 'dsh-evolve' }) }, selectPanel: (id: unknown) => navigation.push(id) },
     effect: (fn: () => () => void) => disposers.push(fn()) });
-  assert.deepEqual(entries.map(e => e.name), ['main', 'settings.plugins.tab', 'conversation.session.header.actions']);
+  assert.deepEqual(entries.map(e => e.name), ['main', 'settings.plugins.tab', 'plugins.bundle.config', 'conversation.session.header.actions']);
+  assert.equal(entries.find(e => e.name === 'plugins.bundle.config')?.key, 'dsh-evolve');
   disposers.forEach(fn => fn()); assert.deepEqual(navigation, [null]);
 });
 
@@ -54,13 +79,14 @@ test('a working-day of native polling never exhausts writes, and duplicate write
   let exported: { apply: (ctx: unknown) => void } | undefined; let main: () => { type: (props: unknown) => unknown; props: unknown };
   let listener: (event: unknown) => void = () => undefined; let forwarded = 0;
   const replies: { id: string; ok: boolean; message?: string }[] = [];
-  const contentWindow = { postMessage: (reply: typeof replies[number]) => replies.push(reply) }; const frame = { contentWindow, srcdoc: '' };
+  const contentWindow = { postMessage: (reply: typeof replies[number]) => { if (reply.id) replies.push(reply); } }; const frame = { contentWindow, srcdoc: '', addEventListener: () => undefined, removeEventListener: () => undefined };
   const info = { repositoryId: 'fixture-repo', repositoryName: 'fixture', version: 1 };
   const connection = { rpc: { call: async (_channel: string, endpoint: string) => { if (endpoint === 'dsh-evolve-request') forwarded++; return { ok: true, value: info }; } } };
   const effects: (() => void)[] = [];
   const react = { createElement: (type: unknown, props: unknown) => ({ type, props }), useRef: () => ({ current: frame }), useState: (value: unknown) => [value === null ? info : value, () => undefined], useEffect: (fn: () => void) => { effects.push(fn); } };
   const text = await readFile('dist/src/client.js', 'utf8');
   new Script(text).runInContext(createContext({ crypto: { randomUUID }, AbortController,
+    document: { body: { hasAttribute: () => false } }, getComputedStyle: () => ({ getPropertyValue: () => '' }), MutationObserver: class { observe() {} disconnect() {} },
     window: { location: { origin: 'http://fixture' }, addEventListener: (_name: string, fn: typeof listener) => { listener = fn; }, removeEventListener: () => undefined,
       __ModuleLoader__: { load: (entry: { factory: (require: () => unknown) => typeof exported }) => { exported = entry.factory(() => react); } } } }));
   exported!.apply({ connection, layout: {}, slots: { inject: (_name: string, fn: () => void) => fn(), register: (options: { name: string }, view: typeof main) => { if (options.name === 'main') main = view; } }, effect: () => undefined });

@@ -8,6 +8,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots';
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client';
 import { renderPanel } from './panel-view.js';
 import { bridgeRequest } from './native-bridge.js';
+import { watchNativeTheme } from './native-theme.js';
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client';
 
 export const name = 'dsh-evolve-client';
 export const inject = ['slots', 'connection', 'layout'];
@@ -49,13 +51,14 @@ function NativeView({ connection, layout, inSettings = false }: Face & { inSetti
     };
     window.addEventListener('message', listener);
     target.srcdoc = renderPanel(nonce, { channel: session, parentOrigin: window.location.origin });
-    return () => { live = false; abort.abort(); window.removeEventListener('message', listener); };
+    const stopTheme = watchNativeTheme(target, session);
+    return () => { live = false; abort.abort(); stopTheme(); window.removeEventListener('message', listener); };
   }, [connection, info]);
   return h('section', { style: { width: '100%', height: '100%', minHeight: 400, display: 'flex', flexDirection: 'column' } },
-    h('header', { style: { padding: '10px 16px', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' } },
-      !inSettings && h('button', { type: 'button', onClick: () => layout.selectPanel(null) }, '← 返回对话'),
-      h('span', null, info ? 'DSH-Evolve · 配置绑定仓库：' + info.repositoryName : 'DSH-Evolve · 正在连接')),
-    error ? h('p', { role: 'alert' }, error) : h('iframe', { ref: frame, title: 'DSH-Evolve 经验与学习动态', sandbox: 'allow-scripts', style: { border: 0, width: '100%', flex: 1, minHeight: '70vh', background: '#f5f6f2' } }));
+    h('header', { style: { padding: '8px 12px', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', font: 'inherit', color: 'var(--dsw-alias-label-secondary)' } },
+      !inSettings && h('button', { type: 'button', style: { font: 'inherit', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--dsw-alias-border-l3)', color: 'var(--dsw-alias-label-primary)', background: 'var(--dsw-alias-bg-layer-2)', cursor: 'pointer' }, onClick: () => layout.selectPanel(null) }, '← 返回对话'),
+      h('span', null, info ? '绑定仓库：' + info.repositoryName : '正在连接 DSH-Evolve')),
+    error ? h('p', { role: 'alert' }, error) : h('iframe', { ref: frame, title: 'DSH-Evolve 经验与学习动态', sandbox: 'allow-scripts', style: { border: 0, width: '100%', flex: 1, minHeight: '70vh', background: 'transparent', padding: '0 12px' } }));
 }
 
 // Browser and host connection augment the same Cordis symbol in this monorepo.
@@ -66,6 +69,7 @@ export function apply(ctx: Omit<Context, 'connection'> & { connection: Connectio
   const SettingsView = () => h(NativeView, { ...face, inSettings: true });
   ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-evolve' }, View));
   ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({ name: 'settings.plugins.tab', id: 'dsh-evolve', label: 'DSH-Evolve', order: 25 }, SettingsView));
+  ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({ name: 'plugins.bundle.config', key: 'dsh-evolve' }, SettingsView));
   ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({ name: 'conversation.session.header.actions', id: 'dsh-evolve', order: 25 }, function Entry(props) {
     const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
     const open = async () => {

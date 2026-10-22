@@ -544,6 +544,8 @@ CLI panel 同时启动既有 AutomaticLearning、EvidenceJobs 和无模型端口
 
 ### 16.2 T031 原生 DSH 界面
 
+T032/ADR034补充：官方插件管理器的 `plugins.bundle.config` 按包名 `dsh-evolve` 挂载同一 NativeView；主面板/设置入口保留。原生内嵌复用紧凑呈现，外壳只读取官方body主题投影、通过既有随机channel投递固定颜色/字号消息；子页核对来源/origin/channel、字段/颜色/字号后仅修改CSS变量，不重载srcdoc、不读写表单。主题observer/load监听随组件卸载清理；认证API、数据库、授权与预算不变。
+
 [ADR033](decisions/033-native-dsh-view.md)固定 DSH 0.2.0-rc.2。package 的 ./client 和 dsh.client 声明由官方模块系统加载；React 外壳注册 settings.plugins.tab、main、conversation.session.header.actions。同仓库已有对话可进入经验主面板并返回。视图在只启用 allow-scripts 的 srcdoc 中复用 panel-view，不加载外部页面、令牌或新端口；nonce CSP 禁止网络/外部资源。消息验证窗口、origin、随机通道及 ID，卸载取消，写入失败不自动重放。
 
 前端经 connection.rpc.call('/api', 'dsh-evolve-info/request', ...) 调用官方 connection.fetch.register 的两个精确路径。官方共享载体执行认证/Host/Origin，原生适配器以 streaming 模式限 32 KiB，严格解析信封并回送 rpcId。info 仅返回绑定 repoId/仓库名；request 验 repoId，复用 panel-api 的既有投影和严格操作。HTTP 独立面板保留其原认证和同源检查。
