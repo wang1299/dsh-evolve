@@ -2,7 +2,7 @@
 
 | 任务 | 依赖 | 状态 | 分支 |
 |---|---|---|---|
-| T031 DSH 原生界面 | T028–T030 / Issue #71 | ADR033；原生设置/对话入口、同宿主认证通道与共享视图已实现，完整 Web 初步验收通过；最终检查/评审/CI 进行中 | codex/t031-native-ui |
+| T031 DSH 原生界面 | T028–T030 / Issue #71 | ADR033；原生设置/对话入口、同宿主认证通道与共享视图；完整 Web / 窄屏 / 重启及实际包通过，评审 P2 已修复复审，代码头双平台 CI 成功；最终门槛见 PR #72 | codex/t031-native-ui，未发布 |
 | T030 学习进度中心与独立面板收尾 | T028/T029 / Issue #69 | ADR032；四阶段投影、配置/次数/原因与候选入口、CLI 独立复核已实现；恢复进度 P2 已修并复审，最终验证与合并见 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70) | codex/t030-learning-progress |
 | T029 正常对话自动学习 | T019/T020/T027/T028 / Issue #67 | ADR031；正常请求/未提交私有快照/一次提炼/候选独立再验/自动提供已实现；本地172通过1跳过、兼容8/8、实际包和浏览器通过，独立复审无阻塞。最终头CI与合并见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)；默认关闭，真实模型与收益未验证 | codex/t029-automatic-learning |
 | T028 用户学习动态与渐进详情 | T027 / Issue #65 | 已实现、159项本地检查/兼容8项/实际包演练/界面验证及独立复审通过；最终CI与合并见[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)，自动学习操作简化另拆任务 | codex/t028-learning-home |

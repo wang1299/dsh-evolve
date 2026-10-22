@@ -371,7 +371,7 @@ T009已由PR #28完成设计；T010实现G01/G07显式引用切片，不含自�
 | LC03 | 恢复成功后的当前证据与新候选可见，原始失败和占额保留 | observation-recovery 真实恢复回归、learning-status 提炼授权链 |
 | LC04 | 独立面板能继续已有授权自动片段的候选独立复核，关闭／未知不推进，无模型端口和新 grant | panel-automatic CLI 子进程回归 |
 
-当前切片已实现，最终检查、评审和合并以 [T030 验收](development/T030-acceptance.md)／[PR #70](https://github.com/wang1299/dsh-evolve/pull/70) 为准，未发布。原生 DSH 前端、首次配置向导、宿主在线心跳及真实用户可用性评价仍待后续任务，本次不把说明页面描述为这些能力。
+T030 切片已合并，见 [验收](development/T030-acceptance.md)／[PR #70](https://github.com/wang1299/dsh-evolve/pull/70)。原生 DSH 前端由 T031 接入，实际能力与交付见 [T031 验收](development/T031-acceptance.md)；首次配置向导、宿主在线心跳及真实用户可用性评价仍待后续任务，不把说明页面描述为这些能力。未发布。
 
 ## 12. 文档粒度参考
 

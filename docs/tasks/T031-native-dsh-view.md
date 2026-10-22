@@ -17,4 +17,4 @@ Issue [71](https://github.com/wang1299/dsh-evolve/issues/71)，分支 `codex/t03
 
 ## 当前状态
 
-已实现并完成针对用例和独立完整 Web 初步试装。首次 GitHub 创建请求连接错误后核对无重复，已创建 #71。最终检查、评审、CI 和安装验收进行中，尚未合并或发布。
+已实现，关联 [PR #72](https://github.com/wang1299/dsh-evolve/pull/72)。完整官方 Web 的设置、读写、对话跳转/返回、重启及 390px 窄屏验收通过；实际包探针通过。独立只读评审的长驻读取 P2 已修复并复审通过，代码头 02ae933 两平台 CI 成功。文档增量及最终交付门槛以 PR 和 [验收](../development/T031-acceptance.md) 为准，未发布。
