@@ -1,6 +1,6 @@
 # T031 DSH 原生经验入口
 
-分支 `codex/t031-native-ui`，基线 4dd2f14。依赖 T028–T030，设计 ADR033。
+Issue [71](https://github.com/wang1299/dsh-evolve/issues/71)，分支 `codex/t031-native-ui`，基线 4dd2f14。依赖 T028–T030，设计 ADR033。
 
 ## 范围
 
@@ -17,4 +17,4 @@
 
 ## 当前状态
 
-设计中。GitHub 创建请求遇到连接错误，远端结果待核对，未当作已创建。
+已实现并完成针对用例和独立完整 Web 初步试装。首次 GitHub 创建请求连接错误后核对无重复，已创建 #71。最终检查、评审、CI 和安装验收进行中，尚未合并或发布。

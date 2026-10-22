@@ -10,6 +10,8 @@ import { dshExtractionPort } from './dsh-extraction.js';
 import type { Agent } from '@deepseek-ai/dsh-agent';
 import '@deepseek-ai/dsh-agent';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
+import type {} from '@deepseek-ai/dsh-client-connection';
+import { mountNative, nativeHandler } from './native-rpc.js';
 
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
@@ -18,14 +20,21 @@ declare module '@deepseek-ai/dsh-llm' {
 }
 
 export const name = 'dsh-evolve';
-export const inject = ['tools', 'sessions', 'systemPrompt'];
+export const inject = ['sessions'];
 type Json = null | string | number | boolean | Json[] | { [key: string]: Json };
 function json(value: unknown): Json { return JSON.parse(JSON.stringify(value)) as Json; }
 const output = { schema: { type: 'json' as const }, render: (_args: unknown, value: Json) => [{ type: 'text' as const, text: JSON.stringify(value) }] };
 
-/** Bind only the official DSH surface. The service contains no DSH imports. */
-export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: boolean): void {
+interface HostLifetime { lifetime: AbortController; pending: Set<Promise<unknown>> }
+function startHost(ctx: Context, service: EvolveService): HostLifetime {
   let disposed = false;
+  ctx.inject(['connection'], child => {
+    mountNative(child.connection, nativeHandler(service, child.connection.operator, () => !disposed, id => {
+      const session = ctx.sessions.get(id as Parameters<typeof ctx.sessions.get>[0]);
+      try { return !!session?.header.cwd && realpathSync.native(session.header.cwd) === realpathSync.native(service.root); }
+      catch { return false; }
+    }));
+  });
   const stopAutomatic = service.automatic.start();
   const stopWorker = service.jobs.start();
   const stopExtraction = service.extraction.start(() => {
@@ -35,6 +44,17 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     return llm && ctx.get('credentials') && policy && llm.listProviders().some(p => p.id === policy.provider) ? dshExtractionPort(llm) : null;
   });
   const lifetime = new AbortController(); const pending = new Set<Promise<unknown>>();
+  ctx.effect(() => async () => {
+    disposed = true; lifetime.abort(); await Promise.allSettled([...pending, stopAutomatic(), stopWorker(), stopExtraction()]); service.store.close();
+  }, 'dsh-evolve:close');
+  return { lifetime, pending };
+}
+
+/** Bind only the official Agent services; the native host has its own lifetime. */
+export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: boolean, shared?: HostLifetime): void {
+  let disposed = false;
+  const { lifetime, pending } = shared ?? startHost(ctx, service);
+  ctx.effect(() => () => { disposed = true; }, 'dsh-evolve:agent-binding');
   const sessionForAgent = (agent?: Agent): string => {
     if (disposed) throw new Error('DSH-Evolve is unloading');
     if (!agent) throw new Error('A session-backed Agent is required');
@@ -43,9 +63,6 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
     return String(session.id);
   };
   const sessionFor = (exec: ToolExecution): string => sessionForAgent(exec.agent);
-  ctx.effect(() => async () => {
-    disposed = true; lifetime.abort(); await Promise.allSettled([...pending, stopAutomatic(), stopWorker(), stopExtraction()]); service.store.close();
-  }, 'dsh-evolve:close');
   ctx.systemPrompt.section({
     name: 'dsh-evolve:workflow', order: 1250, interpolate: false,
     text: service.automatic.enabled ? 'DSH-Evolve automatic learning is enabled by the owner. The host captures direct-user request segments and uncommitted snapshots, independently verifies repairs, extracts candidates within the configured quota, and separately revalidates candidates before reuse. '
@@ -191,5 +208,6 @@ export function bindDsh(ctx: Context, service: EvolveService, shareWithModel: bo
 export function apply(ctx: Context, input?: Config): void {
   const config = input ?? (process.env.DSH_EVOLVE_CONFIG ? loadConfig(process.env.DSH_EVOLVE_CONFIG) : { repoRoot: process.cwd() });
   const { service, config: checked } = createService(config);
-  bindDsh(ctx, service, checked.shareWithModel);
+  const host = startHost(ctx, service);
+  ctx.inject(['tools', 'systemPrompt'], child => bindDsh(child, service, checked.shareWithModel, host));
 }

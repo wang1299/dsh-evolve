@@ -540,3 +540,12 @@ CLI panel 同时启动既有 AutomaticLearning、EvidenceJobs 和无模型端口
 - 计划、实现、验证、发布分别更新；不凭CI历史或测试数量合并，不上传私人报告、凭据或真实用户会话。
 
 文档组织与契约颗粒度参考固定Run2Skill快照，引用与范围见[PRD §12](product.md#12-文档粒度参考)；产品、数据与实现仍从DSH-Evolve已确认要求出发。
+
+
+### 16.2 T031 原生 DSH 界面
+
+[ADR033](decisions/033-native-dsh-view.md)固定 DSH 0.2.0-rc.2。package 的 ./client 和 dsh.client 声明由官方模块系统加载；React 外壳注册 settings.plugins.tab、main、conversation.session.header.actions。同仓库已有对话可进入经验主面板并返回。视图在只启用 allow-scripts 的 srcdoc 中复用 panel-view，不加载外部页面、令牌或新端口；nonce CSP 禁止网络/外部资源。消息验证窗口、origin、随机通道及 ID，卸载取消，写入失败不自动重放。
+
+前端经 connection.rpc.call('/api', 'dsh-evolve-info/request', ...) 调用官方 connection.fetch.register 的两个精确路径。官方共享载体执行认证/Host/Origin，原生适配器以 streaming 模式限 32 KiB，严格解析信封并回送 rpcId。info 仅返回绑定 repoId/仓库名；request 验 repoId，复用 panel-api 的既有投影和严格操作。HTTP 独立面板保留其原认证和同源检查。
+
+单例 EvolveService/worker/数据库由 sessions 就绪的宿主管理，Agent 工具待 tools/systemPrompt 后绑定；直接 bindDsh 测试入口仍可用。卸载停止 worker 并关闭库，原生接口拒绝新请求。SQLite v9、Agent 工具、授权/预算不变；不推断任意当前工作区，也不支持跨仓库服务切换。当前实际验证和限制见 T031 验收；Desktop/其他 DSH 版本及真实收益未验证。
