@@ -2,6 +2,7 @@
 
 | 任务 | 依赖 | 状态 | 分支 |
 |---|---|---|---|
+| T033 更名与首次发行 | T032 / Issue #75 | ADR035；包/CLI/品牌与兼容，制品审计与精确 tag 发行流程开发中；发布需实际远端核验 | codex/t033-reforge-release |
 | T032 插件页入口与主题一致性 | T031 / Issue #73 | ADR034；官方插件详情操作页、内嵌紧凑布局与宿主主题；实际Web/草稿/保存/窄屏通过，最终检查/评审/CI及合并见关联PR | codex/t032-native-plugin-page，未发布 |
 | T031 DSH 原生界面 | T028–T030 / Issue #71 | ADR033；原生设置/对话入口、同宿主认证通道与共享视图；完整 Web / 窄屏 / 重启及实际包通过，评审 P2 已修复复审，代码头双平台 CI 成功；最终门槛见 PR #72 | codex/t031-native-ui，未发布 |
 | T030 学习进度中心与独立面板收尾 | T028/T029 / Issue #69 | ADR032；四阶段投影、配置/次数/原因与候选入口、CLI 独立复核已实现；恢复进度 P2 已修并复审，最终验证与合并见 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70) | codex/t030-learning-progress |

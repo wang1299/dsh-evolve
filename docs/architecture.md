@@ -1,4 +1,6 @@
-# DSH-Evolve 架构总纲 v0.2
+# DSH-Reforge 架构总纲 v0.2
+
+T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
 
 ## 1. 范围、权威与版本
 
@@ -9,10 +11,10 @@
 | 版本轴 | 当前值 | 约束 |
 |---|---|---|
 | 本文／PRD | v0.2 | 文档编号独立于运行格式，格式变化由对应ADR定义 |
-| npm源码包 | 0.1.0-alpha.0 | 未向npm／Release发布 |
+| npm源码包 | dsh-reforge 0.1.0-alpha.1 | 首发候选，远端结果见 Issue #75 |
 | Task／Experience JSON | schemaVersion 1 | 不能与SQLite版本混同 |
 | Verification JSON | schemaVersion 2 | 含用例身份和验收输入 |
-| SQLite | user_version 8 | v1–v7事务迁移；保留旧JSON、Job、Bundle和grant；新增固定失败reason；旧程序拒绝v8 |
+| SQLite | user_version 9 | v1–v8事务迁移；保留旧JSON/Job/Bundle/grant，含自动片段与仓库锁；旧程序不可混跑 |
 | EvidenceBundle／Job输入 | schemaVersion 1 | ADR022，有界本地材料；ready不提升经验状态 |
 | 评价报告 | v1／v2／v3 | 各自可读，不能改写旧实验 |
 | 实验预算账本 | v1／v2显式策略；v3单次预算 | ADR020/ADR021；v3记录准确金额/1请求/回执版本；t018-standard-tier-v1须回执2，原策略不改、不混开或改写旧预算 |

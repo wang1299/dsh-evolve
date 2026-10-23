@@ -14,9 +14,10 @@ import { fixture } from '../test/fixture.js';
 import { installedLearning } from './installed-learning.js';
 import { installedScenarios } from './installed-learning-report.js';
 import { rehearseAutomatic } from './automatic-rehearsal.js';
+import { packageName } from '../src/identity.js';
 
 // Explicit, optional package verification. Uses synthetic data and never opens an owner's DSH profile.
-const archive = resolve(process.argv[2] ?? '.probe-work/dsh-evolve-0.1.0-alpha.0.tgz');
+const archive = resolve(process.argv[2] ?? '.probe-work/dsh-reforge-0.1.0-alpha.1.tgz');
 const archiveDigest = createHash('sha256').update(await readFile(archive)).digest('hex');
 const learning = process.argv.includes('--learning');
 const workRoot = resolve('.probe-work'); await mkdir(workRoot, { recursive: true });
@@ -34,8 +35,8 @@ assert.equal(result.exitCode, 0, JSON.stringify(result));
 const loaded = loadProfileDirectory('dsh', profile, anchor);
 assert.deepEqual(loaded.skippedBundles, []);
 assert.equal(loaded.layers.length, 1);
-assert.equal(loaded.layers[0]!.packageName, 'dsh-evolve');
-assert.equal(await realpath(loaded.layers[0]!.packageDir), await realpath(join(profile, 'node_modules', 'dsh-evolve')));
+assert.equal(loaded.layers[0]!.packageName, packageName);
+assert.equal(await realpath(loaded.layers[0]!.packageDir), await realpath(join(profile, 'node_modules', packageName)));
 const packageDir = loaded.layers[0]!.packageDir;
 const jsFiles = async (root: string): Promise<string[]> => {
   const files: string[] = [];
@@ -52,7 +53,7 @@ const expectedFiles = await jsFiles(expectedRoot); assert.deepEqual(await jsFile
 for (const file of expectedFiles) assert.deepEqual(await readFile(join(installedRoot, file)), await readFile(join(expectedRoot, file)), 'Installed compiled JS differs: ' + file);
 const patches = [...loaded.layers.flatMap((layer) => layer.patches), ...loaded.patches];
 const entries = composeEntries([patches]);
-assert.equal(entries.filter((entry) => entry.id === 'dsh-evolve' && entry.name === 'dsh-evolve').length, 1);
+assert.equal(entries.filter((entry) => entry.id === 'dsh-evolve' && entry.name === packageName).length, 1);
 
 if (learning) {
   await writeFile(join(profile, 'cordis.yml'), '[]\n');
@@ -81,7 +82,7 @@ const ctx = await boot('dsh', join(profile, 'cordis.yml'), patches, async (root)
 }, pathToFileURL(join(profile, 'package.json')).href);
 try {
   const installedModule = await import(pathToFileURL(join(packageDir, 'dist/src/dsh.js')).href) as typeof import('../src/dsh.js');
-  const entry = [...ctx.loader.entries()].find(e => e.options.name === 'dsh-evolve');
+  const entry = [...ctx.loader.entries()].find(e => e.options.name === packageName);
   assert.ok(entry?.fiber); assert.equal((entry.moduleNamespace as typeof import('../src/dsh.js')).apply, installedModule.apply);
   const assembled = await ctx.systemPrompt.assemble();
   assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 7);

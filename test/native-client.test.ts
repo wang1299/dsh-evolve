@@ -63,7 +63,7 @@ test('shipped client registers the official settings, main and conversation slot
   const text = await readFile('dist/src/client.js', 'utf8'); let module: { apply: (ctx: unknown) => void; inject: string[] } | undefined;
   const require = createRequire(import.meta.url);
   new Script(text).runInContext(createContext({ window: { __ModuleLoader__: { load: (entry: { id: string; factory: (require: (name: string) => unknown) => typeof module }) => {
-    assert.equal(entry.id, 'dsh-evolve'); module = entry.factory(require);
+    assert.equal(entry.id, 'dsh-reforge'); module = entry.factory(require);
   } } } }));
   assert.ok(module); assert.deepEqual([...module.inject], ['slots', 'connection', 'layout']);
   const entries: Record<string, unknown>[] = []; const disposers: (() => void)[] = []; const navigation: unknown[] = [];
@@ -71,7 +71,7 @@ test('shipped client registers the official settings, main and conversation slot
     layout: { panelInfo: { getSnapshot: () => ({ activePanelId: 'dsh-evolve' }) }, selectPanel: (id: unknown) => navigation.push(id) },
     effect: (fn: () => () => void) => disposers.push(fn()) });
   assert.deepEqual(entries.map(e => e.name), ['main', 'settings.plugins.tab', 'plugins.bundle.config', 'conversation.session.header.actions']);
-  assert.equal(entries.find(e => e.name === 'plugins.bundle.config')?.key, 'dsh-evolve');
+  assert.equal(entries.find(e => e.name === 'plugins.bundle.config')?.key, 'dsh-reforge');
   disposers.forEach(fn => fn()); assert.deepEqual(navigation, [null]);
 });
 

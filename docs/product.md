@@ -1,10 +1,12 @@
-# DSH-Evolve 产品需求 v0.2
+# DSH-Reforge 产品需求 v0.2
+
+T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
 
 > 核心体验：**“这个问题我上次纠正过，这次 Agent 能自己注意到。”**
 
 ## 1. 文档地位与阅读约定
 
-日期：2026-10-19。任务：[T009 / Issue #27](https://github.com/wang1299/dsh-evolve/issues/27)。T009运行核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；T010从已合并`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`实现事实来源切片，见[ADR013](decisions/013-fact-evidence.md)。这是文档v0.2；npm仍为`0.1.0-alpha.0`，没有发布新包。
+日期：2026-10-19。任务：[T009 / Issue #27](https://github.com/wang1299/dsh-evolve/issues/27)。T009运行核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；T010从已合并`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`实现事实来源切片，见[ADR013](decisions/013-fact-evidence.md)。这是文档v0.2；当时npm为`0.1.0-alpha.0`，没有发布新包。
 
 本文件规定产品目标、行为与验收；[架构总纲](architecture.md)规定实现边界、当前契约和目标设计；[ADR](decisions)保留选择与变更理由。需求变化先更新本文件，持久化及公开接口变化另作任务设计。冲突时报告差异，不能用架构中的计划覆盖实际代码。
 

@@ -13,7 +13,7 @@ import { verifyRepair } from '../src/verification.js';
 import { DeepseekBudget, startBudgetRelay } from './deepseek-budget.js';
 
 export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-if (JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')).name !== 'dsh-evolve') throw new Error('Expected compiled runner in DSH-Evolve project');
+if (JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')).name !== 'dsh-reforge') throw new Error('Expected compiled runner in DSH-Evolve project');
 const work = join(projectRoot, '.probe-work/t011-live');
 export const liveBudgetPath = join(projectRoot, '.probe-work/t011-budget.json');
 const python = process.env.EVOLVE_PYTHON ?? 'python';

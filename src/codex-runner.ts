@@ -137,7 +137,7 @@ export async function runCodex(root: string, prepared: PreparedCodexTask, option
     // A separate provider ID preserves built-in provider settings. No endpoint or credential is copied;
     // the CLI resolves its normal ChatGPT/API authentication route, with WebSockets disabled here only.
     const transportArgs = transport === 'https' ? ['-c', 'model_provider="evolve-https"',
-      '-c', 'model_providers.evolve-https.name="DSH-Evolve HTTPS"',
+      '-c', 'model_providers.evolve-https.name="DSH-Reforge HTTPS"',
       '-c', 'model_providers.evolve-https.requires_openai_auth=true',
       '-c', 'model_providers.evolve-https.supports_websockets=false',
       '-c', 'model_providers.evolve-https.wire_api="responses"'] : [];

@@ -2,6 +2,8 @@
 
 目标：`@deepseek-ai/dsh@0.2.0-rc.2`。本机实际安装 Cordis4.0.5、dsh-agent/session/tools/system-prompt0.2.0-rc.2，lockfile固定依赖和完整性摘要。
 
+T033：公开身份 dsh-reforge@0.1.0-alpha.1；固定 DSH 0.2.0-rc.2。旧本地预览的patch行ID、evolve工具、内部RPC、数据目录与配置别名保留，SQLite当前v9；迁移见[安装指南](installation.md)，实际结果见[T033验收](development/T033-acceptance.md)。下面各Txxx为历史阶段记录。
+
 ## 已验证
 
 T027当前SQLite为v8（新增固定失败reason，旧行不变）。旧程序拒绝v8；停止旧宿主/面板、备份后再升级，禁止混跑/直接降级。原生bindDsh后台提炼需要active credentials与llm/provider；完整官方DSH包含该服务，自建宿主若缺失则等待、不占用grant。Core和独立dshExtractionPort、七工具不增加强制依赖。154项本地/8项官方兼容及实际包完整原生managed/env离线启动验证见[T027](development/T027-acceptance.md)，不能当成真实模型成功。

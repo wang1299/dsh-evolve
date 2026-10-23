@@ -38,7 +38,7 @@ async function panel(config: object, home: string) {
   const close = async () => { if (child.exitCode === null && child.signalCode === null) child.kill(); await exited; };
   try {
     const deadline = Date.now() + 10000;
-    while (!output.includes('DSH-Evolve local panel:')) {
+    while (!output.includes('DSH-Reforge local panel:')) {
       if (spawnError) throw spawnError;
       if (child.exitCode !== null || Date.now() > deadline) throw new Error('CLI panel did not become ready');
       await new Promise(done => setTimeout(done, 100));

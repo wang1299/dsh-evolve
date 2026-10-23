@@ -1,0 +1,28 @@
+name: first prerelease
+on:
+  push:
+    tags: ['v0.1.0-alpha.1']
+permissions:
+  contents: read
+concurrency:
+  group: first-prerelease
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'wang1299/dsh-evolve'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: node scripts/github-release.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
