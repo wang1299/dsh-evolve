@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1"><img src="https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha" alt="npm alpha" /></a>
   <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md"><img src="https://img.shields.io/badge/DSH-0.2.0--rc.2-39424e" alt="DSH 0.2.0-rc.2" /></a>
-  <a href="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml"><img src="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://github.com/wang1299/dsh-reforge/actions/workflows/check.yml"><img src="https://github.com/wang1299/dsh-reforge/actions/workflows/check.yml/badge.svg?branch=main" alt="CI" /></a>
   <a href="https://github.com/wang1299/dsh-evolve/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
 </p>
 
