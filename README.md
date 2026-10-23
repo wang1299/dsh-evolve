@@ -1,7 +1,7 @@
 # DSH-Reforge
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v2.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
+  <img src="https://raw.githubusercontent.com/wang1299/dsh-reforge/main/docs/assets/dsh-reforge-hero-v3.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
 </p>
 
 <p align="center"><strong>修复有据，经验可循。</strong></p>
