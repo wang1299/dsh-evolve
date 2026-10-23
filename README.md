@@ -1,10 +1,16 @@
 # DSH-Reforge
 
-从真实 Bug 修复中的失败、纠正和测试证据中积累经验，在后续相似任务中选择适用的经验。
+[中文](README.md) · [English](https://github.com/wang1299/dsh-evolve/blob/main/README.en.md) · [安装指南](docs/installation.md) · [兼容性](https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md)
 
-> “这个问题我上次纠正过，这次 Agent 能自己注意到。”
+[![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
+[![CI](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/wang1299/dsh-evolve/blob/main/LICENSE)
 
-**实验性 alpha：`dsh-reforge@0.1.0-alpha.1`。** 已于 2026-10-23 发布至 npm `alpha`，公开下载与安装检查通过。见 [npm 版本页](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)；[GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 的最终附件与恢复结果记录在 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码仓库保留原地址 `wang1299/dsh-evolve`。
+**DSH-Reforge（npm 包名 `dsh-reforge`）是 DeepSeek Harness 的社区插件，从有测试依据的 Python Bug 修复中积累可追溯经验，在后续相似任务中选择适用经验作为参考。**
+
+DSH-Reforge is a DeepSeek Harness plugin for traceable experience from test-verified Python bug fixes, with scoped retrieval for later tasks.
+
+**实验性 alpha：`dsh-reforge@0.1.0-alpha.1`。** 已于 2026-10-23 发布至 npm `alpha`，公开下载与安装检查通过。[GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 的制品与摘要已核验，完整结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码仓库保留原地址 `wang1299/dsh-evolve`。本项目由社区独立开发，不代表 DeepSeek 官方审核、推荐或安全认证。
 
 ## 能做什么
 
@@ -37,6 +43,15 @@ dsh plugin --profile web add dsh-reforge@0.1.0-alpha.1
 ```
 
 完整安装、开启自动学习、独立验收和旧本地预览迁移步骤见 [安装指南](docs/installation.md)。旧 `DSH_EVOLVE_CONFIG` 仍兼容；两个变量同时存在时必须指向同一个文件。凭据只在 DSH 官方凭据配置中设置，不写入插件 JSON。
+
+## 一次修复如何形成经验
+
+1. 仓库所有者配置独立验收、执行信任、模型共享和提炼次数，开启学习。
+2. 在 DSH 中照常提出 Python Bug 修复请求，并在需要时明确纠正。
+3. 插件在临时工作区检查原始失败、修复结果和回归测试；材料与授权齐备后提炼候选，再独立复核。
+4. 在插件页查看经验、适用范围和来源；后续相似请求可能获得参考，反馈或停用仍由使用者决定。
+
+这是当前流程的文字说明；来源验证和后续参考记录不能证明任务收益。可复用的[中英文项目介绍](https://github.com/wang1299/dsh-evolve/blob/main/docs/public-introduction.md)单独维护。
 
 ## 当前边界
 
