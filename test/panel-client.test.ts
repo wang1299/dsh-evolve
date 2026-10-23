@@ -54,13 +54,14 @@ function browser() {
 test('learning home renders untrusted titles as text and keeps technical editors off the default screen', async () => {
   const b = browser(); await b.run('refresh()');
   assert.equal(b.get('home').hidden, false); assert.equal(b.get('library').hidden, true); assert.equal(b.get('detail').hidden, true); assert.equal(b.get('records').open, false);
-  assert.ok(b.descendants(b.get('recent')).some(e => e.tag === 'h3' && e.textContent === b.current.experiences[0]!.title));
+  assert.ok(b.descendants(b.get('recent')).some(e => e.tag === 'h3' && e.textContent === '转账失败时恢复余额'));
+  assert.ok(b.descendants(b.get('recent')).some(e => e.tag === 'p' && e.textContent === b.current.experiences[0]!.title));
   assert.equal(b.descendants(b.get('recent')).some(e => ['input', 'select', 'textarea', 'pre'].includes(e.tag)), false);
   assert.ok(b.descendants(b.get('activity')).some(e => e.tag === 'h3' && e.textContent === '库存异常后数量不正确'));
-  assert.ok(b.descendants(b.get('activity')).some(e => e.textContent.includes('任务结果尚未确认')));
+  assert.ok(b.descendants(b.get('activity')).some(e => /任务结果.*确认/.test(e.textContent)));
   await b.run("openExperience('experience-one')");
   assert.ok(b.descendants(b.get('detail')).some(e => e.tag === 'h2' && e.textContent === '待检查的处理建议'));
-  assert.ok(b.descendants(b.get('detail')).some(e => e.textContent === '来源任务'));
+  assert.ok(b.descendants(b.get('detail')).some(e => e.textContent === '当时在处理什么'));
   assert.equal(b.descendants(b.get('detail')).some(e => e.textContent === '来自一次真实修正'), false);
 });
 
@@ -70,6 +71,48 @@ test('polling preserves a draft and its captured revision; a conflict never over
   b.current.experiences[0]!.revision = 2; await b.run('refresh()');
   assert.equal(b.control('处理策略'), strategy); assert.equal(strategy.value, 'My unsaved strategy'); assert.equal(b.get('detail-update').hidden, false); assert.equal(b.get('discard-edit').hidden, false);
   await b.click('保存为待验证版本'); assert.equal(b.posts.length, 1); assert.equal(b.posts[0]!.body.revision, 1); assert.equal(b.control('处理策略'), strategy); assert.equal(strategy.value, 'My unsaved strategy'); assert.match(b.get('message').textContent, /当前编辑已保留/);
+});
+
+test('experience reading starts with the source problem and keeps original machine text in a closed disclosure', async () => {
+  const b = browser(); await b.run('refresh()'); await b.run("openExperience('experience-one')");
+  assert.equal(b.get('detail-heading').textContent, '转账失败时恢复余额');
+  const detail = b.descendants(b.get('detail'));
+  const original = detail.find(e => e.tag === 'details' && e.children.some(c => c.tag === 'summary' && c.textContent === '查看处理方法原文'));
+  assert.ok(original); assert.equal(original.open, false);
+  assert.ok(b.descendants(original).some(e => e.textContent === b.current.experiences[0]!.strategy));
+  assert.ok(detail.some(e => e.textContent === '当时在处理什么'));
+  assert.ok(detail.some(e => e.textContent === '后来在哪里参考'));
+  assert.equal(b.posts.length, 0);
+});
+
+test('a quiet learning center stays folded but an uncertain task has a visible route to its progress', async () => {
+  const b = browser(); b.current.experiences[0]!.status = 'disabled';
+  const task = { id: 'uncertain', title: '库存失败', status: 'waiting', summary: '正在等待材料。', next: '查看记录',
+    steps: [{ label: '记录变化', state: 'done' }] };
+  Object.assign(b.current, { learning: { automatic: false, checks: [], quota: null, tasks: [task] } });
+  await b.run('refresh()'); assert.equal(b.get('learning-area').open, false);
+  task.status = 'unknown'; task.summary = '结果尚不确定，未自动重跑。'; await b.run('refresh()');
+  assert.equal(b.get('attention').hidden, false);
+  assert.ok(b.descendants(b.get('attention')).some(e => e.textContent === task.summary));
+  const open = b.descendants(b.get('attention')).find(e => e.tag === 'button' && e.textContent === '查看处理进度');
+  assert.ok(open); await open.onclick!(); assert.equal(b.get('learning-area').open, true);
+  assert.equal(b.posts.length, 0);
+});
+
+test('progress alerts navigate out of library or details while preserving an unsaved edit', async () => {
+  const b = browser();
+  Object.assign(b.current, { learning: { automatic: false, checks: [], quota: null, tasks: [{ id: 'uncertain', title: '库存失败', status: 'unknown', summary: '结果未知', next: '核对', steps: [] }] } });
+  await b.run('refresh()');
+  const follow = async () => { const control = b.descendants(b.get('attention')).find(e => e.tag === 'button' && e.textContent === '查看处理进度'); assert.ok(control); await control.onclick!(); };
+  await b.run("showView('library')"); await follow();
+  assert.equal(b.get('home').hidden, false); assert.equal(b.get('learning-area').open, true);
+  await b.run("openExperience('experience-one')"); await follow();
+  assert.equal(b.get('home').hidden, false); assert.equal(b.get('detail').hidden, true);
+  await b.run("openExperience('experience-one')");
+  const strategy = b.control('处理策略'); strategy.value = '不能丢失的草稿'; b.get('detail').listeners.get('input')!();
+  await follow(); assert.equal(b.get('detail').hidden, false); assert.equal(b.control('处理策略'), strategy);
+  assert.equal(strategy.value, '不能丢失的草稿'); assert.match(b.get('message').textContent, /尚未保存/);
+  assert.equal(b.posts.length, 0);
 });
 
 test('unknown feedback submission retains its request ID and offline refresh marks existing data stale', async () => {
@@ -106,7 +149,8 @@ test('learning center explains setup and each request, opens its candidate and p
       steps: [{ label: '记录变化', state: 'done' }, { label: '验证修复', state: 'done' }, { label: '提炼经验', state: 'pending' }, { label: '独立复核', state: 'pending' }] }] };
   Object.assign(b.current, { learning: progress }); await b.run('refresh()');
   assert.equal(b.get('learning-area').hidden, false); assert.match(b.get('learning-mode-title').textContent, /尚未开启/);
-  assert.match(b.get('learning-quota').textContent, /可提炼 0 次/);
+  assert.match(b.get('learning-quota').textContent, /新增提炼需要授权/);
+  assert.ok(b.descendants(b.get('learning-checks')).some(e => e.textContent.includes('已占用 1 / 1')));
   assert.ok(b.descendants(b.get('learning-tasks')).some(e => e.tag === 'h3' && e.textContent === progress.tasks[0]!.title));
   b.get('learning-setup').open = true;
   const open = b.descendants(b.get('learning-tasks')).find(e => e.textContent === '查看这条经验 →')!;
