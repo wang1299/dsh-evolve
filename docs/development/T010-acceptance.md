@@ -1,6 +1,6 @@
 # T010：事实来源与保留验收
 
-日期：2026-10-19。Issue [#29](https://github.com/wang1299/dsh-evolve/issues/29)，基线`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`。设计与失败用例先提交`cace0f1`，见[ADR013](../decisions/013-fact-evidence.md)与[任务](../tasks/T010-evidence-provenance.md)。
+日期：2026-10-19。Issue [#29](https://github.com/wang1299/dsh-reforge/issues/29)，基线`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`。设计与失败用例先提交`cace0f1`，见[ADR013](../decisions/013-fact-evidence.md)与[任务](../tasks/T010-evidence-provenance.md)。
 
 ## 实现
 
@@ -30,7 +30,7 @@
 
 独立只读Agent审查初始稳定远端17dcca1（本地6ba32cc，内容树一致），基线bdf778c，发现两个P2：来源元数据新revision可使不相关/晚到反例失效；README将v1误写为不改写旧报告。首项新增真实Git/pytest回归在旧实现失败（3≠2），修复后通过：相同引用集合幂等、完整已验证来源拒绝变化、晚到反例仍停用同版、停用经验编辑不激活。DSH和HTTP共用该服务校验；面板锁定并解释owner显式修订路径。原来源pytest重验不能反证后续任务反例。第二项明确v1降级重验与v2原记录保留。
 
-修复后53项check及新的实际tgz组件安装探针通过，证据为本机忽略目录install-probe-WtYwtm/evidence.json；该次实测包SHA256为`f47060824088865ac1341ea7e0a10429b89fada628168f5ddbde97e8403eacbb`（之后只更新文档结果，当前头CI重新打包）。新包与截图摘要、稳定提交的必要增量复审、当前头两平台CI及合并结果在[PR #30](https://github.com/wang1299/dsh-evolve/pull/30)记录。AI审查不是GitHub正式Review，不伪造批准。
+修复后53项check及新的实际tgz组件安装探针通过，证据为本机忽略目录install-probe-WtYwtm/evidence.json；该次实测包SHA256为`f47060824088865ac1341ea7e0a10429b89fada628168f5ddbde97e8403eacbb`（之后只更新文档结果，当前头CI重新打包）。新包与截图摘要、稳定提交的必要增量复审、当前头两平台CI及合并结果在[PR #30](https://github.com/wang1299/dsh-reforge/pull/30)记录。AI审查不是GitHub正式Review，不伪造批准。
 
 ## 待最终交付门槛与限制
 

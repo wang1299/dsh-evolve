@@ -152,7 +152,7 @@ async function verifyPair(root: string, taskId: string, baseCommit: string, fixC
   const files = await acceptanceFiles(acceptanceRoot);
   if (!files.some((f) => /(?:^|\/)test_[^/]+\.py$/.test(f.path))) throw new Error('No independent acceptance tests');
   const acceptanceDigest = digest(files.map((f) => `${f.path}:${digest(f.bytes)}`).join('\n'));
-  const workspace = await mkdtemp(join(tmpdir(), 'dsh-evolve-verify-'));
+  const workspace = await mkdtemp(join(tmpdir(), 'dsh-reforge-verify-'));
   try {
     const baseDir = join(workspace, 'base'); const fixDir = join(workspace, 'fixed'); const testsDir = join(workspace, 'acceptance');
     await mkdir(baseDir); await mkdir(fixDir); await mkdir(testsDir);

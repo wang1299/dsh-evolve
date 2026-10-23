@@ -1,12 +1,12 @@
 # T009：详细需求与架构设计验收
 
-日期：2026-10-19。Issue [#27](https://github.com/wang1299/dsh-evolve/issues/27)。运行基线`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；范围提交`4deb0ea`先记录[ADR012](../decisions/012-detailed-design-baseline.md)，再修改两份主文档。
+日期：2026-10-19。Issue [#27](https://github.com/wang1299/dsh-reforge/issues/27)。运行基线`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；范围提交`4deb0ea`先记录[ADR012](../decisions/012-detailed-design-baseline.md)，再修改两份主文档。
 
 ## 修改与验收依据
 
 - [产品需求v0.2](../product.md)：用户/职责、目标与当前流程、异常、领域状态、58项稳定需求、15个黄金场景、原A1–A8、三组指标及证据上限。
 - [架构v0.2](../architecture.md)：信任边界、模块输入/输出/错误、现行对象与SQLite、状态机、五工具/事件、来源验证、排序/反馈、HTTP/配置、目标自动提炼、并发恢复、授权/清理/成本、58项追踪与G01–G10依赖。
-- README、路线、状态、AGENTS同步；Run2Skill参考范围仅扩展至文档粒度，固定只读快照，不移植其产品或代码。
+- README、路线、状态、AGENTS同步，区分当前实现、目标设计与实际验收。
 
 ## 事实核对与重要边界
 

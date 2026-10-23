@@ -14,7 +14,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client';
 
 export const name = 'dsh-reforge-client';
 export const inject = ['slots', 'connection', 'layout'];
-const channel = '/api'; const mainId = 'dsh-evolve' as MainPanelId;
+const channel = '/api'; const mainId = 'dsh-reforge' as MainPanelId;
 interface Info { repositoryId: string; repositoryName: string; version: number }
 type Face = { connection: ConnectionHandle; layout: ILayout };
 
@@ -22,7 +22,7 @@ function NativeView({ connection, layout, inSettings = false }: Face & { inSetti
   const frame = useRef<HTMLIFrameElement>(null); const [info, setInfo] = useState<Info | null>(null); const [error, setError] = useState('');
   useEffect(() => {
     const abort = new AbortController(); let live = true;
-    void connection.rpc.call(channel, 'dsh-evolve-info', {}, abort.signal).then(result => {
+    void connection.rpc.call(channel, 'dsh-reforge-info', {}, abort.signal).then(result => {
       if (!live) return;
       if (result.ok) setInfo(result.value as Info); else setError(result.error.message);
     }).catch(() => { if (live) setError('暂时无法连接 DSH 插件，请关闭后重新打开。'); });
@@ -42,7 +42,7 @@ function NativeView({ connection, layout, inSettings = false }: Face & { inSetti
       if (pending.size >= 16) { refuse('请求较多，请等待当前操作完成后再试。'); return; }
       if (request.method === 'POST') writes.add(request.id);
       pending.add(request.id);
-      void connection.rpc.call(channel, 'dsh-evolve-request', { repositoryId: info.repositoryId, path: request.path, method: request.method, ...(request.data === undefined ? {} : { data: request.data }) }, abort.signal)
+      void connection.rpc.call(channel, 'dsh-reforge-request', { repositoryId: info.repositoryId, path: request.path, method: request.method, ...(request.data === undefined ? {} : { data: request.data }) }, abort.signal)
         .then(result => {
           if (!live || event.source !== target.contentWindow) return;
           target.contentWindow?.postMessage({ channel: session, id: request.id, ok: result.ok, ...(result.ok ? { value: result.value } : { message: result.error.message }) }, '*');
@@ -68,19 +68,19 @@ export function apply(ctx: Omit<Context, 'connection'> & { connection: Connectio
   const face: Face = { connection: ctx.connection, layout: ctx.layout };
   const View = () => h(NativeView, face);
   const SettingsView = () => h(NativeView, { ...face, inSettings: true });
-  ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-evolve' }, View));
-  ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({ name: 'settings.plugins.tab', id: 'dsh-evolve', label: 'DSH-Reforge', order: 25 }, SettingsView));
+  ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-reforge' }, View));
+  ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({ name: 'settings.plugins.tab', id: 'dsh-reforge', label: 'DSH-Reforge', order: 25 }, SettingsView));
   ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({ name: 'plugins.bundle.config', key: packageName }, SettingsView));
-  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({ name: 'conversation.session.header.actions', id: 'dsh-evolve', order: 25 }, function Entry(props) {
+  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({ name: 'conversation.session.header.actions', id: 'dsh-reforge', order: 25 }, function Entry(props) {
     const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
     const open = async () => {
       setBusy(true); setError('');
       try {
-        const result = await face.connection.rpc.call(channel, 'dsh-evolve-info', { sessionId: props.sessionId });
+        const result = await face.connection.rpc.call(channel, 'dsh-reforge-info', { sessionId: props.sessionId });
         if (result.ok) face.layout.selectPanel(mainId); else setError(result.error.message);
       } catch { setError('暂时无法连接 DSH 插件。'); } finally { setBusy(false); }
     };
     return h('span', null, h('button', { type: 'button', disabled: busy, onClick: () => { void open(); }, title: '查看当前配置仓库的经验与学习动态' }, '经验'), error && h('span', { role: 'status' }, error));
   }));
-  ctx.effect(() => () => { if (ctx.layout.panelInfo.getSnapshot().activePanelId === mainId) ctx.layout.selectPanel(null); }, 'dsh-evolve:native-navigation');
+  ctx.effect(() => () => { if (ctx.layout.panelInfo.getSnapshot().activePanelId === mainId) ctx.layout.selectPanel(null); }, 'dsh-reforge:native-navigation');
 }

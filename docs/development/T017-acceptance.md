@@ -1,6 +1,6 @@
 # T017：单次真实Messages采样
 
-Issue [#43](https://github.com/wang1299/dsh-evolve/issues/43)，[PR #44](https://github.com/wang1299/dsh-evolve/pull/44)，设计先于实现见[ADR020](../decisions/020-single-messages-sample.md)。用户明确新增最多3元，只允许本轮1个真实响应；本轮已经执行一次，结果和限制如下。
+Issue [#43](https://github.com/wang1299/dsh-reforge/issues/43)，[PR #44](https://github.com/wang1299/dsh-reforge/pull/44)，设计先于实现见[ADR020](../decisions/020-single-messages-sample.md)。用户明确新增最多3元，只允许本轮1个真实响应；本轮已经执行一次，结果和限制如下。
 
 ## 实现与固定边界
 
@@ -26,7 +26,7 @@ prepare/probe均0模型HTTP；live仅一次，不能调用旧T011/T015入口来�
 - 实现后单次预算/入口8项针对回归通过：准确金额/重启/第二请求拒绝，金额下限/超限/旧库不改，固定请求/丢弃响应/无重复，未知结构全额保留，源码漂移在凭据/网络前拒绝，probe零请求/不消费资格，过期拒绝，HTTP402/传输异常不保存秘密，cwd锚定。
 - 既有数值/终结/持久化预算回归19项通过。类型/构建/静态检查、完整check的92项及compat的2项通过；35文档/58需求/58追踪/15场景与diff检查通过。采样前比对字典固定在ADR020，prepare同时冻结该设计文档摘要。
 - 付费前独立只读AI评审：稳定远端`cae8c0694952ae13dbd1f46fcf2c7b3fe4e34744`，基线`bf9508ce71ee7aec94ecdf81dd1272d23f922048`，树`54c13af2f7a98be6af8fef2c891eb759fe86780f`与本机执行源码树一致；独立29项针对回归通过，55个编译JS一致，无阻塞P0/P1/P2。此时尚无真实样本，评审不替代下面结果核对。
-- 付费前当前源码头CI [39238510882](https://github.com/wang1299/dsh-evolve/actions/runs/39238510882)的Windows/Ubuntu均成功。真实结果文档的最终提交仍须核对独立评审、当前头CI及仓库合并条件，实际状态以PR为准；AI评审不伪装GitHub正式批准。
+- 付费前当前源码头CI [39238510882](https://github.com/wang1299/dsh-reforge/actions/runs/39238510882)的Windows/Ubuntu均成功。真实结果文档的最终提交仍须核对独立评审、当前头CI及仓库合并条件，实际状态以PR为准；AI评审不伪装GitHub正式批准。
 
 ## 实际结果
 

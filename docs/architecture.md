@@ -1,6 +1,6 @@
 # DSH-Reforge 架构总纲 v0.2
 
-T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
+T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-reforge/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
 
 ## 1. 范围、权威与版本
 
@@ -216,7 +216,7 @@ v4新增learning_jobs、learning_attempts、learning_job_sources、evidence_bund
 
 ### 7.1 固定官方扩展面
 
-当前插件name=`dsh-evolve`，inject=`tools,sessions,systemPrompt`。没有注入LLM服务、修改模型权重或直接拼装网络请求。systemPrompt section为`dsh-evolve:workflow`、order=1250，说明显式工作流、权限、未知和经验不可信边界。
+当前插件name=`dsh-reforge`，inject=`sessions`（工具与提示服务在可用时注入）。没有注入LLM服务、修改模型权重或直接拼装网络请求。systemPrompt section为`dsh-reforge:workflow`、order=1250，说明显式工作流、权限、未知和经验不可信边界。
 
 工具须有session-backed Agent，取`ctx.sessions.get(exec.agent.id)`，cwd原生realpath与配置Git根一致；带task的工具再核对task session。不能用模型自传sessionId绕过归属。
 
@@ -368,7 +368,7 @@ T028按照[ADR030](decisions/030-learning-home.md)将展示集中在`src/panel-v
 | regressionPath | tests，验证时安全相对路径 | 固定回归目标 |
 | timeoutMs | 15000，100–120000整数 | 单pytest子进程期限 |
 
-严格schema拒未知字段。DSH可由apply输入、`DSH_EVOLVE_CONFIG`指向的JSON文件或当前cwd默认配置启动；CLI panel显式`--config`。工具和HTTP没有修改信任、共享、路径的API。
+严格schema拒未知字段。DSH可由apply输入、`DSH_REFORGE_CONFIG`（兼容旧变量）指向的JSON文件或当前cwd默认配置启动；CLI panel显式`--config`。工具和HTTP没有修改信任、共享、路径的API。
 
 ### 11.2 HTTP当前契约
 
@@ -507,7 +507,7 @@ ID以[PRD §6](product.md#6-编号需求)为准。下表覆盖原58项及新增U
 
 T029 / ADR031增量：WorkspaceSnapshots只向dataDir私有Git对象库写入受限tracked Python/依赖；AutomaticStore v9保存执行片段/唯一输入/同仓库锁；AutomaticLearning协调正常用户turn、原EvidenceJobs/ExtractionJobs和候选独立再验。EvidenceInput追加可选snapshotDigest绑定不可变来源，旧记录无该字段。报告SHA属于私有快照时environment明确captureMethod/repositoryHead/内容摘要。官方pre-step的已接纳消息使用有出处的MessageSourceMap扩展交付，避免早于pre-step完成的context装配漏掉首请求。详细字段/拒绝矩阵与限制见[ADR031](decisions/031-automatic-learning.md)。
 
-下面是设计backlog。T010 / Issue #29已实现G01/G07显式来源切片，其余目标未自动创建或完成实现Issue。已有父[Issue #8](https://github.com/wang1299/dsh-evolve/issues/8)、[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)保持open。后续每项另固定范围、失败场景、任务分支和PR，不能把整张表塞进一个实现PR。
+下面是设计backlog。T010 / Issue #29已实现G01/G07显式来源切片，其余目标未自动创建或完成实现Issue。已有父[Issue #8](https://github.com/wang1299/dsh-reforge/issues/8)、[Issue #15](https://github.com/wang1299/dsh-reforge/issues/15)保持open。后续每项另固定范围、失败场景、任务分支和PR，不能把整张表塞进一个实现PR。
 
 | 缺口 | 问题／目标 | 依赖 | 必须新增的验收证据 |
 |---|---|---|---|
@@ -541,15 +541,15 @@ CLI panel 同时启动既有 AutomaticLearning、EvidenceJobs 和无模型端口
 - 独立AI评审须写SHA、基线、范围、证据与影响，不充当GitHub正式批准；P0/P1及影响当前验收／数据／安全／主要路径的可复现P2必须修。
 - 计划、实现、验证、发布分别更新；不凭CI历史或测试数量合并，不上传私人报告、凭据或真实用户会话。
 
-文档组织与契约颗粒度参考固定Run2Skill快照，引用与范围见[PRD §12](product.md#12-文档粒度参考)；产品、数据与实现仍从DSH-Evolve已确认要求出发。
+文档要求见[PRD §12](product.md#12-文档维护约定)；产品、数据与实现以本项目已确认要求和验收为依据。
 
 
 ### 16.2 T031 原生 DSH 界面
 
-T032/ADR034补充：官方插件管理器的 `plugins.bundle.config` 按包名 `dsh-evolve` 挂载同一 NativeView；主面板/设置入口保留。原生内嵌复用紧凑呈现，外壳只读取官方body主题投影、通过既有随机channel投递固定颜色/字号消息；子页核对来源/origin/channel、字段/颜色/字号后仅修改CSS变量，不重载srcdoc、不读写表单。主题observer/load监听随组件卸载清理；认证API、数据库、授权与预算不变。
+T032/ADR034补充：官方插件管理器的 `plugins.bundle.config` 按包名 `dsh-reforge` 挂载同一 NativeView；主面板/设置入口保留。原生内嵌复用紧凑呈现，外壳只读取官方body主题投影、通过既有随机channel投递固定颜色/字号消息；子页核对来源/origin/channel、字段/颜色/字号后仅修改CSS变量，不重载srcdoc、不读写表单。主题observer/load监听随组件卸载清理；认证API、数据库、授权与预算不变。
 
 [ADR033](decisions/033-native-dsh-view.md)固定 DSH 0.2.0-rc.2。package 的 ./client 和 dsh.client 声明由官方模块系统加载；React 外壳注册 settings.plugins.tab、main、conversation.session.header.actions。同仓库已有对话可进入经验主面板并返回。视图在只启用 allow-scripts 的 srcdoc 中复用 panel-view，不加载外部页面、令牌或新端口；nonce CSP 禁止网络/外部资源。消息验证窗口、origin、随机通道及 ID，卸载取消，写入失败不自动重放。
 
-前端经 connection.rpc.call('/api', 'dsh-evolve-info/request', ...) 调用官方 connection.fetch.register 的两个精确路径。官方共享载体执行认证/Host/Origin，原生适配器以 streaming 模式限 32 KiB，严格解析信封并回送 rpcId。info 仅返回绑定 repoId/仓库名；request 验 repoId，复用 panel-api 的既有投影和严格操作。HTTP 独立面板保留其原认证和同源检查。
+前端经 connection.rpc.call('/api', 'dsh-reforge-info/request', ...) 调用官方 connection.fetch.register 的两个精确路径。官方共享载体执行认证/Host/Origin，原生适配器以 streaming 模式限 32 KiB，严格解析信封并回送 rpcId。info 仅返回绑定 repoId/仓库名；request 验 repoId，复用 panel-api 的既有投影和严格操作。HTTP 独立面板保留其原认证和同源检查。
 
 单例 EvolveService/worker/数据库由 sessions 就绪的宿主管理，Agent 工具待 tools/systemPrompt 后绑定；直接 bindDsh 测试入口仍可用。卸载停止 worker 并关闭库，原生接口拒绝新请求。SQLite v9、Agent 工具、授权/预算不变；不推断任意当前工作区，也不支持跨仓库服务切换。当前实际验证和限制见 T031 验收；Desktop/其他 DSH 版本及真实收益未验证。

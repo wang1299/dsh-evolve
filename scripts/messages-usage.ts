@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
+import { usageFingerprintDomainV1 } from '../src/legacy.js';
 
 const stopReasons = ['end_turn', 'tool_use', 'max_tokens', 'stop_sequence'] as const;
 export const usagePolicies = ['t011-conservative-v1', 't015-snapshot-high-water-v1', 't018-standard-tier-v1'] as const;
@@ -39,7 +40,7 @@ const fields = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cac
 function describeRejection(location: UsageDiagnostic['location'], violation: UsageDiagnostic['violation'], value: unknown,
   supportedFields: readonly string[]): UsageDiagnostic {
   const unknown = Object.keys(object(value) ?? {}).filter(key => !supportedFields.includes(key));
-  const fingerprints = [...new Set(unknown.map(key => createHash('sha256').update('dsh-evolve/usage-field/v1\0' + key).digest('hex')))].sort().slice(0, 8);
+  const fingerprints = [...new Set(unknown.map(key => createHash('sha256').update(usageFingerprintDomainV1 + key).digest('hex')))].sort().slice(0, 8);
   return usageDiagnosticSchema.parse({ location, violation,
     usageType: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
     unknownFieldCount: unknown.length, fieldFingerprints: fingerprints, omittedFieldCount: unknown.length - fingerprints.length });

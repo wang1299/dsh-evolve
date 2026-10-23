@@ -68,7 +68,7 @@ test('shipped client registers the official settings, main and conversation slot
   assert.ok(module); assert.deepEqual([...module.inject], ['slots', 'connection', 'layout']);
   const entries: Record<string, unknown>[] = []; const disposers: (() => void)[] = []; const navigation: unknown[] = [];
   module.apply({ connection: {}, slots: { inject: (_slot: string, fn: () => unknown) => fn(), register: (options: Record<string, unknown>) => { entries.push(options); return () => undefined; } },
-    layout: { panelInfo: { getSnapshot: () => ({ activePanelId: 'dsh-evolve' }) }, selectPanel: (id: unknown) => navigation.push(id) },
+    layout: { panelInfo: { getSnapshot: () => ({ activePanelId: 'dsh-reforge' }) }, selectPanel: (id: unknown) => navigation.push(id) },
     effect: (fn: () => () => void) => disposers.push(fn()) });
   assert.deepEqual(entries.map(e => e.name), ['main', 'settings.plugins.tab', 'plugins.bundle.config', 'conversation.session.header.actions']);
   assert.equal(entries.find(e => e.name === 'plugins.bundle.config')?.key, 'dsh-reforge');
@@ -81,7 +81,7 @@ test('a working-day of native polling never exhausts writes, and duplicate write
   const replies: { id: string; ok: boolean; message?: string }[] = [];
   const contentWindow = { postMessage: (reply: typeof replies[number]) => { if (reply.id) replies.push(reply); } }; const frame = { contentWindow, srcdoc: '', addEventListener: () => undefined, removeEventListener: () => undefined };
   const info = { repositoryId: 'fixture-repo', repositoryName: 'fixture', version: 1 };
-  const connection = { rpc: { call: async (_channel: string, endpoint: string) => { if (endpoint === 'dsh-evolve-request') forwarded++; return { ok: true, value: info }; } } };
+  const connection = { rpc: { call: async (_channel: string, endpoint: string) => { if (endpoint === 'dsh-reforge-request') forwarded++; return { ok: true, value: info }; } } };
   const effects: (() => void)[] = [];
   const react = { createElement: (type: unknown, props: unknown) => ({ type, props }), useRef: () => ({ current: frame }), useState: (value: unknown) => [value === null ? info : value, () => undefined], useEffect: (fn: () => void) => { effects.push(fn); } };
   const text = await readFile('dist/src/client.js', 'utf8');

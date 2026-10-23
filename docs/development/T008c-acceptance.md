@@ -1,6 +1,6 @@
 # T008c：feedback-v1真实模型初步对照
 
-关联[Issue #23](https://github.com/wang1299/dsh-evolve/issues/23)，父#15/#8保持open。实现前`4962f96`固定ADR011、任务、外部验收和最多7次新调用。协议SHA256 `a32c1298a859b02a57fd0520dbce8c46cefce986883c6749439b1a6b0f54dd49`。
+关联[Issue #23](https://github.com/wang1299/dsh-reforge/issues/23)，父#15/#8保持open。实现前`4962f96`固定ADR011、任务、外部验收和最多7次新调用。协议SHA256 `a32c1298a859b02a57fd0520dbce8c46cefce986883c6749439b1a6b0f54dd49`。
 
 ## 可复现入口（源码开发）
 
@@ -53,7 +53,7 @@ Evolve评价比baseline增加166输入tokens（每次83），另有积累成本1
 - report.json：`3b0ba456c26b9520e80ff78486f365b44b5a233fc3d28906aff113fd2671d513`
 - execution.json：`85624edce50da18bfcf9c22ebef5ed074ac0b0bf23093d0def52b0328072c197`
 
-本地完整check 44/44通过。执行头两平台CI run39190227601通过类型/静态/构建、44项测试、固定DSH兼容、演示、打包及实际tgz安装/Loader探针。随后只更新结果文档；最终交付头的增量独立评审、CI及合并门槛另记[PR #24](https://github.com/wang1299/dsh-evolve/pull/24)，AI评审不是GitHub正式批准。
+本地完整check 44/44通过。执行头两平台CI run39190227601通过类型/静态/构建、44项测试、固定DSH兼容、演示、打包及实际tgz安装/Loader探针。随后只更新结果文档；最终交付头的增量独立评审、CI及合并门槛另记[PR #24](https://github.com/wang1299/dsh-reforge/pull/24)，AI评审不是GitHub正式批准。
 
 ## 限制
 

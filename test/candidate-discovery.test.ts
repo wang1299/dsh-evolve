@@ -66,20 +66,20 @@ test('official DSH candidate tool and next-step reminder respect sharing, sessio
       } else { assert.deepEqual(JSON.parse(raw), { reason: 'sharing_disabled_by_owner' }); }
       assert.equal((await run({}, { id: outside.id } as Agent)).isError, true);
       const noAgent = await ctx.tools.execute({ callId: ToolCallId(randomUUID()), name: 'evolve_list_candidates', arguments: {}, signal: AbortSignal.timeout(3000) }); assert.equal(noAgent.isError, true);
-      const reminder = (await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-evolve:candidates');
+      const reminder = (await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-reforge:candidates');
       if (sharing) { assert.ok(reminder); assert.match(reminder.text, /1/); assert.ok(!reminder.text.includes(own.exp.id)); assert.ok(!reminder.text.includes(candidate.title)); }
       else assert.ok(!reminder?.text);
       if (sharing) {
         service.disable(own.exp.id, 'Owner rejects the pending candidate', 1);
         const fresh = await run({ taskId: own.task.id }); assert.equal(fresh.isError, false); assert.equal(JSON.parse(fresh.content.find(c => c.type === 'text')!.text).total, 0);
-        assert.ok(!(await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-evolve:candidates')?.text);
+        assert.ok(!(await ctx.systemPrompt.assemble(assembleContextFor(identity))).contexts.find(c => c.name === 'dsh-reforge:candidates')?.text);
       }
       for (const agent of [undefined, { id: outside.id } as Agent]) {
-        const assembly = await ctx.systemPrompt.assemble(agent ? assembleContextFor(agent) : {}); assert.ok(!assembly.contexts.find(c => c.name === 'dsh-evolve:candidates')?.text);
+        const assembly = await ctx.systemPrompt.assemble(agent ? assembleContextFor(agent) : {}); assert.ok(!assembly.contexts.find(c => c.name === 'dsh-reforge:candidates')?.text);
       }
       assert.equal(store.applications().length, 0); assert.equal(store.feedback().length, 0);
     } finally { await handle.dispose(); }
-    const after = await ctx.systemPrompt.assemble(); assert.ok(!after.contexts.some(c => c.name === 'dsh-evolve:candidates')); assert.ok(!after.tools.some(t => t.name === 'evolve_list_candidates')); await ctx.fiber.dispose();
+    const after = await ctx.systemPrompt.assemble(); assert.ok(!after.contexts.some(c => c.name === 'dsh-reforge:candidates')); assert.ok(!after.tools.some(t => t.name === 'evolve_list_candidates')); await ctx.fiber.dispose();
   }
 });
 

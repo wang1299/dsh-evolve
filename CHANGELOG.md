@@ -1,8 +1,15 @@
 # 更新记录
 
+## 未发布
+
+- GitHub 仓库及当前源码统一为 `wang1299/dsh-reforge`；更新原生页面、通信、profile 行 ID 与公开链接。
+- 清理外部项目对照材料，保留自身需求、架构与验收。
+- 保留旧配置、旧消息、用量指纹、SQLite v9 和首发制品的历史身份；升级见[安装指南](docs/installation.md#6-从首发包升级到当前源码)。
+- 已完成的首发发布 job 停用，避免用冻结的旧仓库控制重新发布；不改变现有 npm 包或 Release。
+
 ## 0.1.0-alpha.1 — 2026-10-23 实验性 alpha
 
-品牌改为 DSH-Reforge，npm 包及 CLI 为 `dsh-reforge`。npm `alpha` 已公开并通过完整性和实际安装验证；GitHub 附件与首跑 checkout 失败后的恢复结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75) 与对应 npm/GitHub 版本。发行包仍固定原已合并树，不随恢复工作流或文档重新打包。
+品牌改为 DSH-Reforge，npm 包及 CLI 为 `dsh-reforge`。npm `alpha` 已公开并通过完整性和实际安装验证；GitHub 附件与首跑 checkout 失败后的恢复结果见 [Issue #75](https://github.com/wang1299/dsh-reforge/issues/75) 与对应 npm/GitHub 版本。发行包仍固定原已合并树，不随恢复工作流或文档重新打包。
 
 - 正常对话的受限 Python 修复片段、私有快照、来源验证、单次自动候选提炼及独立再验。
 - 适用条件、代码/依赖约束、可弃权检索、应用记录、反馈及经验版本管理。
@@ -14,4 +21,4 @@
 
 ## 此前的本地开发
 
-`0.1.0-alpha.0` 以 DSH-Evolve 名义在本地试装，未向 npm 或 GitHub Release 发布。历史任务、实验（包括失败、未知费用占额和无收益结果）保留在仓库文档中，不随更名改写。
+`0.1.0-alpha.0` 为旧名称的本地预览，未向 npm 或 GitHub Release 发布。历史任务、实验（包括失败、未知费用占额和无收益结果）保留在仓库文档中，不随更名改写。

@@ -1,6 +1,6 @@
 # T011：真实DSH学习闭环验证
 
-Issue [#31](https://github.com/wang1299/dsh-evolve/issues/31)，父#8/#15，依赖T010、已有独立DSH安装和用户配置Key。[ADR014](../decisions/014-dsh-live-budget.md)先于代码固定验证与预算边界。
+Issue [#31](https://github.com/wang1299/dsh-reforge/issues/31)，父#8/#15，依赖T010、已有独立DSH安装和用户配置Key。[ADR014](../decisions/014-dsh-live-budget.md)先于代码固定验证与预算边界。
 
 范围：请求前最坏费用预留/持久账本、固定官方SDK真正Agent、受限合成代码提案、独立pytest、逐项来源和复用/反馈观测、去敏记录。非目标：普通Web所有工具自主开发、自动提炼/Job、强隔离、收益对照、发布。
 

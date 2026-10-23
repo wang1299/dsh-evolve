@@ -60,12 +60,12 @@ Task/Experience v1、Verification v2和历史评价格式不变。新增evolve_l
 npm run build
 # 先创建本地 .probe-work 目录，然后打包
 npm pack --pack-destination .probe-work
-npm run install-probe -- .probe-work/dsh-evolve-0.1.0-alpha.0.tgz
+npm run install-probe -- .probe-work/dsh-reforge-0.1.0-alpha.1.tgz
 ```
 
 报告和测试profile保存在`.probe-work/install-probe-*`，不会修改已有用户profile。Codex受限提案/宿主写入与外部pytest已另行实现；强安全隔离、正常DSH完整学习及真实任务收益仍待验证；T011有引导的真实SDK回合为partial。
 
-插件读取可选环境变量 `DSH_EVOLVE_CONFIG` 指向本地JSON配置，或由Cordis传入Config。未配置时以进程cwd为单仓库，关闭执行信任和模型共享。
+插件读取可选环境变量 `DSH_REFORGE_CONFIG`（旧变量兼容见安装指南） 指向本地JSON配置，或由Cordis传入Config。未配置时以进程cwd为单仓库，关闭执行信任和模型共享。
 
 ```json
 {

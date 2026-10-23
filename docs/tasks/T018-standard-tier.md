@@ -1,6 +1,6 @@
 # T018：standard服务档位的显式用量策略
 
-Issue [#45](https://github.com/wang1299/dsh-evolve/issues/45)，依赖T017 / PR #44，设计[ADR021](../decisions/021-standard-service-tier.md)。
+Issue [#45](https://github.com/wang1299/dsh-reforge/issues/45)，依赖T017 / PR #44，设计[ADR021](../decisions/021-standard-service-tier.md)。
 
 ## 问题、范围与非目标
 

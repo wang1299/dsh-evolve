@@ -1,6 +1,6 @@
 # T028：学习动态与用户界面
 
-- Issue：[#65](https://github.com/wang1299/dsh-evolve/issues/65)
+- Issue：[#65](https://github.com/wang1299/dsh-reforge/issues/65)
 - 基线：729cbf3；分支：codex/t028-learning-home。
 - 设计：[ADR030](../decisions/030-learning-home.md)。依赖现有面板、T019–T027的数据与状态。
 
@@ -18,4 +18,4 @@
 
 ## 当前状态
 
-已实现并完成本地159项检查、兼容8项、实际安装包离线学习演练及桌面/窄屏界面验证。独立只读评审发现的2项P2已补失败用例、修复并复审通过。当前头CI与合并记录见[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)，详细结果见[T028验收](../development/T028-acceptance.md)。无新增模型调用或发布。
+已实现并完成本地159项检查、兼容8项、实际安装包离线学习演练及桌面/窄屏界面验证。独立只读评审发现的2项P2已补失败用例、修复并复审通过。当前头CI与合并记录见[PR #66](https://github.com/wang1299/dsh-reforge/pull/66)，详细结果见[T028验收](../development/T028-acceptance.md)。无新增模型调用或发布。

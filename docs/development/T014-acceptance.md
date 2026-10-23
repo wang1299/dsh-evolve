@@ -1,6 +1,6 @@
 # T014：真实Agent循环的脚本演练
 
-Issue [#37](https://github.com/wang1299/dsh-evolve/issues/37)，设计先于实现见[ADR017](../decisions/017-agent-loop-rehearsal.md)。这是一项零付费开发回归，**不是实际模型、自动提炼或收益评价**。
+Issue [#37](https://github.com/wang1299/dsh-reforge/issues/37)，设计先于实现见[ADR017](../decisions/017-agent-loop-rehearsal.md)。这是一项零付费开发回归，**不是实际模型、自动提炼或收益评价**。
 
 ## 实际运行边界
 

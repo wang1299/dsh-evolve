@@ -53,7 +53,7 @@ const expectedFiles = await jsFiles(expectedRoot); assert.deepEqual(await jsFile
 for (const file of expectedFiles) assert.deepEqual(await readFile(join(installedRoot, file)), await readFile(join(expectedRoot, file)), 'Installed compiled JS differs: ' + file);
 const patches = [...loaded.layers.flatMap((layer) => layer.patches), ...loaded.patches];
 const entries = composeEntries([patches]);
-assert.equal(entries.filter((entry) => entry.id === 'dsh-evolve' && entry.name === packageName).length, 1);
+assert.equal(entries.filter((entry) => entry.id === 'dsh-reforge' && entry.name === packageName).length, 1);
 
 if (learning) {
   await writeFile(join(profile, 'cordis.yml'), '[]\n');
@@ -74,7 +74,7 @@ if (learning) {
 
 const f = await fixture();
 await writeFile(join(profile, 'cordis.yml'), '[]\n');
-patches.push({ id: 'dsh-evolve', config: { repoRoot: f.repo, dataDir: join(work, 'learning'), executionTrusted: false, shareWithModel: false } });
+patches.push({ id: 'dsh-reforge', config: { repoRoot: f.repo, dataDir: join(work, 'learning'), executionTrusted: false, shareWithModel: false } });
 const ctx = await boot('dsh', join(profile, 'cordis.yml'), patches, async (root) => {
   await root.plugin(SystemPrompt, {}).await();
   await root.plugin(ToolRuntime, { mode: 'native' }).await();
@@ -86,7 +86,7 @@ try {
   assert.ok(entry?.fiber); assert.equal((entry.moduleNamespace as typeof import('../src/dsh.js')).apply, installedModule.apply);
   const assembled = await ctx.systemPrompt.assemble();
   assert.equal(assembled.tools.filter((tool) => tool.name.startsWith('evolve_')).length, 7);
-  assert.ok(assembled.sections.some((section) => section.name === 'dsh-evolve:workflow'));
+  assert.ok(assembled.sections.some((section) => section.name === 'dsh-reforge:workflow'));
   const propose = assembled.tools.find((tool) => tool.name === 'evolve_propose_experience')!;
   const properties = propose.parameters.properties as Record<string, Record<string, unknown>>;
   assert.equal(properties.candidate!.type, 'object', 'installed package must publish Candidate fields');

@@ -1,6 +1,6 @@
 # T020：自动提炼候选经验
 
-Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，基线278f58a；设计[ADR023](../decisions/023-automatic-candidate-extraction.md)。G02/G03切片，依赖T019。
+Issue [#49](https://github.com/wang1299/dsh-reforge/issues/49)，基线278f58a；设计[ADR023](../decisions/023-automatic-candidate-extraction.md)。G02/G03切片，依赖T019。
 
 ## 范围与验收
 
@@ -16,4 +16,4 @@ Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，基线278f58a；
 
 ## 开发顺序
 
-设计 → 必要失败用例 → 持久化／固定材料／模型端口 → 自动调度与面板 → 针对／完整验证 → Draft PR／独立评审／修复／CI → 合并。实际证据见[验收记录](../development/T020-acceptance.md)与[PR #50](https://github.com/wang1299/dsh-evolve/pull/50)。
+设计 → 必要失败用例 → 持久化／固定材料／模型端口 → 自动调度与面板 → 针对／完整验证 → Draft PR／独立评审／修复／CI → 合并。实际证据见[验收记录](../development/T020-acceptance.md)与[PR #50](https://github.com/wang1299/dsh-reforge/pull/50)。

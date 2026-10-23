@@ -1,5 +1,7 @@
 # ADR-006：实际安装包的配置层验证
 
+> 历史设计记录：当时的内部名称按原实现保留。当前身份、路由与升级规则见 [ADR037](037-project-identity.md) 和[安装指南](../installation.md)。
+
 2026-10-18，实施前设计。固定DSH 0.2.0-rc.2。
 
 问题：官方`runPluginCommand`在隔离profile成功安装本地tgz，bundle元数据和版本检查通过，但`composeEntries`得到空列表。原`cordis.patch.yml`只有id/name，按官方include语义是覆盖已有行；空树中没有目标，不能注册新插件。

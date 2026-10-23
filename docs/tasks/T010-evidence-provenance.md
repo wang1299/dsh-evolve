@@ -1,6 +1,6 @@
 # T010：经验事实来源与保留
 
-Issue [#29](https://github.com/wang1299/dsh-evolve/issues/29)，依赖T009 / G01+G07。[ADR013](../decisions/013-fact-evidence.md)先于实现提交。
+Issue [#29](https://github.com/wang1299/dsh-reforge/issues/29)，依赖T009 / G01+G07。[ADR013](../decisions/013-fact-evidence.md)先于实现提交。
 
 范围：最小纠正/验证证据、revision事实引用、摘要/归属校验、默认资格、保留历史的事务迁移（v1降级重验/v2不改写）、引用清理保护、六工具与本机面板。非目标：自动采集归并/提炼、Job、上下文预算、沙箱、收益实验、发布。
 

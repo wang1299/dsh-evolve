@@ -1,6 +1,6 @@
 # T018：standard服务档位兼容的离线验收
 
-Issue [#45](https://github.com/wang1299/dsh-evolve/issues/45)，实施前设计[ADR021](../decisions/021-standard-service-tier.md)，任务[T018](../tasks/T018-standard-tier.md)。本轮没有真实模型调用、凭据访问、新付费资格或实际实验账本。
+Issue [#45](https://github.com/wang1299/dsh-reforge/issues/45)，实施前设计[ADR021](../decisions/021-standard-service-tier.md)，任务[T018](../tasks/T018-standard-tier.md)。本轮没有真实模型调用、凭据访问、新付费资格或实际实验账本。
 
 ## 修改与依据
 

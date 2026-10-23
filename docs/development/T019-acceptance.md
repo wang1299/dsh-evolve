@@ -1,6 +1,6 @@
 # T019：自动任务证据与最小后台机制
 
-Issue [#47](https://github.com/wang1299/dsh-evolve/issues/47)，基线`30ed2139e11f065c43722e19662fefcf7622a663`，设计[ADR022](../decisions/022-task-evidence-jobs.md)、任务[T019](../tasks/T019-task-evidence.md)。源码/验证/最终合并状态见关联PR，不以历史检查代替当前头。
+Issue [#47](https://github.com/wang1299/dsh-reforge/issues/47)，基线`30ed2139e11f065c43722e19662fefcf7622a663`，设计[ADR022](../decisions/022-task-evidence-jobs.md)、任务[T019](../tasks/T019-task-evidence.md)。源码/验证/最终合并状态见关联PR，不以历史检查代替当前头。
 
 ## 已实现范围
 

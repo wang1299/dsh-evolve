@@ -1,10 +1,10 @@
 # T035：Logo 与首页主视觉
 
-2026-10-23，Issue [#80](https://github.com/wang1299/dsh-evolve/issues/80)，分支 `codex/t035-brand-assets`，基线 `7a575e32a3a52799fce0c2ddbe0297679bfb32bb`。用户要求制作 T034 中缺少的 Logo 和首页主视觉。
+2026-10-23，Issue [#80](https://github.com/wang1299/dsh-reforge/issues/80)，分支 `codex/t035-brand-assets`，基线 `7a575e32a3a52799fce0c2ddbe0297679bfb32bb`。用户要求制作 T034 中缺少的 Logo 和首页主视觉。
 
 ## 范围
 
-通过内置 imagegen 创建原创透明 PNG 标志和宽幅主视觉，复制最终资产到 `docs/assets/`，接入中英文 README，记录[设计与最终提示词](../branding.md)。没有使用 Run2Skill 或 DeepSeek 官方图形资产，不改产品接口、存储、生命周期、包元数据或发行白名单，无需新增 ADR。
+通过内置 imagegen 创建原创透明 PNG 标志和宽幅主视觉，复制最终资产到 `docs/assets/`，接入中英文 README，记录[设计与最终提示词](../branding.md)。素材为原创，未使用 DeepSeek 官方图形资产，不改产品接口、存储、生命周期、包元数据或发行白名单，无需新增 ADR。
 
 ## 验收与已执行检查
 

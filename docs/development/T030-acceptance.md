@@ -1,6 +1,6 @@
 # T030 学习进度中心与独立面板收尾验收
 
-Issue [#69](https://github.com/wang1299/dsh-evolve/issues/69)，[PR #70](https://github.com/wang1299/dsh-evolve/pull/70)，实现前 [ADR032](../decisions/032-learning-progress.md)。基线 acf892abbc4468dcc77608f39dc3d8499da5f3e9。
+Issue [#69](https://github.com/wang1299/dsh-reforge/issues/69)，[PR #70](https://github.com/wang1299/dsh-reforge/pull/70)，实现前 [ADR032](../decisions/032-learning-progress.md)。基线 acf892abbc4468dcc77608f39dc3d8499da5f3e9。
 
 ## 修改与用户操作
 

@@ -13,7 +13,7 @@ import { verifyRepair } from '../src/verification.js';
 import { DeepseekBudget, startBudgetRelay } from './deepseek-budget.js';
 
 export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-if (JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')).name !== 'dsh-reforge') throw new Error('Expected compiled runner in DSH-Evolve project');
+if (JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')).name !== 'dsh-reforge') throw new Error('Expected compiled runner in DSH-Reforge project');
 const work = join(projectRoot, '.probe-work/t011-live');
 export const liveBudgetPath = join(projectRoot, '.probe-work/t011-budget.json');
 const python = process.env.EVOLVE_PYTHON ?? 'python';
@@ -71,7 +71,7 @@ const readPlan = (): Plan => {
 };
 function environment(home: string, config: string): NodeJS.ProcessEnv {
   return { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(path|systemroot|windir|comspec|temp|tmp|pathext|appdata|localappdata|userprofile|home)$/i.test(key))),
-    DSH_HOME: home, DSH_EVOLVE_CONFIG: config, DSH_TELEMETRY: 'false', DSH_MAX_TOKENS_AS_SUCCESS: 'false' };
+    DSH_HOME: home, DSH_REFORGE_CONFIG: config, DSH_TELEMETRY: 'false', DSH_MAX_TOKENS_AS_SUCCESS: 'false' };
 }
 function basePatch(plan: Plan): RecordValue[] {
   return [ ...['persistent-bash', 'persistent-pwsh', 'session-log-deepseek', 'plugin-package-inventory-deepseek', 'deepseek-llm-api-extensions', 'llm-retry']

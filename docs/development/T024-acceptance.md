@@ -1,6 +1,6 @@
 # T024：SSE 消费者断连验收
 
-Issue [#57](https://github.com/wang1299/dsh-evolve/issues/57)，基线 bc38fec，设计 ADR026。
+Issue [#57](https://github.com/wang1299/dsh-reforge/issues/57)，基线 bc38fec，设计 ADR026。
 
 ## 复现与修改
 
@@ -15,4 +15,4 @@ Issue [#57](https://github.com/wang1299/dsh-evolve/issues/57)，基线 bc38fec�
 - 预算及追加预算针对测试 15/15 通过；新增用例依次覆盖完整终端后取消、终端前取消、终端后上游异常、终端后非法追加事件。
 - 现有流/响应上限、磁盘与账本写入失败、原账本重启/unknown 不回填仍通过。
 
-稳定提交的 CI、独立只读 AI 评审及合并记录见 [PR #58](https://github.com/wang1299/dsh-evolve/pull/58)；未通过这些门槛前保持 Draft。AI 评审不等于 GitHub 正式批准。本任务没有模型调用，没有读取或变更历史预算、Key 或私人会话；公开测试只含合成数据。Windows 沙箱环境和真实模型学习不由这些离线用例认证；本次原因也不回推为旧实验 unknown 的根因。
+稳定提交的 CI、独立只读 AI 评审及合并记录见 [PR #58](https://github.com/wang1299/dsh-reforge/pull/58)；未通过这些门槛前保持 Draft。AI 评审不等于 GitHub 正式批准。本任务没有模型调用，没有读取或变更历史预算、Key 或私人会话；公开测试只含合成数据。Windows 沙箱环境和真实模型学习不由这些离线用例认证；本次原因也不回推为旧实验 unknown 的根因。

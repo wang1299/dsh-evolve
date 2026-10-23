@@ -38,7 +38,7 @@ const readPlan = async (): Promise<Plan> => {
 };
 function environment(home: string, config: string): NodeJS.ProcessEnv {
   return { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(path|systemroot|windir|comspec|temp|tmp|pathext|appdata|localappdata|userprofile|home)$/i.test(key))),
-    DSH_HOME: home, DSH_EVOLVE_CONFIG: config, DSH_TELEMETRY: 'false', DSH_MAX_TOKENS_AS_SUCCESS: 'false' };
+    DSH_HOME: home, DSH_REFORGE_CONFIG: config, DSH_TELEMETRY: 'false', DSH_MAX_TOKENS_AS_SUCCESS: 'false' };
 }
 function basePatch(plan: Plan): RecordValue[] {
   return [ ...['persistent-bash', 'persistent-pwsh', 'session-log-deepseek', 'plugin-package-inventory-deepseek', 'deepseek-llm-api-extensions', 'llm-retry']

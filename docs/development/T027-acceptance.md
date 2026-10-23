@@ -1,6 +1,6 @@
 # T027 原生提炼启动竞态验收
 
-Issue [#63](https://github.com/wang1299/dsh-evolve/issues/63)，交付[PR #64](https://github.com/wang1299/dsh-evolve/pull/64)，基线d444331ff9d4ea683134483757be7c4bf9635aec，设计[ADR029](../decisions/029-native-extraction-readiness.md)。
+Issue [#63](https://github.com/wang1299/dsh-reforge/issues/63)，交付[PR #64](https://github.com/wang1299/dsh-reforge/pull/64)，基线d444331ff9d4ea683134483757be7c4bf9635aec，设计[ADR029](../decisions/029-native-extraction-readiness.md)。
 
 ## 可复现原因
 

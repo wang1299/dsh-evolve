@@ -1,6 +1,6 @@
 # T031 原生界面验收
 
-Issue [#71](https://github.com/wang1299/dsh-evolve/issues/71)，PR [#72](https://github.com/wang1299/dsh-evolve/pull/72)，分支 codex/t031-native-ui；基线 4dd2f140e7973768e3f3c64d176c8e0ea1151b2d。设计提交 61c78c3，生命周期补充设计 72fa9ef；最终精确路由选择见 ADR033。
+Issue [#71](https://github.com/wang1299/dsh-reforge/issues/71)，PR [#72](https://github.com/wang1299/dsh-reforge/pull/72)，分支 codex/t031-native-ui；基线 4dd2f140e7973768e3f3c64d176c8e0ea1151b2d。设计提交 61c78c3，生命周期补充设计 72fa9ef；最终精确路由选择见 ADR033。
 
 ## 实现
 
@@ -26,8 +26,8 @@ Issue [#71](https://github.com/wang1299/dsh-evolve/issues/71)，PR [#72](https:/
 - 首次稳定 SHA 920264ad170cdddfda89370a97bf0d524c1e704c 对比上述基线，由独立只读 Agent 审查。发现 P2：前端把周期 GET 也永久计入 4096 个请求 ID，约 5.69 小时后会停止更新。实际 bundle VM 复现 4097 次读取只有 4096 次转发；本机 t031-long-day-before.log 保留断言失败。另建议 npm test 构建 client，已采纳。
 - 修复 SHA 02ae9332abe55b766068a7ad766411319ee270bd：GET 不计写入账本，16 个在途请求结束释放；写入重复/4096 个上限显式报错，额度满仍能读。npm test 先构建 client。针对客户端 3/3 通过，涵盖 4097 次 GET、重复 POST、写入额度满后的读取。
 - 同一独立审查者对 02ae933 相对 920264a 增量复审并独立运行 3/3，用例通过，无剩余阻塞问题。AI 评审不冒充 GitHub 正式 Review。
-- 精确代码头 02ae933 的 [CI 39721536543](https://github.com/wang1299/dsh-evolve/actions/runs/39721536543) 在 Windows / Ubuntu 全部成功，覆盖 check、compat、demo、pack 及两种实际安装探针。后续文档增量的独立审查、最终头 CI、规则核对和合并以 PR #72 的记录为准；满足后才更新用户测试配置。
-- 文档头 45855a275607e1f2f20740c1ddf13765f5c66afc 的增量独立只读审查通过；[CI 39722784628](https://github.com/wang1299/dsh-evolve/actions/runs/39722784628) Ubuntu 成功、Windows 184/185，唯一失败为旧 panel-automatic 用例在经验已 source_verified、片段尚 qualifying 时提前断言 learned。该用例原先只等待经验发布，未等待随后片段状态写回。保留失败日志；修正为等待两个发布步骤结束，原时间上限和全部结果/预算/Git 断言不变，不修改产品行为。新提交必要增量复审及最终 CI 另在 PR 记录，不通过直接重跑掩盖竞态。
+- 精确代码头 02ae933 的 [CI 39721536543](https://github.com/wang1299/dsh-reforge/actions/runs/39721536543) 在 Windows / Ubuntu 全部成功，覆盖 check、compat、demo、pack 及两种实际安装探针。后续文档增量的独立审查、最终头 CI、规则核对和合并以 PR #72 的记录为准；满足后才更新用户测试配置。
+- 文档头 45855a275607e1f2f20740c1ddf13765f5c66afc 的增量独立只读审查通过；[CI 39722784628](https://github.com/wang1299/dsh-reforge/actions/runs/39722784628) Ubuntu 成功、Windows 184/185，唯一失败为旧 panel-automatic 用例在经验已 source_verified、片段尚 qualifying 时提前断言 learned。该用例原先只等待经验发布，未等待随后片段状态写回。保留失败日志；修正为等待两个发布步骤结束，原时间上限和全部结果/预算/Git 断言不变，不修改产品行为。新提交必要增量复审及最终 CI 另在 PR 记录，不通过直接重跑掩盖竞态。
 
 ## 限制与交付
 

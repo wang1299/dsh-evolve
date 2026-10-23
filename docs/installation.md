@@ -1,6 +1,6 @@
 # 安装与首次使用
 
-包名 `dsh-reforge`，品牌 DSH-Reforge。首个实验性版本 `0.1.0-alpha.1` 已发布至 npm `alpha` 并通过公开安装；发行附件与最终结果见 [npm](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)、[Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 和 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码、本机 tgz 与远端公开结果分别核验。
+包名 `dsh-reforge`，品牌 DSH-Reforge。首个实验性版本 `0.1.0-alpha.1` 已发布至 npm `alpha` 并通过公开安装；发行附件与最终结果见 [npm](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)、[Release](https://github.com/wang1299/dsh-reforge/releases/tag/v0.1.0-alpha.1) 和 [Issue #75](https://github.com/wang1299/dsh-reforge/issues/75)。源码、本机 tgz 与远端公开结果分别核验。
 
 ## 1. 准备环境和配置
 
@@ -86,7 +86,7 @@ dsh web --profile web
 
 查看经验的处理策略、条件和使用记录；你可以反馈“不相关”或“策略错误”、修订、停用或恢复。不要为了让状态变绿而填写虚假的“通过验收”。显式 `evolve_` 工具仍兼容，适合手动排查和受控案例。
 
-## 5. 从旧本地 DSH-Evolve 预览升级
+## 5. 从旧本地预览升级
 
 本节只针对本项目**尚未公开的旧本地包**，不针对其他同名开源项目。
 
@@ -101,7 +101,19 @@ dsh web --profile web
 
 4. 使用原配置和 dataDir 重启。旧环境变量仍可用。检查经验、来源、版本和使用次数保持。
 
-DSH patch 行 ID、`evolve_` 工具、内部 RPC 和 SQLite v9 均保留兼容身份；公开模块名改为 `dsh-reforge`。默认数据位置仍为 `~/.dsh/evolve/<repoId>/evolve.sqlite`，无需搬迁。不要同时运行新旧插件，不要从 registry 安装第三方 `dsh-evolve`，也不要通过降级程序直接打开新数据库。恢复程序版本与回滚用户代码是不同操作。
+已发布的 `0.1.0-alpha.1` 保留当时的内部 patch 行 ID 和 RPC；当前未重新发布的源码已统一为 `dsh-reforge`，具体升级见下一节。`evolve_` 工具和 SQLite v9 保持兼容。默认数据位置仍为 `~/.dsh/evolve/<repoId>/evolve.sqlite`，无需搬迁。不要同时运行新旧插件，不要从 registry 安装第三方 `dsh-evolve`，也不要通过降级程序直接打开新数据库。恢复程序版本与回滚用户代码是不同操作。
+
+## 6. 从首发包升级到当前源码
+
+本节适用于 T038 后的开发源码，不表示 npm 首发包已经更新。先停止所有旧服务和面板，确认没有后台学习任务；备份 profile、原配置、SQLite 及私有快照。
+
+在原 profile 移除旧插件依赖，再安装经过检查的新 tgz；沿用原配置的绝对路径和同一 dataDir。若 profile 的自定义 patch 曾使用 `id: dsh-evolve` 覆盖配置，只把该行改为 `id: dsh-reforge`，保持整份 config（包括 dataDir、grantId、maxCalls）不变。不要新增第二份行或同时启用新旧 ID；若存在多行，停机核对后再启动。默认数据路径和 SQLite 文件名不变，无需搬迁。
+
+启动新服务时重新打开本机生成的认证入口，刷新网页使客户端和服务端同时更新。当前源码使用新的原生 RPC 路径，旧页面不能跨版本混用。旧消息来源仍可读，旧配置变量仍兼容，用量指纹域保持原字节。
+
+启动前后核对 schema v9、经验、应用、反馈、预算账本、未知费用占额及已使用次数完全一致；若不一致，停机排查，勿重置或重放。项目更名不授予额外次数。当前实际体验环境仍使用冻结首发包，本次仓库更名不自动替换它。
+
+首发 npm 包和 Release 附件的原仓库元数据、SHA256 与注释 tag 是历史事实，不能改写；当前源码包使用新地址。任何后续公开发行需要新版本和单独授权。
 
 ## 排查
 
@@ -111,4 +123,4 @@ DSH patch 行 ID、`evolve_` 工具、内部 RPC 和 SQLite v9 均保留兼容�
 - Windows权限错误：按 DSH 官方诊断流程，仅对明确授权目录修复；本插件不扩大系统权限。
 - 需要独立面板：运行 `dsh-reforge panel --config <配置文件>`，私密地址只在本机终端显示。它不能代替 DSH 提供后台提炼模型。
 
-有问题请在 [Issues](https://github.com/wang1299/dsh-evolve/issues) 提供版本、脱敏最小复现和错误类别；不要上传聊天、Key、完整配置、认证地址或经验数据库。
+有问题请在 [Issues](https://github.com/wang1299/dsh-reforge/issues) 提供版本、脱敏最小复现和错误类别；不要上传聊天、Key、完整配置、认证地址或经验数据库。

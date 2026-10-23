@@ -1,6 +1,6 @@
 # ADR019：未知usage的有限结构诊断
 
-日期：2026-10-19。设计先于实现，Issue [#41](https://github.com/wang1299/dsh-evolve/issues/41)。T015两次真实响应都在message_start阶段unsupported_usage，原回执缺少具体位置/字段身份；不能确认哪个字段或T011历史原因。
+日期：2026-10-19。设计先于实现，Issue [#41](https://github.com/wang1299/dsh-reforge/issues/41)。T015两次真实响应都在message_start阶段unsupported_usage，原回执缺少具体位置/字段身份；不能确认哪个字段或T011历史原因。
 
 ## 选择与边界
 

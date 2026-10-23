@@ -16,14 +16,14 @@ test('native host mounts when connection becomes active even without Agent tools
   }).await();
   await new Promise<void>(resolve => setTimeout(resolve, 50));
   const carrier = connection!.createSharedFetchHandler('/api');
-  const request = () => new Request('http://fixture/api/dsh-evolve-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'client-request', rpcId: 'fixture-info', method: 'dsh-evolve-info', payload: {} }) });
+  const request = () => new Request('http://fixture/api/dsh-reforge-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'client-request', rpcId: 'fixture-info', method: 'dsh-reforge-info', payload: {} }) });
   try {
-    assert.equal(carrier.requestBodyMode({ method: 'POST', url: new URL('http://fixture/api/dsh-evolve-info') }), 'streaming');
+    assert.equal(carrier.requestBodyMode({ method: 'POST', url: new URL('http://fixture/api/dsh-reforge-info') }), 'streaming');
     const reply = await carrier.fetch(request()); assert.equal(reply.status, 200);
     const value = await reply.json() as { rpcId: string; result: { ok: boolean } }; assert.equal(value.rpcId, 'fixture-info'); assert.equal(value.result.ok, true);
-    const huge = new Request('http://fixture/api/dsh-evolve-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: 'x'.repeat(32769) });
+    const huge = new Request('http://fixture/api/dsh-reforge-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: 'x'.repeat(32769) });
     assert.equal((await carrier.fetch(huge)).status, 413);
-    const malformed = new Request('http://fixture/api/dsh-evolve-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'client-request', rpcId: 'fixture-info', method: 'dsh-evolve-request', payload: {} }) });
+    const malformed = new Request('http://fixture/api/dsh-reforge-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'client-request', rpcId: 'fixture-info', method: 'dsh-reforge-request', payload: {} }) });
     assert.equal((await carrier.fetch(malformed)).status, 400);
   } finally { await root.fiber.dispose(); }
   assert.equal((await carrier.fetch(request())).status, 404);

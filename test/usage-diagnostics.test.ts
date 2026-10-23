@@ -14,7 +14,7 @@ const wire = (...events: object[]) => events.map(e => 'data: ' + JSON.stringify(
 const request = { model: 'deepseek-flash', stream: true, max_tokens: 4096, messages: [] };
 const send = (baseURL: string) => fetch(baseURL + '/v1/messages', { method: 'POST', headers: { 'x-api-key': 'fixture-secret-key' }, body: JSON.stringify(request) });
 const receipt = (budget: DeepseekBudget) => usageReceiptSchema.parse(JSON.parse(readFileSync(budget.path + '.receipts/' + budget.state.calls.at(-1)!.id + '.json', 'utf8')));
-const fingerprint = (key: string) => createHash('sha256').update('dsh-evolve/usage-field/v1\0' + key).digest('hex');
+const fingerprint = (key: string) => createHash('sha256').update('dsh-evolve/usage-field/v1\0' + key).digest('hex'); // Frozen v1 fixture, independent of the implementation constant.
 const fresh = (version: 1 | 2) => new DeepseekBudget(join(mkdtempSync(join(tmpdir(), 'evolve-shape-')), 'budget.json'), 't015-snapshot-high-water-v1', version);
 
 test('the same unsupported_usage reason identifies five fixed rejection locations', () => {

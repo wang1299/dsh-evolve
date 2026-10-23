@@ -1,6 +1,6 @@
 # T025：诊断摘要与显式恢复验收
 
-Issue [#59](https://github.com/wang1299/dsh-evolve/issues/59)，基线 e1827bb，设计ADR027先于实现提交7abb80c。
+Issue [#59](https://github.com/wang1299/dsh-reforge/issues/59)，基线 e1827bb，设计ADR027先于实现提交7abb80c。
 
 ## 复现与实现
 
@@ -23,4 +23,4 @@ SQLite v6移除两张Job表的task唯一约束，普通入队在写锁内保持�
 
 ## 独立只读评审与交付
 
-源码目标a2cedffe07a5eda90f295010828a22390e2518a0，远端稳定映射b97734da3df94836aa7f05fc0782d61365c8c68a；同树62c42ef17f28d9e77111a9cf152a79def3beef92，基线e1827bbd1cdf10f102d81f544742328fcf049bdb。独立Agent核对迁移、写锁、幂等/历史、grant/unknown、验证门槛与测试，无成立的P0/P1/P2阻塞。未重复全量测试、访问网络、模型或真实预算/凭据/学习库。后续仅验收文档变化需必要增量复审；最终CI/正式Review/保护/合并见[PR #60](https://github.com/wang1299/dsh-evolve/pull/60)的实际记录。AI评审不等于GitHub批准；门槛完成前不得合并或升级原体验库。源码包仍未发布。
+源码目标a2cedffe07a5eda90f295010828a22390e2518a0，远端稳定映射b97734da3df94836aa7f05fc0782d61365c8c68a；同树62c42ef17f28d9e77111a9cf152a79def3beef92，基线e1827bbd1cdf10f102d81f544742328fcf049bdb。独立Agent核对迁移、写锁、幂等/历史、grant/unknown、验证门槛与测试，无成立的P0/P1/P2阻塞。未重复全量测试、访问网络、模型或真实预算/凭据/学习库。后续仅验收文档变化需必要增量复审；最终CI/正式Review/保护/合并见[PR #60](https://github.com/wang1299/dsh-reforge/pull/60)的实际记录。AI评审不等于GitHub批准；门槛完成前不得合并或升级原体验库。源码包仍未发布。

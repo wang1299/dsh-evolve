@@ -1,6 +1,6 @@
 # T036：深色主视觉与新标语
 
-2026-10-23，Issue [#83](https://github.com/wang1299/dsh-evolve/issues/83)，分支 `codex/t036-dark-hero-slogan`，比较基线 `a9ee2cee83aa2eb1f2a650fe02f84ec08fafcffe`。
+2026-10-23，Issue [#83](https://github.com/wang1299/dsh-reforge/issues/83)，分支 `codex/t036-dark-hero-slogan`，比较基线 `a9ee2cee83aa2eb1f2a650fe02f84ec08fafcffe`。
 
 用户选定深色锻造主视觉，最终要求图内无中文、英文简短有力，图下中文“修复有据，经验可循。”及徽章/许可/导航居中。通过内置 imagegen 编辑用户选图，新增 `docs/assets/dsh-reforge-hero-v2.png`：图内仅产品名及“Fix. Verify. Reforge.”。两份 README 同步使用新 URL 和居中 HTML 头部；品牌说明更新当前版本、文字、摘要与实际提示词。只参考用户截图的布局，未复制参考项目图形。旧米白 v1 和独立 Logo 均保留。
 

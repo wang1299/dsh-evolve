@@ -4,9 +4,9 @@
   "description": "Evidence-based experience learning for DeepSeek Harness",
   "type": "module",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/wang1299/dsh-evolve.git" },
-  "homepage": "https://github.com/wang1299/dsh-evolve#readme",
-  "bugs": { "url": "https://github.com/wang1299/dsh-evolve/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/wang1299/dsh-reforge.git" },
+  "homepage": "https://github.com/wang1299/dsh-reforge#readme",
+  "bugs": { "url": "https://github.com/wang1299/dsh-reforge/issues" },
   "keywords": ["deepseek-harness", "dsh-plugin", "agent-memory", "experience-learning", "bug-fix", "verification"],
   "publishConfig": { "registry": "https://registry.npmjs.org/", "access": "public", "tag": "alpha" },
   "engines": {

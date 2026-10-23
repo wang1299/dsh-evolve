@@ -1,12 +1,12 @@
 # DSH-Reforge 产品需求 v0.2
 
-T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
+T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-reforge/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
 
 > 核心体验：**“这个问题我上次纠正过，这次 Agent 能自己注意到。”**
 
 ## 1. 文档地位与阅读约定
 
-日期：2026-10-19。任务：[T009 / Issue #27](https://github.com/wang1299/dsh-evolve/issues/27)。T009运行核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；T010从已合并`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`实现事实来源切片，见[ADR013](decisions/013-fact-evidence.md)。这是文档v0.2；当时npm为`0.1.0-alpha.0`，没有发布新包。
+日期：2026-10-19。任务：[T009 / Issue #27](https://github.com/wang1299/dsh-reforge/issues/27)。T009运行核对基线为`bd724ccf03eb50314b29e132df1cbf6210c6c81c`；T010从已合并`bdf778cd0fc8172e3a2da976f72b17df6eb2ad4f`实现事实来源切片，见[ADR013](decisions/013-fact-evidence.md)。这是文档v0.2；当时npm为`0.1.0-alpha.0`，没有发布新包。
 
 本文件规定产品目标、行为与验收；[架构总纲](architecture.md)规定实现边界、当前契约和目标设计；[ADR](decisions)保留选择与变更理由。需求变化先更新本文件，持久化及公开接口变化另作任务设计。冲突时报告差异，不能用架构中的计划覆盖实际代码。
 
@@ -37,7 +37,7 @@ T029增量（2026-10-21）：新增owner明确开启的正常对话自动学习�
 
 开发Agent在不同任务中重复犯相同错误。用户上次的纠正可能只留在旧对话；普通长期记忆又可能忽视代码版本、测试证据和反例，把过时建议反复带入上下文。
 
-DSH-Evolve积累的是**有来源、有限适用范围、能重新验证和停用的修复经验**。优化对象是经验内容、资格、选择和反馈策略；不修改模型权重，不保证每次任务更好。
+DSH-Reforge积累的是**有来源、有限适用范围、能重新验证和停用的修复经验**。优化对象是经验内容、资格、选择和反馈策略；不修改模型权重，不保证每次任务更好。
 
 ### 2.2 用户与职责
 
@@ -241,7 +241,7 @@ Task只有`open/closed`；closed不表示通过。经验只有`candidate/source_
 
 T031 原生接入验收（2026-10-22）：
 
-T032补充：首要入口为DSH左侧「插件」→已安装dsh-evolve→包详情中的操作页，仍提供对话和设置入口。内嵌布局紧凑、跟随宿主主题，主题切换不得重载或清空未保存编辑；独立面板保留原布局。实现/验证/最终交付区分见[T032验收](development/T032-acceptance.md)。
+T032补充：首要入口为DSH左侧「插件」→已安装dsh-reforge→包详情中的操作页，仍提供对话和设置入口。内嵌布局紧凑、跟随宿主主题，主题切换不得重载或清空未保存编辑；独立面板保留原布局。实现/验证/最终交付区分见[T032验收](development/T032-acceptance.md)。
 
 - NU01：DSH 设置页内查看经验、来源、进度、版本和使用记录，复用现有修订/停用/恢复/反馈行为；打开页面不产生模型调用。
 - NU02：已有同仓库对话的经验入口可进入主面板并返回；其他仓库对话明确拒绝，设置页清楚标示配置绑定仓库，不自动切换数据。
@@ -375,8 +375,8 @@ T009已由PR #28完成设计；T010实现G01/G07显式引用切片，不含自�
 | LC03 | 恢复成功后的当前证据与新候选可见，原始失败和占额保留 | observation-recovery 真实恢复回归、learning-status 提炼授权链 |
 | LC04 | 独立面板能继续已有授权自动片段的候选独立复核，关闭／未知不推进，无模型端口和新 grant | panel-automatic CLI 子进程回归 |
 
-T030 切片已合并，见 [验收](development/T030-acceptance.md)／[PR #70](https://github.com/wang1299/dsh-evolve/pull/70)。原生 DSH 前端由 T031 接入，实际能力与交付见 [T031 验收](development/T031-acceptance.md)；首次配置向导、宿主在线心跳及真实用户可用性评价仍待后续任务，不把说明页面描述为这些能力。未发布。
+T030 切片已合并，见 [验收](development/T030-acceptance.md)／[PR #70](https://github.com/wang1299/dsh-reforge/pull/70)。原生 DSH 前端由 T031 接入，实际能力与交付见 [T031 验收](development/T031-acceptance.md)；首次配置向导、宿主在线心跳及真实用户可用性评价仍待后续任务，不把说明页面描述为这些能力。未发布。
 
-## 12. 文档粒度参考
+## 12. 文档维护约定
 
-只读参考Run2Skill固定快照`cfd288ebd0839aa82e65b118d10a85b6b1b61f35`的[PRD](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/product/prd.md)、[架构](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/architecture/baseline.md)、[设计索引](https://github.com/qkycir-123/dsh-run2skill/blob/cfd288ebd0839aa82e65b118d10a85b6b1b61f35/docs/design/README.md)：借鉴编号、契约、异常矩阵、验收追踪深度。未引入Skill发布／Catalog／所有权产品，未复制实现。参考范围变更见[ADR012](decisions/012-detailed-design-baseline.md)。
+需求与架构采用稳定编号、明确契约、异常矩阵和验收追踪。目标与当前实现分列，设计不得替代实际运行证据；文档版本独立于 npm、SQLite 和评价格式。见[ADR012](decisions/012-detailed-design-baseline.md)。

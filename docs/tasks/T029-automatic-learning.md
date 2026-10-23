@@ -1,6 +1,6 @@
 # T029 正常对话自动学习
 
-- Issue：[67](https://github.com/wang1299/dsh-evolve/issues/67)
+- Issue：[67](https://github.com/wang1299/dsh-reforge/issues/67)
 - 分支codex/t029-automatic-learning；基线c0da5fa。
 - 设计：[ADR031](../decisions/031-automatic-learning.md)。依赖T019/T020/T027/T028。
 
@@ -18,4 +18,4 @@
 
 ## 状态
 
-设计、实现、完整本地检查、实际包/官方Loader学习演练及独立只读复审已完成。173项中172通过、1项本机符号链接权限跳过；兼容8/8。原生脚本模型完整案例零evolve工具、真实目标pytest通过；无真实模型质量/收益结论。代码头d068885两平台CI已通过，最终文档头CI及合并以[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)为准。详见[T029验收](../development/T029-acceptance.md)，未发布。
+设计、实现、完整本地检查、实际包/官方Loader学习演练及独立只读复审已完成。173项中172通过、1项本机符号链接权限跳过；兼容8/8。原生脚本模型完整案例零evolve工具、真实目标pytest通过；无真实模型质量/收益结论。代码头d068885两平台CI已通过，最终文档头CI及合并以[PR #68](https://github.com/wang1299/dsh-reforge/pull/68)为准。详见[T029验收](../development/T029-acceptance.md)，未发布。

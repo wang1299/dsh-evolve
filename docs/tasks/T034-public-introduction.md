@@ -1,8 +1,8 @@
 # T034：仓库介绍与公开材料对照
 
-2026-10-23，Issue [#78](https://github.com/wang1299/dsh-evolve/issues/78)，分支 `codex/t034-public-introduction`，比较基线 `f48dfdc4a9960e03cb5a1d62b33302045abd5277`。
+2026-10-23，Issue [#78](https://github.com/wang1299/dsh-reforge/issues/78)，分支 `codex/t034-public-introduction`，比较基线 `f48dfdc4a9960e03cb5a1d62b33302045abd5277`。
 
-用户要求：对比 Run2Skill 仓库的文档、配图、视频等材料，找出本仓库缺少的部分；补齐本仓库简介、标签，并准备准确的中英文介绍。
+范围：盘点本仓库的公开文档、配图和演示材料；补齐简介、标签和准确的中英文介绍。当前页面按本项目材料维护，原始过程保留在 Git 历史中。
 
 范围：固定参考 SHA 的只读材料盘点；中文首页补身份和流程、英文首页、中英文短/长介绍；远端 About/topics 更新和回读。对照与验收见 [T034 记录](../development/T034-public-materials.md)。没有公开接口、存储或生命周期变化，无需新增 ADR。
 

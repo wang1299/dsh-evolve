@@ -1,6 +1,6 @@
 # T023 · 完整DSH候选发现试装
 
-日期2026-10-20。Issue [#55](https://github.com/wang1299/dsh-evolve/issues/55)，依赖T022已合并PR #54（6742214），本任务基线6742214。
+日期2026-10-20。Issue [#55](https://github.com/wang1299/dsh-reforge/issues/55)，依赖T022已合并PR #54（6742214），本任务基线6742214。
 
 ## 范围与验收
 

@@ -1,6 +1,6 @@
 # T032 插件页与主题一致性验收
 
-Issue [#73](https://github.com/wang1299/dsh-evolve/issues/73)，分支 codex/t032-native-plugin-page，基线 3832e2a297b6e348f419edc4d606fc2e95e17f94。实现前 ADR034 提交 08f3999；无数据格式、模型授权、预算或学习机制变更。
+Issue [#73](https://github.com/wang1299/dsh-reforge/issues/73)，分支 codex/t032-native-plugin-page，基线 3832e2a297b6e348f419edc4d606fc2e95e17f94。实现前 ADR034 提交 08f3999；无数据格式、模型授权、预算或学习机制变更。
 
 ## 实现和依据
 
@@ -20,4 +20,4 @@ Issue [#73](https://github.com/wang1299/dsh-evolve/issues/73)，分支 codex/t03
 
 稳定SHA独立只读评审、必要修复、最终双平台CI和当前仓库规则全部满足后才合并；结果和自己的现有试装保全升级记录追加关联PR。当前未发布npm/Release，未新增模型调用或授权。原预算/unknown/逻辑资格/SQLite v9不变。
 
-本次保留隔离子文档实现，并非将所有界面组件重写成DSH React primitives。插件详情仍有宿主外层滚动与隔离视图内部滚动；未验证其他宿主/版本、Desktop、任意第三方主题或真实模型收益。主题切换保留草稿；卸载/离开操作页仍沿用T031的未保存草稿丢弃语义。主功能和技术记录均属本项目，不移植Run2Skill产品或源码。
+本次保留隔离子文档实现，并非将所有界面组件重写成DSH React primitives。插件详情仍有宿主外层滚动与隔离视图内部滚动；未验证其他宿主/版本、Desktop、任意第三方主题或真实模型收益。主题切换保留草稿；卸载/离开操作页仍沿用T031的未保存草稿丢弃语义。主功能和技术记录均属本项目。

@@ -1,6 +1,6 @@
 # T030 学习进度中心与独立面板收尾
 
-- Issue：[69](https://github.com/wang1299/dsh-evolve/issues/69)
+- Issue：[69](https://github.com/wang1299/dsh-reforge/issues/69)
 - 分支：`codex/t030-learning-progress`；基线 `acf892a`。
 - 依赖：T028/T029；设计：[ADR032](../decisions/032-learning-progress.md)。
 
@@ -19,4 +19,4 @@
 
 ## 当前状态
 
-设计、实现、失败复现、独立复审与代码头两平台 CI 已完成。最终文档头 CI 与合并见 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70)；本机保留的检查失败与全部限制见 [验收记录](../development/T030-acceptance.md)。未发布。
+设计、实现、失败复现、独立复审与代码头两平台 CI 已完成。最终文档头 CI 与合并见 [PR #70](https://github.com/wang1299/dsh-reforge/pull/70)；本机保留的检查失败与全部限制见 [验收记录](../development/T030-acceptance.md)。未发布。

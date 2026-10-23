@@ -80,7 +80,7 @@ export async function rehearseAutomatic(productDir?: string) {
     ctx.on('tools/result', exec => { tools.push(exec.name); });
     const create = async (sessionId: SessionId): Promise<Agent> => { const h = await ctx.agents.create({ sessionId, meta: { cwd: f.repo }, agentOptions: { provider, model, maxTokens: 256 } }); handles.push(h); return h.agent; };
     const pluginInput = await create(SessionId('automatic-ignore-plugin'));
-    pluginInput.followup(createUserMessage({ source: { kind: 'dsh-evolve-experience', form: 'notice', summary: 'Synthetic plugin input, not a human request' }, content: [{ type: 'text', text: 'Do not infer a human task from this plugin message.' }] }));
+    pluginInput.followup(createUserMessage({ source: { kind: 'dsh-reforge-experience', form: 'notice', summary: 'Synthetic plugin input, not a human request' }, content: [{ type: 'text', text: 'Do not infer a human task from this plugin message.' }] }));
     await pluginInput.whenIdle(); assert.equal(store.tasks().length, 0);
     const child = await ctx.agents.create({ sessionId: SessionId('automatic-ignore-child'), meta: { cwd: f.repo, origin: 'subagent' }, agentOptions: { provider, model, maxTokens: 256 } }); handles.push(child);
     await turn(child.agent, 'Synthetic subagent input'); assert.equal(store.tasks().length, 0);

@@ -1,6 +1,6 @@
 # T011：真实DSH首次闭环验证（partial）
 
-2026-10-19，Issue [#31](https://github.com/wang1299/dsh-evolve/issues/31)，[PR #32](https://github.com/wang1299/dsh-evolve/pull/32)，基线52ed030。设计[ADR014](../decisions/014-dsh-live-budget.md)／[任务](../tasks/T011-dsh-live.md)先于实现提交c78290b。用户指定DeepSeek官方及本轮累计5元，Key由用户在本机DSH设置页配置。
+2026-10-19，Issue [#31](https://github.com/wang1299/dsh-reforge/issues/31)，[PR #32](https://github.com/wang1299/dsh-reforge/pull/32)，基线52ed030。设计[ADR014](../decisions/014-dsh-live-budget.md)／[任务](../tasks/T011-dsh-live.md)先于实现提交c78290b。用户指定DeepSeek官方及本轮累计5元，Key由用户在本机DSH设置页配置。
 
 ## 实际结果
 
@@ -31,7 +31,7 @@
 
 累计SDK输入5439、输出561。把缓存也全部按未命中高峰价计算，SDK用量的保守估算为**0.015366元**；这不是服务商账单，也不是原代理策略已完成的结算。原账本保守占额为**4.471346元**，剩余0.528654元不足下一次最坏预留，始终未超过5元。
 
-两次unknown的原始HTTP SSE未保留，无法从现有最终聚合记录断言具体根因；不能把缓存重分配等推测写成事实。历史账本不释放或重算。数值回执/协议兼容跟进[#34](https://github.com/wang1299/dsh-evolve/issues/34)，模型可见的引用契约跟进[#33](https://github.com/wang1299/dsh-evolve/issues/33)。两个任务均未实现，新的付费复测需另定方案与预算，不改写本次失败。
+两次unknown的原始HTTP SSE未保留，无法从现有最终聚合记录断言具体根因；不能把缓存重分配等推测写成事实。历史账本不释放或重算。数值回执/协议兼容跟进[#34](https://github.com/wang1299/dsh-reforge/issues/34)，模型可见的引用契约跟进[#33](https://github.com/wang1299/dsh-reforge/issues/33)。两个任务均未实现，新的付费复测需另定方案与预算，不改写本次失败。
 
 ## 检查、评审及安装
 
