@@ -42,7 +42,7 @@ The first public release is `dsh-reforge@0.1.0-alpha.1`, pinned to DSH 0.2.0-rc.
 dsh plugin --profile web add dsh-reforge@0.1.0-alpha.1
 ```
 
-使用同一 profile 重启 Web，从「插件 → dsh-reforge」打开；首次配置见[安装指南](installation.md)。Restart Web with the same profile, then open Plugins → dsh-reforge. See the [English README](../README.en.md) for initial setup.
+使用同一 profile 重启 Web，从「插件 → dsh-reforge」打开；首次配置见[安装指南](installation.md)。Restart Web with the same profile, then open Plugins → dsh-reforge. See the [English README](README.en.md) for initial setup.
 
 ## 公开链接 / Public links
 

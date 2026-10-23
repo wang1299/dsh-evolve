@@ -1,6 +1,6 @@
 # DSH-Reforge
 
-[中文](README.md) · [English](https://github.com/wang1299/dsh-evolve/blob/main/README.en.md) · [安装指南](docs/installation.md) · [兼容性](https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md)
+[中文](README.md) · [English](https://github.com/wang1299/dsh-evolve/blob/main/docs/README.en.md) · [安装指南](docs/installation.md) · [兼容性](https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md)
 
 [![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
 [![CI](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml)

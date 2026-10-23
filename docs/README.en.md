@@ -1,10 +1,10 @@
 # DSH-Reforge
 
-[中文](README.md) · [English](README.en.md) · [Installation guide (Chinese)](docs/installation.md) · [Compatibility (Chinese)](docs/compatibility.md)
+[中文](../README.md) · [English](README.en.md) · [Installation guide (Chinese)](installation.md) · [Compatibility (Chinese)](compatibility.md)
 
 [![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
 [![CI](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 **DSH-Reforge (`dsh-reforge` on npm) is a community plugin for DeepSeek Harness. It builds traceable experience from test-verified Python bug fixes and selects applicable experience as context for later tasks.**
 
@@ -18,7 +18,7 @@
 - **Selects relevant experience:** checks repository, code, dependencies, and relevance before supplying a small amount of context. It may provide none when evidence is insufficient or inapplicable.
 - **Supports inspection and correction:** the DSH plugin page shows learning progress, experience, sources, history, and usage records, with feedback, revisions, deactivation, and restoration.
 
-Source verification establishes that a repair passed its checks at that time. **It does not prove that the experience improves future tasks.** Earlier small controlled comparisons did not show an improvement in acceptance success rates; see the [evaluation record (Chinese)](docs/development/T008c-acceptance.md).
+Source verification establishes that a repair passed its checks at that time. **It does not prove that the experience improves future tasks.** Earlier small controlled comparisons did not show an improvement in acceptance success rates; see the [evaluation record (Chinese)](development/T008c-acceptance.md).
 
 ## Install and open
 
@@ -52,7 +52,7 @@ dsh web --profile web
 
 Open the full authentication URL printed by DSH. Do not share that URL. In the left sidebar, open **Plugins → dsh-reforge → plugin detail page**. The experience button at the top of an existing conversation also opens the page. Opening the page does not call a model.
 
-Learning is off by default. To enable it, the owner must configure independent acceptance tests outside the target repository, execution trust, model sharing, and an extraction allowance. See the [installation and migration guide (Chinese)](docs/installation.md). The legacy `DSH_EVOLVE_CONFIG` variable remains supported; when both variables are set, they must resolve to the same file. Configure provider credentials through DSH, never in the plugin JSON file.
+Learning is off by default. To enable it, the owner must configure independent acceptance tests outside the target repository, execution trust, model sharing, and an extraction allowance. See the [installation and migration guide (Chinese)](installation.md). The legacy `DSH_EVOLVE_CONFIG` variable remains supported; when both variables are set, they must resolve to the same file. Configure provider credentials through DSH, never in the plugin JSON file.
 
 ## From a repair to an experience
 
@@ -61,7 +61,7 @@ Learning is off by default. To enable it, the owner must configure independent a
 3. The plugin checks the original failure, fixed code, and regression tests in temporary workspaces. With the required evidence and authorization, it extracts a candidate and independently checks it.
 4. Inspect the experience, scope, and source in the plugin page. A later applicable request may receive it as context; users can give feedback or deactivate it.
 
-This describes the current workflow. Source checks and subsequent usage records do not establish task improvement. Reusable [Chinese and English project introductions](docs/public-introduction.md) are maintained separately.
+This describes the current workflow. Source checks and subsequent usage records do not establish task improvement. Reusable [Chinese and English project introductions](public-introduction.md) are maintained separately.
 
 ## Current limits
 
@@ -83,6 +83,6 @@ npm run demo
 
 The demo uses synthetic cases only. Follow its configuration path and run `node dist/src/cli.js panel --config <config.json>` to open the standalone panel. Its full URL includes a local access token; do not share it. Development and installation checks use isolated profiles.
 
-[Product requirements (Chinese)](docs/product.md) · [Architecture (Chinese)](docs/architecture.md) · [Roadmap (Chinese)](docs/roadmap.md) · [Contributing (Chinese)](CONTRIBUTING.md) · [Changelog (Chinese)](CHANGELOG.md)
+[Product requirements (Chinese)](product.md) · [Architecture (Chinese)](architecture.md) · [Roadmap (Chinese)](roadmap.md) · [Contributing (Chinese)](../CONTRIBUTING.md) · [Changelog (Chinese)](../CHANGELOG.md)
 
 Run2Skill is a reference for development organization and documentation granularity only. This repository implements its own data, verification, selection, and update mechanisms. MIT License.
