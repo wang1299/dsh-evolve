@@ -1,6 +1,6 @@
 # T008a验收与交付
 
-关联[Issue #19](https://github.com/wang1299/dsh-evolve/issues/19)，父#15/#8保持open。基线`6e9927cbf7b7767a73331686370b7228ef32e531`。源码树、远端提交、CI与独立评审结果登记在本次关联PR；AI评审不构成GitHub正式Review批准。
+关联[Issue #19](https://github.com/wang1299/dsh-reforge/issues/19)，父#15/#8保持open。基线`6e9927cbf7b7767a73331686370b7228ef32e531`。源码树、远端提交、CI与独立评审结果登记在本次关联PR；AI评审不构成GitHub正式Review批准。
 
 ## 实现与可复现证据
 

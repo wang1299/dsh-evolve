@@ -1,6 +1,6 @@
 # T013：数值用量回执验收
 
-Issue [#34](https://github.com/wang1299/dsh-evolve/issues/34)，[ADR016](../decisions/016-numeric-usage-receipts.md)。依赖已合并PR #35/T012。本轮没有真实模型/新采样。
+Issue [#34](https://github.com/wang1299/dsh-reforge/issues/34)，[ADR016](../decisions/016-numeric-usage-receipts.md)。依赖已合并PR #35/T012。本轮没有真实模型/新采样。
 
 ## 原因与实际能力
 

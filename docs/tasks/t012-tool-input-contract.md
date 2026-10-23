@@ -1,6 +1,6 @@
 # T012：明确模型工具输入契约
 
-Issue [#33](https://github.com/wang1299/dsh-evolve/issues/33)，依赖T010/T011。[ADR015](../decisions/015-tool-input-contract.md)先于实现。
+Issue [#33](https://github.com/wang1299/dsh-reforge/issues/33)，依赖T010/T011。[ADR015](../decisions/015-tool-input-contract.md)先于实现。
 
 范围：原生嵌套Candidate/FactCitation schema、receipt与引用的区别、提案后绑定顺序、错误重放和正确映射。非目标：自动提炼、放宽来源验证、迁移、模型复测或收益评价。
 

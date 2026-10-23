@@ -1,6 +1,6 @@
 # T021 安装包自动学习演练与独立试装
 
-日期：2026-10-19，Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，基线bd7d7fa。设计[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)先于实现，范围[任务](../tasks/T021-installed-learning.md)。最终头检查/独立评审/CI/合并记录以关联PR为准。
+日期：2026-10-19，Issue [#51](https://github.com/wang1299/dsh-reforge/issues/51)，基线bd7d7fa。设计[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)先于实现，范围[任务](../tasks/T021-installed-learning.md)。最终头检查/独立评审/CI/合并记录以关联PR为准。
 
 ## 安装包离线自动链路
 

@@ -1,6 +1,6 @@
 # T008b验收与交付
 
-关联[Issue #21](https://github.com/wang1299/dsh-evolve/issues/21)，父#15/#8继续open。基线d3a64e4d73f86a7c7f81c118a401cde80a78dbf8，设计/8个开发场景先在5e22223提交。稳定提交、CI及独立只读评审记录在关联PR；不是GitHub正式批准。
+关联[Issue #21](https://github.com/wang1299/dsh-reforge/issues/21)，父#15/#8继续open。基线d3a64e4d73f86a7c7f81c118a401cde80a78dbf8，设计/8个开发场景先在5e22223提交。稳定提交、CI及独立只读评审记录在关联PR；不是GitHub正式批准。
 
 ## 修改和证据
 

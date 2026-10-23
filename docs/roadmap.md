@@ -5,9 +5,9 @@
 | T033 更名与首次发行 | T032 / Issue #75 | ADR035；包/CLI/品牌与兼容，制品审计与精确 tag 发行流程开发中；发布需实际远端核验 | codex/t033-reforge-release |
 | T032 插件页入口与主题一致性 | T031 / Issue #73 | ADR034；官方插件详情操作页、内嵌紧凑布局与宿主主题；实际Web/草稿/保存/窄屏通过，最终检查/评审/CI及合并见关联PR | codex/t032-native-plugin-page，未发布 |
 | T031 DSH 原生界面 | T028–T030 / Issue #71 | ADR033；原生设置/对话入口、同宿主认证通道与共享视图；完整 Web / 窄屏 / 重启及实际包通过，评审 P2 已修复复审，代码头双平台 CI 成功；最终门槛见 PR #72 | codex/t031-native-ui，未发布 |
-| T030 学习进度中心与独立面板收尾 | T028/T029 / Issue #69 | ADR032；四阶段投影、配置/次数/原因与候选入口、CLI 独立复核已实现；恢复进度 P2 已修并复审，最终验证与合并见 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70) | codex/t030-learning-progress |
-| T029 正常对话自动学习 | T019/T020/T027/T028 / Issue #67 | ADR031；正常请求/未提交私有快照/一次提炼/候选独立再验/自动提供已实现；本地172通过1跳过、兼容8/8、实际包和浏览器通过，独立复审无阻塞。最终头CI与合并见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)；默认关闭，真实模型与收益未验证 | codex/t029-automatic-learning |
-| T028 用户学习动态与渐进详情 | T027 / Issue #65 | 已实现、159项本地检查/兼容8项/实际包演练/界面验证及独立复审通过；最终CI与合并见[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)，自动学习操作简化另拆任务 | codex/t028-learning-home |
+| T030 学习进度中心与独立面板收尾 | T028/T029 / Issue #69 | ADR032；四阶段投影、配置/次数/原因与候选入口、CLI 独立复核已实现；恢复进度 P2 已修并复审，最终验证与合并见 [PR #70](https://github.com/wang1299/dsh-reforge/pull/70) | codex/t030-learning-progress |
+| T029 正常对话自动学习 | T019/T020/T027/T028 / Issue #67 | ADR031；正常请求/未提交私有快照/一次提炼/候选独立再验/自动提供已实现；本地172通过1跳过、兼容8/8、实际包和浏览器通过，独立复审无阻塞。最终头CI与合并见[PR #68](https://github.com/wang1299/dsh-reforge/pull/68)；默认关闭，真实模型与收益未验证 | codex/t029-automatic-learning |
+| T028 用户学习动态与渐进详情 | T027 / Issue #65 | 已实现、159项本地检查/兼容8项/实际包演练/界面验证及独立复审通过；最终CI与合并见[PR #66](https://github.com/wang1299/dsh-reforge/pull/66)，自动学习操作简化另拆任务 | codex/t028-learning-home |
 | T001 需求、架构、ADR、验收和开发基线 | 无 | 已合并PR #2，Issue #1关闭 | codex/t001-baseline |
 | T002 数据、来源验证、经验选择和生命周期 | T001 | 9项测试两平台CI和必要复审通过，已合并PR #9，Issue #3关闭 | codex/t002-core |
 | T003 DSH 固定版本工具与正常会话兼容探针 | T002 | 11项两平台CI和独立评审通过，PR #10已合并 | codex/t003-dsh |
@@ -36,14 +36,14 @@
 | T023 完整宿主内候选发现试装 | T022已合并6742214、Issue #55 | 新完整Windowsprofile/实际7次脚本Agent与1提炼/实际数量提醒与list回执、正常重启、同库面板；零模型HTTP，最终门槛/限制见[T023验收](development/T023-native-discovery.md) | codex/t023-native-discovery |
 | T024 SSE消费者断连收尾 | T013/T018、Issue #57 | 终端后有界排空、正常EOF再判定，终端前取消及异常仍保留预留；离线预算15项通过，最终门槛见[T024验收](development/T024-acceptance.md) | codex/t024-sse-disconnect |
 | T027 原生提炼启动竞态 | T020/T026，Issue #63 | active凭据服务门槛、固定失败原因/v8；本地154/兼容8、安装包与完整CLI两条离线路径通过；最终门槛见关联PR | codex/t027-native-extraction |
-| T026 未知提炼后的显式新授权 | T020/T025，Issue #61 | ADR028、v7、owner排队、旧记录保留；本地151/兼容6/安装检查与独立复审通过；最终CI/合并见[PR #62](https://github.com/wang1299/dsh-evolve/pull/62) | codex/t026-explicit-extraction |
-| T025 诊断事件截断与显式恢复 | T019/T020、Issue #59 | ADR027/v6、初始完整147项、最终增量5项/兼容6项、实际包离线演练与安装CLI恢复副本检查通过；独立评审无阻塞，最终门槛见[PR #60](https://github.com/wang1299/dsh-evolve/pull/60)；实际恢复另记、未发布 | codex/t025-observation-recovery |
+| T026 未知提炼后的显式新授权 | T020/T025，Issue #61 | ADR028、v7、owner排队、旧记录保留；本地151/兼容6/安装检查与独立复审通过；最终CI/合并见[PR #62](https://github.com/wang1299/dsh-reforge/pull/62) | codex/t026-explicit-extraction |
+| T025 诊断事件截断与显式恢复 | T019/T020、Issue #59 | ADR027/v6、初始完整147项、最终增量5项/兼容6项、实际包离线演练与安装CLI恢复副本检查通过；独立评审无阻塞，最终门槛见[PR #60](https://github.com/wang1299/dsh-reforge/pull/60)；实际恢复另记、未发布 | codex/t025-observation-recovery |
 | T018 显式standard用量兼容 | T017、Issue #45 | PR #46已合并30ed213，Issue #45关闭；文档standard分支/回执2，其他值拒绝；100项两平台CI/实际包/独立评审通过，零新增模型调用 | codex/t018-standard-tier |
 | T017 最小单次真实采样 | T016、用户新增最多3元 | PR #44已合并，Issue #43关闭；一次HTTP200/987字节，字段指纹匹配service_tier，值/历史原因未知，2.232768元未知占额；两平台92项/实际包/独立评审通过，未重跑 | codex/t017-messages-sample |
 | T016 未知usage结构诊断 | T013/T015、Issue #41 | 可选v2回执/固定拒绝位置/有限字段指纹，离线检查及最终CI/评审门槛见关联PR；没有新付费或真实字段认定 | codex/t016-usage-diagnostics |
 | T015 追加预算真实学习回归 | T012–T014、用户另授权5元 | PR #40 / Issue #39；一次live共2个HTTP，start usage未兼容、来源仍open/经验0，partial；代码77项两平台检查、付费前及结果独立核对通过，当前提交CI/合并门槛见PR | codex/t015-live-learning |
 
-远端：公开仓库wang1299/dsh-evolve。T019已合并PR #48（278f58a）；当前T020实现自动候选提炼，实际门槛/合并见[PR列表](https://github.com/wang1299/dsh-evolve/pulls?q=is%3Apr)。T017响应值/真实协议兼容仍未知，T011/T015真实学习仍partial，发布：无。
+远端：公开仓库wang1299/dsh-reforge。T019已合并PR #48（278f58a）；当前T020实现自动候选提炼，实际门槛/合并见[PR列表](https://github.com/wang1299/dsh-reforge/pulls?q=is%3Apr)。T017响应值/真实协议兼容仍未知，T011/T015真实学习仍partial，发布：无。
 
 后续从[架构缺口G01–G10](architecture.md#16-缺口与实施依赖)继续拆任务。T020覆盖G02/G03有限自动候选/单次资格，真实模型质量仍待验；上下文预算/交付G04、正常真实DSH模型学习G05、公开重建/收益G06待完成。G08/G09/G10按风险推进。本次零付费调用，不重开历史预算/未知占额/一次资格；#34协议真实验证及父#8/#15保持open。
 

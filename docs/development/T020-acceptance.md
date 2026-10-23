@@ -1,6 +1,6 @@
 # T020 自动候选提炼验收
 
-日期：2026-10-19。Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，Draft [PR #50](https://github.com/wang1299/dsh-evolve/pull/50)，基线278f58a。设计[ADR023](../decisions/023-automatic-candidate-extraction.md)，范围[任务](../tasks/T020-auto-extraction.md)。最终提交、CI/实际包和独立审查门槛以PR当前头记录为准，本文件不替代这些门槛。
+日期：2026-10-19。Issue [#49](https://github.com/wang1299/dsh-reforge/issues/49)，Draft [PR #50](https://github.com/wang1299/dsh-reforge/pull/50)，基线278f58a。设计[ADR023](../decisions/023-automatic-candidate-extraction.md)，范围[任务](../tasks/T020-auto-extraction.md)。最终提交、CI/实际包和独立审查门槛以PR当前头记录为准，本文件不替代这些门槛。
 
 ## 交付范围
 

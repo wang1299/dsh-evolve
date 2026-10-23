@@ -1,6 +1,6 @@
 # T031 DSH 原生经验入口
 
-Issue [71](https://github.com/wang1299/dsh-evolve/issues/71)，分支 `codex/t031-native-ui`，基线 4dd2f14。依赖 T028–T030，设计 ADR033。
+Issue [71](https://github.com/wang1299/dsh-reforge/issues/71)，分支 `codex/t031-native-ui`，基线 4dd2f14。依赖 T028–T030，设计 ADR033。
 
 ## 范围
 
@@ -17,4 +17,4 @@ Issue [71](https://github.com/wang1299/dsh-evolve/issues/71)，分支 `codex/t03
 
 ## 当前状态
 
-已实现，关联 [PR #72](https://github.com/wang1299/dsh-evolve/pull/72)。完整官方 Web 的设置、读写、对话跳转/返回、重启及 390px 窄屏验收通过；实际包探针通过。独立只读评审的长驻读取 P2 已修复并复审通过，代码头 02ae933 两平台 CI 成功。文档增量及最终交付门槛以 PR 和 [验收](../development/T031-acceptance.md) 为准，未发布。
+已实现，关联 [PR #72](https://github.com/wang1299/dsh-reforge/pull/72)。完整官方 Web 的设置、读写、对话跳转/返回、重启及 390px 窄屏验收通过；实际包探针通过。独立只读评审的长驻读取 P2 已修复并复审通过，代码头 02ae933 两平台 CI 成功。文档增量及最终交付门槛以 PR 和 [验收](../development/T031-acceptance.md) 为准，未发布。

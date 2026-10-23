@@ -1,29 +1,29 @@
 # DSH-Reforge
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v2.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
+  <img src="https://raw.githubusercontent.com/wang1299/dsh-reforge/main/docs/assets/dsh-reforge-hero-v2.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
 </p>
 
 <p align="center"><strong>修复有据，经验可循。</strong></p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1"><img src="https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha" alt="npm alpha" /></a>
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md"><img src="https://img.shields.io/badge/DSH-0.2.0--rc.2-39424e" alt="DSH 0.2.0-rc.2" /></a>
-  <a href="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml"><img src="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main" alt="CI" /></a>
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/docs/compatibility.md"><img src="https://img.shields.io/badge/DSH-0.2.0--rc.2-39424e" alt="DSH 0.2.0-rc.2" /></a>
+  <a href="https://github.com/wang1299/dsh-reforge/actions/workflows/check.yml"><img src="https://github.com/wang1299/dsh-reforge/actions/workflows/check.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/README.md">中文</a> ·
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/README.en.md">English</a> ·
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/installation.md">Installation (Chinese)</a> ·
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md">Compatibility (Chinese)</a> ·
-  <a href="https://github.com/wang1299/dsh-evolve/blob/main/CHANGELOG.md">Changelog (Chinese)</a>
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/README.md">中文</a> ·
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/docs/README.en.md">English</a> ·
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/docs/installation.md">Installation (Chinese)</a> ·
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/docs/compatibility.md">Compatibility (Chinese)</a> ·
+  <a href="https://github.com/wang1299/dsh-reforge/blob/main/CHANGELOG.md">Changelog (Chinese)</a>
 </p>
 
 **DSH-Reforge (`dsh-reforge` on npm) is a community plugin for DeepSeek Harness. It builds traceable experience from test-verified Python bug fixes and selects applicable experience as context for later tasks.**
 
-**Experimental alpha: `dsh-reforge@0.1.0-alpha.1`.** Published on October 23, 2026. Public npm download and installation were checked; the [GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) assets and digests were verified. See [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75) for the results. The source repository retains its original address, `wang1299/dsh-evolve`. This independent community project is not officially reviewed, endorsed, or security certified by DeepSeek.
+**Experimental alpha: `dsh-reforge@0.1.0-alpha.1`.** Published on October 23, 2026. Public npm download and installation were checked; the [GitHub Release](https://github.com/wang1299/dsh-reforge/releases/tag/v0.1.0-alpha.1) assets and digests were verified. See [Issue #75](https://github.com/wang1299/dsh-reforge/issues/75) for the results. The source repository is now `wang1299/dsh-reforge`; GitHub redirects its former address. This independent community project is not officially reviewed, endorsed, or security certified by DeepSeek.
 
 ## What it does
 
@@ -100,4 +100,4 @@ The demo uses synthetic cases only. Follow its configuration path and run `node 
 
 [Product requirements (Chinese)](product.md) · [Architecture (Chinese)](architecture.md) · [Roadmap (Chinese)](roadmap.md) · [Contributing (Chinese)](../CONTRIBUTING.md) · [Changelog (Chinese)](../CHANGELOG.md)
 
-Run2Skill is a reference for development organization and documentation granularity only. This repository implements its own data, verification, selection, and update mechanisms. MIT License. [Brand assets and usage notes (Chinese)](branding.md).
+This repository implements its own data, verification, selection, and update mechanisms. MIT License. [Brand assets and usage notes (Chinese)](branding.md).

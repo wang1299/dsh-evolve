@@ -1,6 +1,6 @@
 # T026 验收与独立评审
 
-Issue [#61](https://github.com/wang1299/dsh-evolve/issues/61)，交付 [PR #62](https://github.com/wang1299/dsh-evolve/pull/62)，设计[ADR028](../decisions/028-explicit-extraction-reauthorization.md)。
+Issue [#61](https://github.com/wang1299/dsh-reforge/issues/61)，交付 [PR #62](https://github.com/wang1299/dsh-reforge/pull/62)，设计[ADR028](../decisions/028-explicit-extraction-reauthorization.md)。
 
 ## 范围与实现
 

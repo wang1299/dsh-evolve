@@ -1,6 +1,6 @@
 # T022 候选发现与提醒：验收记录
 
-日期2026-10-19，Issue [#53](https://github.com/wang1299/dsh-evolve/issues/53)，基线84f5d57。实施前ADR025提交bf7d66d，失败回归提交edca8e9，随后才实现。SQLite仍v5，增量第七工具/只读HTTP接口，无新增授权或自动验证。
+日期2026-10-19，Issue [#53](https://github.com/wang1299/dsh-reforge/issues/53)，基线84f5d57。实施前ADR025提交bf7d66d，失败回归提交edca8e9，随后才实现。SQLite仍v5，增量第七工具/只读HTTP接口，无新增授权或自动验证。
 
 ## 修改与结果
 

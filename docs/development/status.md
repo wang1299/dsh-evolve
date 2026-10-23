@@ -1,44 +1,46 @@
 # 本轮实现与验证状态
 
-T036：按用户最终要求，深色主视觉内仅保留产品名和“Fix. Verify. Reforge.”，图下中文“修复有据，经验可循。”及徽章/导航均居中；两份 README 改用新 v2，旧 v1 和独立 Logo 保留。素材与实际编辑提示词见[品牌说明](../branding.md)，检查、独立稳定SHA审查、CI、合并及公开图像回读以 [T036](../tasks/T036-dark-hero-slogan.md) 和 [Issue #83](https://github.com/wang1299/dsh-evolve/issues/83) 为准。不改产品或已发行制品；以下保留历史状态。
+T037：同一 GitHub 仓库已改名为 `wang1299/dsh-reforge`（ID 1424260867），origin 与目录申请地址已同步。当前源码统一身份并清理外部对照材料，兼容旧配置/消息/用量指纹并保留 SQLite 和授权。实际检查、独立审查、CI 和合并结果见 [T037 验收](T037-acceptance.md) / [Issue #85](https://github.com/wang1299/dsh-reforge/issues/85)。当前源码未重新公开发行；以下保留历史状态。
 
-T035：制作原创透明 PNG Logo 和首页宽幅主视觉，接入中英文 README，最终素材及提示词见[品牌说明](../branding.md)。图像检查、打包、独立稳定 SHA 审查与双平台 CI/合并结果见 [T035](../tasks/T035-brand-assets.md) 及 [Issue #80](https://github.com/wang1299/dsh-evolve/issues/80)。只补品牌材料，不改产品、发行白名单、已发布制品或私人学习环境；以下保留历史状态。
+T036：按用户最终要求，深色主视觉内仅保留产品名和“Fix. Verify. Reforge.”，图下中文“修复有据，经验可循。”及徽章/导航均居中；两份 README 改用新 v2，旧 v1 和独立 Logo 保留。素材与实际编辑提示词见[品牌说明](../branding.md)，检查、独立稳定SHA审查、CI、合并及公开图像回读以 [T036](../tasks/T036-dark-hero-slogan.md) 和 [Issue #83](https://github.com/wang1299/dsh-reforge/issues/83) 为准。不改产品或已发行制品；以下保留历史状态。
 
-T034：按用户要求核对 Run2Skill 固定快照中的公开文档、logo、截图、GIF 和视频入口；补齐本仓库双语首页、准确中英文介绍与仓库 About/topics。逐项已有/缺口及实际远端检查、评审、CI 和合并以 [T034 记录](T034-public-materials.md) 与 [Issue #78](https://github.com/wang1299/dsh-evolve/issues/78) 为准。只改公开材料，不改产品或已发布制品，不调用模型或上传私人图片。以下保留历史状态。
+T035：制作原创透明 PNG Logo 和首页宽幅主视觉，接入中英文 README，最终素材及提示词见[品牌说明](../branding.md)。图像检查、打包、独立稳定 SHA 审查与双平台 CI/合并结果见 [T035](../tasks/T035-brand-assets.md) 及 [Issue #80](https://github.com/wang1299/dsh-reforge/issues/80)。只补品牌材料，不改产品、发行白名单、已发布制品或私人学习环境；以下保留历史状态。
 
-T033：更名 dsh-reforge 并准备0.1.0-alpha.1首个alpha发行；旧数据/预算/工具保留。npm账号已由本人登录并核对为wang129。实际检查、评审、合并与发行结果见[T033验收](T033-acceptance.md)及[Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)，不以本地包或合并当作已发布。以下保留历史状态。
+T034：盘点本项目公开文档、logo、截图、GIF 和视频材料；补齐本仓库双语首页、准确中英文介绍与仓库 About/topics。逐项已有/缺口及实际远端检查、评审、CI 和合并以 [T034 记录](T034-public-materials.md) 与 [Issue #78](https://github.com/wang1299/dsh-reforge/issues/78) 为准。只改公开材料，不改产品或已发布制品，不调用模型或上传私人图片。以下保留历史状态。
+
+T033：更名 dsh-reforge 并准备0.1.0-alpha.1首个alpha发行；旧数据/预算/工具保留。npm账号已由本人登录并核对为wang129。实际检查、评审、合并与发行结果见[T033验收](T033-acceptance.md)及[Issue #75](https://github.com/wang1299/dsh-reforge/issues/75)，不以本地包或合并当作已发布。以下保留历史状态。
 
 T032：依据官方0.2.0-rc.2的plugins.bundle.config补齐左侧插件详情操作页，保留对话/设置入口；内嵌改用紧凑布局及宿主主题，主题切换不重载草稿。固定完整Web实际tgz的插件入口、明暗主题/草稿/保存、窄屏已验；完整检查、独立只读评审及最终CI/合并/试装升级以[T032验收](T032-acceptance.md)与Issue#73关联PR为准。SQLite/预算/授权不变，零模型调用、未发布。以下T031等为历史状态。
 
-T031：原生设置页、对话入口和主面板已实现，复用现有视图和单例服务；固定官方 Web 实际 tgz 的读取/停用保存、认证拒绝、对话打开/返回、重启及窄屏通过，零付费。首次 rpc.handle 受 Cordis shadow 上下文限制失败，改用官方认证 /api 精确 fetch 路由，不修改宿主。独立评审长驻读取 P2 已修复复审，02ae933 两平台 CI 成功；文档增量、最终头 CI、合并及自己的试装升级见 [T031 验收](T031-acceptance.md) / [PR #72](https://github.com/wang1299/dsh-evolve/pull/72)。未发布，自动学习开关与授权不变。以下为历史状态。
+T031：原生设置页、对话入口和主面板已实现，复用现有视图和单例服务；固定官方 Web 实际 tgz 的读取/停用保存、认证拒绝、对话打开/返回、重启及窄屏通过，零付费。首次 rpc.handle 受 Cordis shadow 上下文限制失败，改用官方认证 /api 精确 fetch 路由，不修改宿主。独立评审长驻读取 P2 已修复复审，02ae933 两平台 CI 成功；文档增量、最终头 CI、合并及自己的试装升级见 [T031 验收](T031-acceptance.md) / [PR #72](https://github.com/wang1299/dsh-reforge/pull/72)。未发布，自动学习开关与授权不变。以下为历史状态。
 
-T030：学习主页直接显示模式、配置要求、逻辑提炼余量、逐请求四阶段和固定原因/下一步；CLI 面板补启动已有自动候选独立复核。恢复 Job 的当前链问题已先补失败回归并修复，稳定代码 3f59030 经独立只读 AI 增量复审无阻塞。实际验证、失败记录、最终 CI 与合并见 [T030 验收](T030-acceptance.md) 和 [PR #70](https://github.com/wang1299/dsh-evolve/pull/70)。不新增真实模型调用、授权或发布；原生 DSH 前端和配置向导仍待后续任务。
+T030：学习主页直接显示模式、配置要求、逻辑提炼余量、逐请求四阶段和固定原因/下一步；CLI 面板补启动已有自动候选独立复核。恢复 Job 的当前链问题已先补失败回归并修复，稳定代码 3f59030 经独立只读 AI 增量复审无阻塞。实际验证、失败记录、最终 CI 与合并见 [T030 验收](T030-acceptance.md) 和 [PR #70](https://github.com/wang1299/dsh-reforge/pull/70)。不新增真实模型调用、授权或发布；原生 DSH 前端和配置向导仍待后续任务。
 
-T029：首次owner配置后，正常直接用户请求自动形成受限Python执行片段；未提交代码可私有快照重放，不写用户Git。后台来源验证→单次候选提炼→候选独立再验→后续首次模型输入提供经验，用户无需指定evolve工具或复制ID。默认关闭，依赖外置独立验收。173项中本地172通过1权限跳过、兼容8/8、demo、实际包四场景与新增普通对话案例及浏览器验证通过；独立AI复审确认并发P2已修复，无剩余阻塞。代码头d068885两平台CI通过，最终文档头与合并见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)和[T029验收](T029-acceptance.md)。真实模型质量/收益未验证，未新增付费、授权或发布；以下保留历史状态。
+T029：首次owner配置后，正常直接用户请求自动形成受限Python执行片段；未提交代码可私有快照重放，不写用户Git。后台来源验证→单次候选提炼→候选独立再验→后续首次模型输入提供经验，用户无需指定evolve工具或复制ID。默认关闭，依赖外置独立验收。173项中本地172通过1权限跳过、兼容8/8、demo、实际包四场景与新增普通对话案例及浏览器验证通过；独立AI复审确认并发P2已修复，无剩余阻塞。代码头d068885两平台CI通过，最终文档头与合并见[PR #68](https://github.com/wang1299/dsh-reforge/pull/68)和[T029验收](T029-acceptance.md)。真实模型质量/收益未验证，未新增付费、授权或发布；以下保留历史状态。
 
-T028：默认入口改为学习动态与经验卡片，详情优先呈现策略、适用范围、来源验证和实际应用，证据/编辑/诊断按需展开。草稿与旧revision保护、历史应用反馈语义保留。本地159项检查、兼容8项、实际包四场景和桌面/窄屏验证通过；独立评审2项P2已修复并复审无阻塞。最终当前头CI/合并见[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)及[T028验收](T028-acceptance.md)。正常对话自动归并和候选资格检查仍待后续实现，没有新增模型费用、数据迁移或发布。
+T028：默认入口改为学习动态与经验卡片，详情优先呈现策略、适用范围、来源验证和实际应用，证据/编辑/诊断按需展开。草稿与旧revision保护、历史应用反馈语义保留。本地159项检查、兼容8项、实际包四场景和桌面/窄屏验证通过；独立评审2项P2已修复并复审无阻塞。最终当前头CI/合并见[PR #66](https://github.com/wang1299/dsh-reforge/pull/66)及[T028验收](T028-acceptance.md)。正常对话自动归并和候选资格检查仍待后续实现，没有新增模型费用、数据迁移或发布。
 
 T027：已复现并修复原生提炼早于managed凭据服务active的竞态。只检查strict服务就绪，不读取Key；新增固定失败类别/v8，旧unknown与grant不变。本地check154/154、compat8/8、demo、实际包四场景及完整官方CLI managed/env两路径离线启动通过。最终稳定提交AI独立只读评审和两平台CI/合并见关联PR与[T027验收](T027-acceptance.md)。真实用户旧任务未重放，真实模型复验另需授权；未发布。
 
 
-T026：owner显式新授权、单次新grant、v7原子迁移和面板尝试关联已实现；最终本地check151/151、官方兼容6/6、demo、实际包脚本学习四场景及安装CLI的v6副本迁移/幂等排队通过。独立AI审查发现面板P2，修复并复审无阻塞。最终CI/合并见[PR #62](https://github.com/wang1299/dsh-evolve/pull/62)及[T026验收](T026-acceptance.md)。旧unknown/已用次数/财务占额不变；真实模型执行另记，未发布。
+T026：owner显式新授权、单次新grant、v7原子迁移和面板尝试关联已实现；最终本地check151/151、官方兼容6/6、demo、实际包脚本学习四场景及安装CLI的v6副本迁移/幂等排队通过。独立AI审查发现面板P2，修复并复审无阻塞。最终CI/合并见[PR #62](https://github.com/wang1299/dsh-reforge/pull/62)及[T026验收](T026-acceptance.md)。旧unknown/已用次数/财务占额不变；真实模型执行另记，未发布。
 
 
 ## 当前T023完整宿主候选发现试装（2026-10-20）
 
-Issue [#55](https://github.com/wang1299/dsh-evolve/issues/55)，实施前范围28ebecb。产品代码与6742214相同：T022已由PR #54经141项/compat6/实际包四场景两平台CI和独立评审合并，#53关闭。新的完整固定Windows宿主中实际7次脚本Agent/1次提炼，后台原1失败→修复0/回归0、候选保持candidate，下一实际provider输入收到数量提醒并通过真实list回执发现ID；正常重启与同库安装包面板通过，旧数据保留。失败尝试/完整证据/最终门槛及公开重建限制见[T023验收](T023-native-discovery.md)和关联PR。无真实模型HTTP/费用/Key或旧预算访问；正常真实模型及收益仍待验证，以下为历史快照。
+Issue [#55](https://github.com/wang1299/dsh-reforge/issues/55)，实施前范围28ebecb。产品代码与6742214相同：T022已由PR #54经141项/compat6/实际包四场景两平台CI和独立评审合并，#53关闭。新的完整固定Windows宿主中实际7次脚本Agent/1次提炼，后台原1失败→修复0/回归0、候选保持candidate，下一实际provider输入收到数量提醒并通过真实list回执发现ID；正常重启与同库安装包面板通过，旧数据保留。失败尝试/完整证据/最终门槛及公开重建限制见[T023验收](T023-native-discovery.md)和关联PR。无真实模型HTTP/费用/Key或旧预算访问；正常真实模型及收益仍待验证，以下为历史快照。
 
 ## 当前T022候选发现与提醒（2026-10-19）
 
-Issue [#53](https://github.com/wang1299/dsh-evolve/issues/53)，实施前[ADR025](../decisions/025-candidate-discovery.md)。第七工具在原session只读查询当前自动候选，shareWithModel关闭无存储信息；官方动态context下一正常步骤仅数量提醒，不唤醒/验证。面板顶部有界轮询与当前详情入口，保留编辑草稿；无变化不替换提醒按钮。实际包脚本不再从用户消息传候选ID。设计、失败回归、本地141项及浏览器证据、最终门槛/限制见[T022验收](T022-acceptance.md)及关联PR。T021已由PR #52两平台CI/独立评审合并84f5d57，#51关闭。零付费，真实模型/收益仍未完成，以下保留历史快照。
+Issue [#53](https://github.com/wang1299/dsh-reforge/issues/53)，实施前[ADR025](../decisions/025-candidate-discovery.md)。第七工具在原session只读查询当前自动候选，shareWithModel关闭无存储信息；官方动态context下一正常步骤仅数量提醒，不唤醒/验证。面板顶部有界轮询与当前详情入口，保留编辑草稿；无变化不替换提醒按钮。实际包脚本不再从用户消息传候选ID。设计、失败回归、本地141项及浏览器证据、最终门槛/限制见[T022验收](T022-acceptance.md)及关联PR。T021已由PR #52两平台CI/独立评审合并84f5d57，#51关闭。零付费，真实模型/收益仍未完成，以下保留历史快照。
 
 ## 当前T021安装包自动学习演练与独立试装（2026-10-19）
 
-Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，实施前[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。实际安装tgz、核对24个产品JS/Loader模块身份，真实AgentLoop与固定脚本跑自动候选到新会话实际交付/独立目标验收/宿主合成反馈；三条负路径保留partial，无人工propose补候选。新的完整WindowsDSH配置中最新版插件安装、实际运行及重启通过，未配置Key。实际结果、保留的Loader/Python环境失败、检查/评审/CI门槛见[T021验收](T021-acceptance.md)和关联PR。零付费调用、不重开旧预算；真实模型连通/提炼质量仍待新预算与冻结实验。T020已由PR #50经135项两平台CI/实际安装及独立评审合并bd7d7fa，#49关闭。以下保留历史快照。
+Issue [#51](https://github.com/wang1299/dsh-reforge/issues/51)，实施前[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。实际安装tgz、核对24个产品JS/Loader模块身份，真实AgentLoop与固定脚本跑自动候选到新会话实际交付/独立目标验收/宿主合成反馈；三条负路径保留partial，无人工propose补候选。新的完整WindowsDSH配置中最新版插件安装、实际运行及重启通过，未配置Key。实际结果、保留的Loader/Python环境失败、检查/评审/CI门槛见[T021验收](T021-acceptance.md)和关联PR。零付费调用、不重开旧预算；真实模型连通/提炼质量仍待新预算与冻结实验。T020已由PR #50经135项两平台CI/实际安装及独立评审合并bd7d7fa，#49关闭。以下保留历史快照。
 
 ## 当前T020自动候选经验提炼（2026-10-19）
 
-Issue [#49](https://github.com/wang1299/dsh-evolve/issues/49)，实施前[ADR023](../decisions/023-automatic-candidate-extraction.md)，后续提交实际失败用例再实现。owner单独配置extraction后，仅对随后结束的任务创建资格；ready修复包经二次摘要/版本核对，官方DSH LLM返回严格策略/factIds或拒绝，宿主生成事实、引用和文件条件，只产生候选。SQLite v5额度/唯一任务/原子发布；中断unknown不退额不重跑。默认关闭，无新增付费或真实Key操作；真实模型提炼质量、正常学习与收益待验。本轮实际测试/失败/评审/CI及合并状态见[T020验收](T020-acceptance.md)和[PR #50](https://github.com/wang1299/dsh-evolve/pull/50)。T019已由PR #48经115项两平台CI/实际包及独立审查合并278f58a，#47关闭。以下保留历史快照。
+Issue [#49](https://github.com/wang1299/dsh-reforge/issues/49)，实施前[ADR023](../decisions/023-automatic-candidate-extraction.md)，后续提交实际失败用例再实现。owner单独配置extraction后，仅对随后结束的任务创建资格；ready修复包经二次摘要/版本核对，官方DSH LLM返回严格策略/factIds或拒绝，宿主生成事实、引用和文件条件，只产生候选。SQLite v5额度/唯一任务/原子发布；中断unknown不退额不重跑。默认关闭，无新增付费或真实Key操作；真实模型提炼质量、正常学习与收益待验。本轮实际测试/失败/评审/CI及合并状态见[T020验收](T020-acceptance.md)和[PR #50](https://github.com/wang1299/dsh-reforge/pull/50)。T019已由PR #48经115项两平台CI/实际包及独立审查合并278f58a，#47关闭。以下保留历史快照。
 
 ## 当前T019自动任务证据与后台处理（2026-10-19）
 
@@ -58,7 +60,7 @@ Issue #41，[ADR019](../decisions/019-usage-shape-diagnostics.md)先于实现；
 
 ## 当前T015追加预算真实学习回归（2026-10-19）
 
-用户另授权最多5元；Issue #39 / Draft PR #40，设计[ADR018](../decisions/018-supplemental-live-validation.md)先于实现。新固定profile/单次资格/schema2账本、最大输入总数保守计费，原T011首次partial/未知预留不改。付费前P2（新增验收文件漂移）修复并独立增量复审通过，77项两平台CI通过，实际17个JS安装/零调用握手通过；一次live共2个HTTP，在message_start的未知usage结构保守拒绝，begin/纠正完成，来源open/经验0。新增4.465536元为最坏占额，SDK独立估算0.009626元不是账单或结算，未重跑；最终结果文档已独立增量核对通过；代码头77项两平台检查通过，当前提交CI/合并状态见[PR #40](https://github.com/wang1299/dsh-evolve/pull/40)；详见[T015验收](T015-acceptance.md)。已见合成任务的引导回归，不是收益评价。T014由PR #38经70项两平台检查及必要独立复审合并；以下保留当时阶段快照。
+用户另授权最多5元；Issue #39 / Draft PR #40，设计[ADR018](../decisions/018-supplemental-live-validation.md)先于实现。新固定profile/单次资格/schema2账本、最大输入总数保守计费，原T011首次partial/未知预留不改。付费前P2（新增验收文件漂移）修复并独立增量复审通过，77项两平台CI通过，实际17个JS安装/零调用握手通过；一次live共2个HTTP，在message_start的未知usage结构保守拒绝，begin/纠正完成，来源open/经验0。新增4.465536元为最坏占额，SDK独立估算0.009626元不是账单或结算，未重跑；最终结果文档已独立增量核对通过；代码头77项两平台检查通过，当前提交CI/合并状态见[PR #40](https://github.com/wang1299/dsh-reforge/pull/40)；详见[T015验收](T015-acceptance.md)。已见合成任务的引导回归，不是收益评价。T014由PR #38经70项两平台检查及必要独立复审合并；以下保留当时阶段快照。
 
 ## 当前T014原生Agent脚本演练（2026-10-19）
 
@@ -90,7 +92,7 @@ Issue #29，设计/失败用例提交cace0f1先于实现。旧代码构建通过
 
 ## 当前T009交付（2026-10-19）
 
-用户要求按Run2Skill文档颗粒度细化自己的产品需求与架构。Issue #27和实现前提交4deb0ea的ADR012固定范围；以已合并bd724cc为运行事实基线，原路径升级文档v0.2，补58项编号需求、15个黄金场景、模块/数据/状态/DSH与HTTP契约、异常恢复、授权/清理/预算、需求追踪及G01–G10依赖。
+本阶段细化产品需求与架构。Issue #27和实现前提交4deb0ea的ADR012固定范围；以已合并bd724cc为运行事实基线，原路径升级文档v0.2，补58项编号需求、15个黄金场景、模块/数据/状态/DSH与HTTP契约、异常恢复、授权/清理/预算、需求追踪及G01–G10依赖。
 
 当前与目标严格分列：自动证据归并/提炼/耐久协调、DSH总上下文预算与交付、真实DSH模型闭环、公开重建收益评估等仍未完成。文档不增加代码、格式、工具或HTTP路由，不调用模型、不重跑完整Web安装；不复制参考产品。实际文档检查、当前头CI和独立只读设计评审见[T009验收](T009-design-acceptance.md)及关联PR。父#8/#15保持open，未发布。
 
@@ -132,7 +134,7 @@ Issue #19交付长任务BM25检索、相同算法的普通检索对照、策略�
 
 恢复交付说明（2026-10-19）：用户已恢复GitHub开发；T007的PR #13完成13项两平台CI／评审后合并；T005的PR #14完成15项两平台CI／独立映射后合并，Issue #12/#6关闭。当前单独交付实际安装组件，后续本地Codex及三组运行另交付；下面的“未配置”指当时范围，不否认后续本地成果。[恢复记录](github-resume.md)。
 
-日期：2026-10-18。仓库从空目录独立初始化；上层D:/code和其他私人资料未纳入本仓库。产品为DSH-Evolve，Run2Skill仅研究开发组织。
+日期：2026-10-18。仓库从空目录独立初始化；上层D:/code和其他私人资料未纳入本仓库。产品为DSH-Reforge。
 
 ## 已实现
 
@@ -153,7 +155,7 @@ Issue #19交付长任务BM25检索、相同算法的普通检索对照、策略�
 
 ## 仍未验证与阻塞
 
-- 公开仓库`wang1299/dsh-evolve`已建立，设计PR #2、核心#9、DSH#10、面板#11已分别验收并squash合并；T005评价当前待PR验收。没有正式GitHub Review；main当前无branch protection/rulesets，未修改权限或伪造批准。
+- 公开仓库`wang1299/dsh-reforge`已建立，设计PR #2、核心#9、DSH#10、面板#11已分别验收并squash合并；T005评价当前待PR验收。没有正式GitHub Review；main当前无branch protection/rulesets，未修改权限或伪造批准。
 - 无已配置模型执行器和真实任务集：没有真实DSH模型回合、自主提取质量或三组Agent收益结果。
 - 完整DSH Web/Desktop安装、独立只读验收运行器尚未验证；历史面板13项及T007维护13项已在Ubuntu/Windows CI运行，当前评价15项尚待远端，不能把组件CI当完整应用验证。
 - 任务边界、候选和纠正由模型工具显式提交；不保证自动理解每一次用户纠正。

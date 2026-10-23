@@ -1,6 +1,6 @@
 # T029 自动学习验收
 
-Issue [#67](https://github.com/wang1299/dsh-evolve/issues/67)，Draft [PR #68](https://github.com/wang1299/dsh-evolve/pull/68)；基线c0da5fa。设计ADR031先提交09aa481，两个新增核心用例文件先记录缺失接口失败43b261b/2e37d0a，再实施。当前未发布，真实配置/体验库/预算/Key未改，零真实模型HTTP。
+Issue [#67](https://github.com/wang1299/dsh-reforge/issues/67)，Draft [PR #68](https://github.com/wang1299/dsh-reforge/pull/68)；基线c0da5fa。设计ADR031先提交09aa481，两个新增核心用例文件先记录缺失接口失败43b261b/2e37d0a，再实施。当前未发布，真实配置/体验库/预算/Key未改，零真实模型HTTP。
 
 ## 已执行的证据
 
@@ -23,4 +23,4 @@ Issue [#67](https://github.com/wang1299/dsh-evolve/issues/67)，Draft [PR #68](h
 - 本机实际tgz由官方plugin-manager安装，profile composition/Loader/七工具通过；28个产品JS逐一与构建产物相同。四个原场景保留happy完成、坏提炼/关闭共享/无效目标partial结果；新增普通对话案例绑定安装模块、真实AgentLoop与脚本模型，7次脚本响应、1次提炼、0个evolve工具、0真实模型HTTP，目标首次输入实际收到经验、独立目标pytest通过，用户HEAD/index不变，无伪造用户反馈。合成证据目录仅本机ignored保留。
 - 本机浏览器验证实际普通对话案例的学习主页与按需展开进展：1条来源已验证、1次后续提供；停止宿主后的目标片段仍显示处理中/材料不足，不宣称目标被学习或用户验收。界面截图只本机ignored保存，不上传用户数据。该检查不运行worker或模型，不等价于完整应用真实模型验证。
 
-最终文档头CI与合并结果见[PR #68](https://github.com/wang1299/dsh-evolve/pull/68)；未满足不得合并。真实自动模式默认关闭，没有自动迁移旧任务或重开旧提炼授权。本机既有体验安装若升级，另保存停机备份、v8→v9旧行逐项比较和原预算/配置哈希，不能以合成用例代替。
+最终文档头CI与合并结果见[PR #68](https://github.com/wang1299/dsh-reforge/pull/68)；未满足不得合并。真实自动模式默认关闭，没有自动迁移旧任务或重开旧提炼授权。本机既有体验安装若升级，另保存停机备份、v8→v9旧行逐项比较和原预算/配置哈希，不能以合成用例代替。

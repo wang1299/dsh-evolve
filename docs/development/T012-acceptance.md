@@ -1,6 +1,6 @@
 # T012：引用工具输入契约验收
 
-Issue [#33](https://github.com/wang1299/dsh-evolve/issues/33)，[设计](../decisions/015-tool-input-contract.md)。本轮没有模型调用，也未重跑或改写T011。
+Issue [#33](https://github.com/wang1299/dsh-reforge/issues/33)，[设计](../decisions/015-tool-input-contract.md)。本轮没有模型调用，也未重跑或改写T011。
 
 ## 修改与复现
 

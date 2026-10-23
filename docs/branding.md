@@ -1,6 +1,6 @@
 # DSH-Reforge 品牌素材
 
-2026-10-23。T035 / [Issue #80](https://github.com/wang1299/dsh-evolve/issues/80) 制作原始 Logo 与米白主视觉；T036 / [Issue #83](https://github.com/wang1299/dsh-evolve/issues/83) 按用户最终要求采用深色主视觉，图内只保留产品名和短英文，图下显示中文标语。当前首页使用 v2，旧 v1 和独立 Logo 保留。素材通过内置 imagegen 生成或编辑；没有使用 API Key 或 CLI 回退，也未复制其他插件或 DeepSeek 官方标志。
+2026-10-23。T035 / [Issue #80](https://github.com/wang1299/dsh-reforge/issues/80) 制作原始 Logo 与米白主视觉；T036 / [Issue #83](https://github.com/wang1299/dsh-reforge/issues/83) 按用户最终要求采用深色主视觉，图内只保留产品名和短英文，图下显示中文标语。当前首页使用 v2，旧 v1 和独立 Logo 保留。素材通过内置 imagegen 生成或编辑；没有使用 API Key 或 CLI 回退，也未复制其他插件或 DeepSeek 官方标志。
 
 ## 素材
 

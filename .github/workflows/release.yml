@@ -10,7 +10,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release:
-    if: github.repository == 'wang1299/dsh-evolve' && (github.event_name == 'push' || github.ref == 'refs/heads/main')
+    # The one authorized first release is complete. Its frozen checkout used
+    # the former repository identity. Keep the recovery recipe as history;
+    # a future version needs a new authorization and reviewed release workflow.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

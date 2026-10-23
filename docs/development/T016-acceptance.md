@@ -1,6 +1,6 @@
 # T016：有限结构诊断验收
 
-Issue [#41](https://github.com/wang1299/dsh-evolve/issues/41)，设计先于实现见[ADR019](../decisions/019-usage-shape-diagnostics.md)。本轮零服务商模型调用/凭据访问，只有内存适配器与本机合成HTTP。
+Issue [#41](https://github.com/wang1299/dsh-reforge/issues/41)，设计先于实现见[ADR019](../decisions/019-usage-shape-diagnostics.md)。本轮零服务商模型调用/凭据访问，只有内存适配器与本机合成HTTP。
 
 ## 实现与使用边界
 

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { list } from 'tar';
+import { firstPublishedArtifact } from '../src/legacy.js';
 
 export const release = { name: 'dsh-reforge', version: '0.1.0-alpha.1', tag: 'v0.1.0-alpha.1',
-  repository: 'wang1299/dsh-evolve', publisher: 'wang129', registry: 'https://registry.npmjs.org' } as const;
+  repository: 'wang1299/dsh-reforge', publisher: 'wang129', registry: 'https://registry.npmjs.org' } as const;
 const required = ['package.json', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/installation.md', 'cordis.patch.yml',
   'dist/src/cli.js', 'dist/src/dsh.js', 'dist/src/client.js', 'dist/src/service.js'];
 const allowed = (p: string): boolean => required.includes(p) || /^dist\/src\/[a-z][a-z0-9-]*\.(?:js|d\.ts)$/.test(p);
@@ -22,7 +23,7 @@ export function validateManifest(input: unknown): void {
 }
 
 /** Audit only; never extracts an archive or executes its scripts. */
-export async function auditArchive(file: string): Promise<{ files: string[]; sha256: string; integrity: string; shasum: string; bytes: number }> {
+export async function auditArchive(file: string, historicalFirstRelease = false): Promise<{ files: string[]; sha256: string; integrity: string; shasum: string; bytes: number }> {
   assert.ok((await stat(file)).size <= 8 * 1024 * 1024, 'Compressed package exceeds release cap');
   const files = new Set<string>(); let total = 0; let manifest: Buffer | undefined; let invalid: unknown;
   await list({ file, strict: true, onReadEntry: entry => {
@@ -43,8 +44,13 @@ export async function auditArchive(file: string): Promise<{ files: string[]; sha
   } });
   if (invalid) throw invalid;
   for (const p of required) assert.ok(files.has(p), 'Missing published file: ' + p);
-  assert.ok(manifest); validateManifest(JSON.parse(manifest.toString('utf8')));
   const buffer = await readFile(file);
+  assert.ok(manifest); const metadata = JSON.parse(manifest.toString('utf8')) as RecordValue;
+  if (historicalFirstRelease) {
+    assert.equal(createHash('sha256').update(buffer).digest('hex'), firstPublishedArtifact.sha256, 'Historical exception requires the exact frozen first artifact');
+    assert.deepEqual(metadata.repository, { type: 'git', url: 'git+https://github.com/' + firstPublishedArtifact.repository + '.git' });
+    validateManifest({ ...metadata, repository: { type: 'git', url: 'git+https://github.com/' + release.repository + '.git' } });
+  } else validateManifest(metadata);
   return { files: [...files].sort(), sha256: createHash('sha256').update(buffer).digest('hex'),
     integrity: 'sha512-' + createHash('sha512').update(buffer).digest('base64'), shasum: createHash('sha1').update(buffer).digest('hex'), bytes: buffer.length };
 }
@@ -67,7 +73,11 @@ export function parseReleaseTag(message: string): { commit: string; integrity: s
 export function validateRegistry(metadata: unknown, tag: ReturnType<typeof parseReleaseTag>): string {
   const p = metadata as RecordValue; const dist = p.dist as RecordValue;
   assert.equal(p.name, release.name); assert.equal(p.version, release.version);
-  assert.equal((p.repository as RecordValue).url, 'git+https://github.com/' + release.repository + '.git');
+  const historical = tag.commit === firstPublishedArtifact.sourceCommit;
+  if (historical) {
+    assert.equal(tag.integrity, firstPublishedArtifact.integrity); assert.equal(tag.shasum, firstPublishedArtifact.shasum);
+  }
+  assert.equal((p.repository as RecordValue).url, 'git+https://github.com/' + (historical ? firstPublishedArtifact.repository : release.repository) + '.git');
   assert.equal((p._npmUser as RecordValue).name, release.publisher);
   assert.equal(dist.integrity, tag.integrity); assert.equal(dist.shasum, tag.shasum);
   const tarball = release.registry + '/' + release.name + '/-/' + release.name + '-' + release.version + '.tgz';

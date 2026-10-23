@@ -46,11 +46,11 @@ dsh plugin --profile web add dsh-reforge@0.1.0-alpha.1
 
 ## 公开链接 / Public links
 
-- [GitHub](https://github.com/wang1299/dsh-evolve)
+- [GitHub](https://github.com/wang1299/dsh-reforge)
 - [npm 0.1.0-alpha.1](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
-- [GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1)
-- [Issues](https://github.com/wang1299/dsh-evolve/issues)
+- [GitHub Release](https://github.com/wang1299/dsh-reforge/releases/tag/v0.1.0-alpha.1)
+- [Issues](https://github.com/wang1299/dsh-reforge/issues)
 
 ## 文案维护边界
 
-不要写成“DeepSeek 官方插件”“自动提升正确率”“无限学习”“零模型费用”“适用所有语言/DSH 版本”或“自动生成原生 Skill”。当前产品积累结构化修复经验，不是 Run2Skill 的 Skill 发布流程。后续截图、动图或视频只使用重新生成的合成案例，并标注版本和演示范围；不得公开真实会话、凭据、认证地址、私人路径或经验库。
+不要写成“DeepSeek 官方插件”“自动提升正确率”“无限学习”“零模型费用”“适用所有语言/DSH 版本”或“自动生成原生 Skill”。当前产品积累结构化修复经验，不发布原生 Skill 草稿。后续截图、动图或视频只使用重新生成的合成案例，并标注版本和演示范围；不得公开真实会话、凭据、认证地址、私人路径或经验库。

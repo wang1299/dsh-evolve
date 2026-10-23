@@ -6,6 +6,7 @@ import { snapshot } from './repository.js';
 import { Store } from './store.js';
 import { EvolveService } from './service.js';
 import { extractionPolicySchema } from './extraction-domain.js';
+import { legacyConfigEnvironment } from './legacy.js';
 
 export const configSchema = z.object({
   repoRoot: z.string().min(1), dataDir: z.string().min(1).optional(),
@@ -19,8 +20,8 @@ export const configSchema = z.object({
   'Automatic learning requires explicit execution, background verification, sharing, extraction and independent acceptance configuration');
 export type Config = z.input<typeof configSchema>;
 export function environmentConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const current = env.DSH_REFORGE_CONFIG; const legacy = env.DSH_EVOLVE_CONFIG;
-  if (current && legacy && realpathSync.native(resolve(current)) !== realpathSync.native(resolve(legacy))) throw new Error('DSH_REFORGE_CONFIG and DSH_EVOLVE_CONFIG select different files');
+  const current = env.DSH_REFORGE_CONFIG; const legacy = env[legacyConfigEnvironment];
+  if (current && legacy && realpathSync.native(resolve(current)) !== realpathSync.native(resolve(legacy))) throw new Error('Current and legacy configuration variables select different files');
   const path = current || legacy;
   return path ? loadConfig(path) : { repoRoot: process.cwd() };
 }

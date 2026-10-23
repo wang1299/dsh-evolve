@@ -7,6 +7,7 @@ import { create } from 'tar';
 import { auditArchive, parseReleaseTag, release, validateManifest, validateRegistry } from '../scripts/release-helpers.js';
 import { environmentConfig } from '../src/config.js';
 import { packageName } from '../src/identity.js';
+import { firstPublishedArtifact, legacyConfigEnvironment } from '../src/legacy.js';
 async function workDir(prefix: string): Promise<string> { await mkdir('.probe-work', { recursive: true }); return mkdtemp(join('.probe-work', prefix)); }
 
 test('release manifest, lock root, public bin and private file exclusions agree', async () => {
@@ -15,7 +16,7 @@ test('release manifest, lock root, public bin and private file exclusions agree'
   const lock = JSON.parse(await readFile('package-lock.json', 'utf8'));
   assert.equal(lock.name, p.name); assert.equal(lock.version, p.version);
   assert.equal(lock.packages[''].name, p.name); assert.equal(lock.packages[''].version, p.version);
-  assert.throws(() => validateManifest({ ...p, bin: { 'dsh-evolve': './dist/src/cli.js' } }));
+  assert.throws(() => validateManifest({ ...p, bin: { 'unrelated-plugin': './dist/src/cli.js' } }));
   assert.throws(() => validateManifest({ ...p, files: [...p.files, '.probe-work'] }));
 });
 
@@ -23,11 +24,11 @@ test('configuration rename supports legacy files and fails closed on conflicting
   const work = await workDir('config-rename-'); const file = join(work, 'config.json');
   const config = { repoRoot: process.cwd(), dataDir: join(work, 'unchanged-local-data') };
   await writeFile(file, JSON.stringify(config));
-  const current = environmentConfig({ DSH_REFORGE_CONFIG: file }); const old = environmentConfig({ DSH_EVOLVE_CONFIG: file });
+  const current = environmentConfig({ DSH_REFORGE_CONFIG: file }); const old = environmentConfig({ [legacyConfigEnvironment]: file });
   assert.deepEqual(current, old); assert.equal(current.dataDir, config.dataDir); assert.equal(current.automaticLearning, false);
-  assert.deepEqual(environmentConfig({ DSH_REFORGE_CONFIG: file, DSH_EVOLVE_CONFIG: join(work, '.', 'config.json') }), current);
+  assert.deepEqual(environmentConfig({ DSH_REFORGE_CONFIG: file, [legacyConfigEnvironment]: join(work, '.', 'config.json') }), current);
   const other = join(work, 'other.json'); await writeFile(other, JSON.stringify(config));
-  assert.throws(() => environmentConfig({ DSH_REFORGE_CONFIG: file, DSH_EVOLVE_CONFIG: other }), /different files/);
+  assert.throws(() => environmentConfig({ DSH_REFORGE_CONFIG: file, [legacyConfigEnvironment]: other }), /different files/);
   assert.deepEqual(environmentConfig({}), { repoRoot: process.cwd() });
 });
 
@@ -39,6 +40,7 @@ test('publication audit accepts required files and rejects unintended private da
   const contents = ['package.json', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/installation.md', 'cordis.patch.yml', 'dist/src/cli.js', 'dist/src/dsh.js', 'dist/src/client.js', 'dist/src/service.js'].map(p => 'package/' + p);
   const good = join(work, 'good.tgz'); await create({ file: good, cwd: work, gzip: true }, contents);
   const result = await auditArchive(good); assert.equal(result.files.length, 10); assert.match(result.integrity, /^sha512-/);
+  await assert.rejects(auditArchive(good, true), /exact frozen first artifact/);
   await mkdir(join(root, '.probe-work')); await writeFile(join(root, '.probe-work', 'private.json'), '{}');
   const bad = join(work, 'bad.tgz'); await create({ file: bad, cwd: work, gzip: true }, [...contents, 'package/.probe-work/private.json']);
   await assert.rejects(auditArchive(bad), /whitelist/);
@@ -56,6 +58,13 @@ test('release annotation and registry bind owner, source, version and exact arti
   assert.throws(() => validateRegistry({ ...metadata, _npmUser: { name: 'someone' } }, tag));
   assert.throws(() => validateRegistry({ ...metadata, dist: { ...metadata.dist, integrity: 'different' } }, tag));
   assert.throws(() => validateRegistry({ ...metadata, dist: { ...metadata.dist, tarball: 'https://example.invalid/package.tgz' } }, tag));
+  const frozen = { commit: firstPublishedArtifact.sourceCommit, integrity: firstPublishedArtifact.integrity, shasum: firstPublishedArtifact.shasum };
+  const historical = { ...metadata, repository: { url: 'git+https://github.com/' + firstPublishedArtifact.repository + '.git' },
+    dist: { ...metadata.dist, integrity: frozen.integrity, shasum: frozen.shasum } };
+  assert.ok(validateRegistry(historical, frozen));
+  assert.throws(() => validateRegistry(historical, { ...frozen, commit: 'a'.repeat(40) }));
+  assert.throws(() => validateRegistry(historical, { ...frozen, integrity: tag.integrity }));
+  assert.throws(() => validateRegistry(historical, { ...frozen, shasum: tag.shasum }));
 });
 
 test('release checkout restores the remote annotation after a SHA fetch replaces its local tag reference', async () => {

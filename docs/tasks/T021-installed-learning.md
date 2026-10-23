@@ -1,6 +1,6 @@
 # T021：安装包自动学习演练与独立试装
 
-Issue [#51](https://github.com/wang1299/dsh-evolve/issues/51)，基线bd7d7fa；设计[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。依赖T020；本次零真实模型调用。
+Issue [#51](https://github.com/wang1299/dsh-reforge/issues/51)，基线bd7d7fa；设计[ADR024](../decisions/024-installed-automatic-learning-rehearsal.md)。依赖T020；本次零真实模型调用。
 
 ## 范围与验收
 

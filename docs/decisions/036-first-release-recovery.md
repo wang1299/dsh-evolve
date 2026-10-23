@@ -6,7 +6,7 @@
 
 `dsh-reforge@0.1.0-alpha.1` 已由 `wang129` 发布至 npm `alpha`，公开下载摘要与冻结包一致，固定 DSH 0.2.0-rc.2 的全新公开安装通过。注释标签 `v0.1.0-alpha.1` 的远端对象为 `5035a5b59e85ca7becdf19aaac0eab18333e4ddd`，指向已验收源码 `4bd55a594ac75bdf4cfb331d94944026bbcc1578`。
 
-首个发行工作流 [39911777719](https://github.com/wang1299/dsh-evolve/actions/runs/39911777719) 在创建 Release 前失败。日志证明 checkout 先取得真实注释标签，随后把提交 SHA 强制取到同名本地标签引用，导致 `cat-file -t` 变为 `commit`。现有发行脚本据此拒绝继续；远端标签和 npm 制品没有改变，尚未创建草稿或 Release。
+首个发行工作流 [39911777719](https://github.com/wang1299/dsh-reforge/actions/runs/39911777719) 在创建 Release 前失败。日志证明 checkout 先取得真实注释标签，随后把提交 SHA 强制取到同名本地标签引用，导致 `cat-file -t` 变为 `commit`。现有发行脚本据此拒绝继续；远端标签和 npm 制品没有改变，尚未创建草稿或 Release。
 
 ## 决定
 

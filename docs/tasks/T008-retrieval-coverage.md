@@ -1,6 +1,6 @@
 # T008：检索覆盖与有效经验对照（进行中）
 
-已创建[Issue #15](https://github.com/wang1299/dsh-evolve/issues/15)。依赖T006c，来源为首轮三组无经验暴露的明确缺口。T008a拆为[Issue #19](https://github.com/wang1299/dsh-evolve/issues/19)：先修复长任务检索并保留离线消融，父任务仍未解决。
+已创建[Issue #15](https://github.com/wang1299/dsh-reforge/issues/15)。依赖T006c，来源为首轮三组无经验暴露的明确缺口。T008a拆为[Issue #19](https://github.com/wang1299/dsh-reforge/issues/19)：先修复长任务检索并保留离线消融，父任务仍未解决。
 
 ## 问题和目标
 
@@ -26,4 +26,4 @@
 
 实现前ADR009和36条合成查询在8e9c267固定；实现/方法/开发结果在ad0082b提交后才运行合成留出。方法、完整失败和复现命令见[诊断](../evaluation/retrieval-v1.md)。本任务只交付检索和离线诊断，不关闭#15/#8；长任务回归先失败，资格/负反馈不放松，普通检索同步算法，历史策略评价兼容。当前提交必须通过类型/静态/核心/兼容/两平台CI和独立只读评审后合并。
 
-T008a已验收合并PR #20、关闭#19。T008b拆为[Issue #21](https://github.com/wang1299/dsh-evolve/issues/21)：owner接受的当前版本应用提供有来源的备用表述，新增irrelevant只拒绝相同完整任务表述，策略反例仍停用。实现前设计/兼容/8个开发场景见ADR010；不引入模型调用，不复用旧留出冒充新评估。当前39项本地检查和具体证据见[验收](../development/T008b-acceptance.md)，当前提交CI/独立评审/合并见关联PR；#15/#8未完成。
+T008a已验收合并PR #20、关闭#19。T008b拆为[Issue #21](https://github.com/wang1299/dsh-reforge/issues/21)：owner接受的当前版本应用提供有来源的备用表述，新增irrelevant只拒绝相同完整任务表述，策略反例仍停用。实现前设计/兼容/8个开发场景见ADR010；不引入模型调用，不复用旧留出冒充新评估。当前39项本地检查和具体证据见[验收](../development/T008b-acceptance.md)，当前提交CI/独立评审/合并见关联PR；#15/#8未完成。

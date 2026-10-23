@@ -143,7 +143,7 @@ export async function installedLearning(input: {
   let ctx: Context | undefined; let db: DatabaseSync | undefined; const handles: AgentHandle[] = []; const latestText = new Map<string, string>();
   const read = <T>(table: string, schema: z.ZodType<T>): T[] => db!.prepare(`SELECT body FROM ${table}`).all().map(r => schema.parse(JSON.parse(String(r.body))));
   try {
-    ctx = await boot('dsh', join(input.profile, 'cordis.yml'), [...input.patches, { id: 'dsh-evolve', config }], async root => {
+    ctx = await boot('dsh', join(input.profile, 'cordis.yml'), [...input.patches, { id: 'dsh-reforge', config }], async root => {
       root.provide('credentials', {}); // Active lifecycle fixture; OfflineAdapter never resolves secrets.
       for (const plugin of [SessionStore, SessionProjectionRegistry, AgentRegistry, LlmRuntime]) await root.plugin(plugin).await();
       await root.plugin(SystemPrompt, {}).await(); await root.plugin(ToolRuntime, { mode: 'native' }).await();

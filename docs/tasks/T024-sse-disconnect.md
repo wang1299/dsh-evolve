@@ -1,6 +1,6 @@
 # T024：SSE 消费者完成后关闭连接
 
-Issue：[#57](https://github.com/wang1299/dsh-evolve/issues/57)；设计：[ADR026](../decisions/026-sse-consumer-disconnect.md)。
+Issue：[#57](https://github.com/wang1299/dsh-reforge/issues/57)；设计：[ADR026](../decisions/026-sse-consumer-disconnect.md)。
 
 ## 目标与范围
 
@@ -16,4 +16,4 @@ Issue：[#57](https://github.com/wang1299/dsh-evolve/issues/57)；设计：[ADR0
 
 依赖 T013/T018。Windows 运行目录准备、真实模型学习和收益评价单独记录，不能用本任务的离线结果宣称完成。
 
-状态：实现、预算针对检查 15/15 及本地完整检查 142/142 通过；旧实现失败记录见[验收](../development/T024-acceptance.md)，远端 CI、独立评审和合并记录见 [PR #58](https://github.com/wang1299/dsh-evolve/pull/58)。
+状态：实现、预算针对检查 15/15 及本地完整检查 142/142 通过；旧实现失败记录见[验收](../development/T024-acceptance.md)，远端 CI、独立评审和合并记录见 [PR #58](https://github.com/wang1299/dsh-reforge/pull/58)。

@@ -1,6 +1,6 @@
 # T006d：完整DSH CLI/Web独立试装
 
-2026-10-19，[Issue #25](https://github.com/wang1299/dsh-evolve/issues/25)，父#8保持open。方案先在`78afcdb522a5c997d6a8b5f2ffb9118fff5fcee8`提交后才安装。插件运行代码与主分支`7e115bd`一致，本任务只补安装方案、实际记录和兼容说明。
+2026-10-19，[Issue #25](https://github.com/wang1299/dsh-reforge/issues/25)，父#8保持open。方案先在`78afcdb522a5c997d6a8b5f2ffb9118fff5fcee8`提交后才安装。插件运行代码与主分支`7e115bd`一致，本任务只补安装方案、实际记录和兼容说明。
 
 ## 实际结果
 

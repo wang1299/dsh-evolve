@@ -5,10 +5,10 @@ import type { EvolveService } from './service.js';
 import { RevisionConflict } from './domain.js';
 import { panelRequest } from './panel-api.js';
 
-export const nativePrefix = 'dsh-evolve-';
+export const nativePrefix = 'dsh-reforge-';
 const infoSchema = z.object({ sessionId: z.string().min(1).max(200).optional() }).strict();
 const requestSchema = z.object({ repositoryId: z.string().min(1).max(200), path: z.string().max(250), method: z.enum(['GET', 'POST']), data: z.unknown().optional() }).strict();
-const envelope = z.object({ type: z.literal('client-request'), rpcId: z.string().min(1).max(200), method: z.enum(['dsh-evolve-info', 'dsh-evolve-request']), payload: z.unknown() }).strict();
+const envelope = z.object({ type: z.literal('client-request'), rpcId: z.string().min(1).max(200), method: z.enum(['dsh-reforge-info', 'dsh-reforge-request']), payload: z.unknown() }).strict();
 
 /** Exact routes retain the official authenticated shared /api carrier. */
 export function mountNative(connection: HostConnectionHandle, handler: ConnectionRpcHandler): void {

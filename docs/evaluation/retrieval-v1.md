@@ -1,6 +1,6 @@
 # T008a：可复现的离线检索诊断
 
-对应[Issue #19](https://github.com/wang1299/dsh-evolve/issues/19)，父任务#15/#8仍未完成。来源是历史完整任务的漏选；不追加真实模型调用。
+对应[Issue #19](https://github.com/wang1299/dsh-reforge/issues/19)，父任务#15/#8仍未完成。来源是历史完整任务的漏选；不追加真实模型调用。
 
 ## 冻结与复现
 

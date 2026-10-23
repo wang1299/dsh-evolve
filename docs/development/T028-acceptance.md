@@ -1,6 +1,6 @@
 # T028 用户界面验收
 
-Issue [#65](https://github.com/wang1299/dsh-evolve/issues/65)，基线729cbf3。[设计ADR030](../decisions/030-learning-home.md)在实现前提交为1eb4c0b。发布状态：未发布；本次没有新增模型调用或上传真实学习数据。
+Issue [#65](https://github.com/wang1299/dsh-reforge/issues/65)，基线729cbf3。[设计ADR030](../decisions/030-learning-home.md)在实现前提交为1eb4c0b。发布状态：未发布；本次没有新增模型调用或上传真实学习数据。
 
 ## 问题复现与实现
 
@@ -26,4 +26,4 @@ Issue [#65](https://github.com/wang1299/dsh-evolve/issues/65)，基线729cbf3。
 
 独立只读Agent最终评审fb913c8bce7056cd254550c40bb81fcc309ddb76，对比基线729cbf3cf88c9e9b75f92d1a69e2c3a9bf68d6ab，无剩余P0/P1或阻塞P2；范围包含界面、客户端与HTTP回归、安全边界及文档。没有写库、调用模型或提交正式GitHub批准。候选导航在83c514e修复，历史反馈在fb913c8修复，5项客户端回归通过。非阻塞建议记入backlog：诊断实际变化时保留折叠/焦点、减少无关反馈引起的详情更新提醒。
 
-当前头CI、分支保护、正式Review要求与合并结果以[PR #66](https://github.com/wang1299/dsh-evolve/pull/66)开发记录为准，未满足不得合并。HTTP与SQLite v8契约保持原样，无新依赖。面板仍扫描本仓库记录，未给出大型库容量或可用性指标。未实现正常对话自动归并、自动候选资格检查或新的执行/费用授权入口。产品包保持alpha且未发布；本地试装不能替代发行安装验收。
+当前头CI、分支保护、正式Review要求与合并结果以[PR #66](https://github.com/wang1299/dsh-reforge/pull/66)开发记录为准，未满足不得合并。HTTP与SQLite v8契约保持原样，无新依赖。面板仍扫描本仓库记录，未给出大型库容量或可用性指标。未实现正常对话自动归并、自动候选资格检查或新的执行/费用授权入口。产品包保持alpha且未发布；本地试装不能替代发行安装验收。

@@ -26,7 +26,7 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   const identity = { id: session.id } as Agent;
   const run = (name: string, args: object, agent = identity) => ctx.tools.execute({ callId: ToolCallId(crypto.randomUUID()), name, arguments: args, agent, signal: new AbortController().signal });
   const assembly = await ctx.systemPrompt.assemble();
-  assert.ok(assembly.sections.some((s) => s.name === 'dsh-evolve:workflow'));
+  assert.ok(assembly.sections.some((s) => s.name === 'dsh-reforge:workflow'));
   assert.equal(assembly.tools.filter((t) => t.name.startsWith('evolve_')).length, 7);
   const proposeSchema = assembly.tools.find((t) => t.name === 'evolve_propose_experience')!.parameters;
   const linkSchema = assembly.tools.find((t) => t.name === 'evolve_link_fact_evidence')!.parameters;
@@ -43,7 +43,7 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
     assert.equal((item.properties as Record<string, Record<string, unknown>>).factIndex!.type, 'integer');
   }
   assert.equal((linkSchema.properties as Record<string, Record<string, unknown>>).revision!.type, 'integer');
-  const workflow = assembly.sections.find((s) => s.name === 'dsh-evolve:workflow')!.text;
+  const workflow = assembly.sections.find((s) => s.name === 'dsh-reforge:workflow')!.text;
   assert.match(workflow, /without citations/);
   assert.match(workflow, /kind/);
   const result = await run('evolve_begin_task', { summary: 'database rollback' });
@@ -103,6 +103,6 @@ test('official DSH 0.2.0-rc.2 services register, execute, isolate sessions and u
   assert.equal((await run('evolve_begin_task', { summary: 'outside repository' }, { id: outside.id } as Agent)).isError, true);
   await plugin.dispose();
   const after = await ctx.systemPrompt.assemble();
-  assert.ok(!after.sections.some((s) => s.name === 'dsh-evolve:workflow'));
+  assert.ok(!after.sections.some((s) => s.name === 'dsh-reforge:workflow'));
   assert.equal(after.tools.filter((t) => t.name.startsWith('evolve_')).length, 0);
 });

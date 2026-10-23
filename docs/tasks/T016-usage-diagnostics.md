@@ -1,6 +1,6 @@
 # T016：安全可定位的Messages诊断
 
-Issue [#41](https://github.com/wang1299/dsh-evolve/issues/41)，Related #34/#8。依赖T013最小数值回执与T015真实失败。设计见[ADR019](../decisions/019-usage-shape-diagnostics.md)。
+Issue [#41](https://github.com/wang1299/dsh-reforge/issues/41)，Related #34/#8。依赖T013最小数值回执与T015真实失败。设计见[ADR019](../decisions/019-usage-shape-diagnostics.md)。
 
 ## 目标、范围及非目标
 

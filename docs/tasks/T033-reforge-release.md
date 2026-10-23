@@ -1,6 +1,6 @@
 # T033 更名 dsh-reforge 与首发
 
-Issue [#75](https://github.com/wang1299/dsh-evolve/issues/75)，分支codex/t033-reforge-release，基线608ee05。ADR035先于实现；用户明确授权一次npm/GitHub公开发行。
+Issue [#75](https://github.com/wang1299/dsh-reforge/issues/75)，分支codex/t033-reforge-release，基线608ee05。ADR035先于实现；用户明确授权一次npm/GitHub公开发行。
 
 目标：新包名/CLI/品牌、旧数据与契约兼容、经过验收的0.1.0-alpha.1 alpha包和相同制品的GitHub prerelease。
 

@@ -1,6 +1,6 @@
 # T015：追加预算的真实DSH学习回归
 
-Issue [#39](https://github.com/wang1299/dsh-evolve/issues/39)，设计先于实现见[ADR018](../decisions/018-supplemental-live-validation.md)。2026-10-19用户另授权最多5元，原5元/首次partial/未知占额保持。本轮已执行一次真实live，结果partial；未跑通学习闭环，不得据准备或有效工具结果宣称成功。
+Issue [#39](https://github.com/wang1299/dsh-reforge/issues/39)，设计先于实现见[ADR018](../decisions/018-supplemental-live-validation.md)。2026-10-19用户另授权最多5元，原5元/首次partial/未知占额保持。本轮已执行一次真实live，结果partial；未跑通学习闭环，不得据准备或有效工具结果宣称成功。
 
 ## 已实现与本地验证
 

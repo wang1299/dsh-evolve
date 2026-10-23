@@ -1,6 +1,6 @@
 # T023：新版完整DSH独立试装与候选发现
 
-日期2026-10-20（Asia/Shanghai），Issue [#55](https://github.com/wang1299/dsh-evolve/issues/55)。实施范围先由28ebecb形成，产品基线6742214（T022 / PR #54已合并，#53关闭）。本任务不改产品代码、公开接口或SQLite v5。
+日期2026-10-20（Asia/Shanghai），Issue [#55](https://github.com/wang1299/dsh-reforge/issues/55)。实施范围先由28ebecb形成，产品基线6742214（T022 / PR #54已合并，#53关闭）。本任务不改产品代码、公开接口或SQLite v5。
 
 ## 安装与宿主
 
