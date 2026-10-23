@@ -1,5 +1,7 @@
 # 本轮实现与验证状态
 
+T034：按用户要求核对 Run2Skill 固定快照中的公开文档、logo、截图、GIF 和视频入口；补齐本仓库双语首页、准确中英文介绍与仓库 About/topics。逐项已有/缺口及实际远端检查、评审、CI 和合并以 [T034 记录](T034-public-materials.md) 与 [Issue #78](https://github.com/wang1299/dsh-evolve/issues/78) 为准。只改公开材料，不改产品或已发布制品，不调用模型或上传私人图片。以下保留历史状态。
+
 T033：更名 dsh-reforge 并准备0.1.0-alpha.1首个alpha发行；旧数据/预算/工具保留。npm账号已由本人登录并核对为wang129。实际检查、评审、合并与发行结果见[T033验收](T033-acceptance.md)及[Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)，不以本地包或合并当作已发布。以下保留历史状态。
 
 T032：依据官方0.2.0-rc.2的plugins.bundle.config补齐左侧插件详情操作页，保留对话/设置入口；内嵌改用紧凑布局及宿主主题，主题切换不重载草稿。固定完整Web实际tgz的插件入口、明暗主题/草稿/保存、窄屏已验；完整检查、独立只读评审及最终CI/合并/试装升级以[T032验收](T032-acceptance.md)与Issue#73关联PR为准。SQLite/预算/授权不变，零模型调用、未发布。以下T031等为历史状态。
