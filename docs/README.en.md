@@ -1,14 +1,25 @@
 # DSH-Reforge
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v1.png" alt="DSH-Reforge: traceable experience from verified fixes" width="1000" />
+  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v2.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
 </p>
 
-[中文](../README.md) · [English](README.en.md) · [Installation guide (Chinese)](installation.md) · [Compatibility (Chinese)](compatibility.md)
+<p align="center"><strong>修复有据，经验可循。</strong></p>
 
-[![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
-[![CI](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
+<p align="center">
+  <a href="https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1"><img src="https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha" alt="npm alpha" /></a>
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md"><img src="https://img.shields.io/badge/DSH-0.2.0--rc.2-39424e" alt="DSH 0.2.0-rc.2" /></a>
+  <a href="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml"><img src="https://github.com/wang1299/dsh-evolve/actions/workflows/check.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/README.md">中文</a> ·
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/README.en.md">English</a> ·
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/installation.md">Installation (Chinese)</a> ·
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md">Compatibility (Chinese)</a> ·
+  <a href="https://github.com/wang1299/dsh-evolve/blob/main/CHANGELOG.md">Changelog (Chinese)</a>
+</p>
 
 **DSH-Reforge (`dsh-reforge` on npm) is a community plugin for DeepSeek Harness. It builds traceable experience from test-verified Python bug fixes and selects applicable experience as context for later tasks.**
 
