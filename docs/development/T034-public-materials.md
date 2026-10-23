@@ -1,5 +1,7 @@
 # T034：公开仓库材料对照与介绍验收
 
+后续更新：T035 按用户要求制作 Logo 和首页主视觉，素材与使用方式见[品牌说明](../branding.md)及 [Issue #80](https://github.com/wang1299/dsh-evolve/issues/80)。下表保留 T034 比较基线和当轮范围，不能当作后续素材的缺失状态。
+
 2026-10-23，Issue [#78](https://github.com/wang1299/dsh-evolve/issues/78)。本仓库比较基线 `f48dfdc4a9960e03cb5a1d62b33302045abd5277`；Run2Skill 只读快照 [`40e7fb7c39d2f69fee9becf694ad8e12290229d3`](https://github.com/qkycir-123/dsh-run2skill/tree/40e7fb7c39d2f69fee9becf694ad8e12290229d3)。核对其完整 Git 文件树、中文/英文 README、About、第三方许可和数据说明；没有复制代码、文案或图片，也没有向该仓库发送内容。
 
 ## 逐项对照

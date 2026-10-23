@@ -1,5 +1,9 @@
 # DSH-Reforge
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v1.png" alt="DSH-Reforge：从修复证据中积累经验" width="1000" />
+</p>
+
 [中文](README.md) · [English](https://github.com/wang1299/dsh-evolve/blob/main/docs/README.en.md) · [安装指南](docs/installation.md) · [兼容性](https://github.com/wang1299/dsh-evolve/blob/main/docs/compatibility.md)
 
 [![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
@@ -75,4 +79,4 @@ npm run demo
 
 [产品需求](https://github.com/wang1299/dsh-evolve/blob/main/docs/product.md) · [架构总纲](https://github.com/wang1299/dsh-evolve/blob/main/docs/architecture.md) · [路线](https://github.com/wang1299/dsh-evolve/blob/main/docs/roadmap.md) · [开发与贡献](https://github.com/wang1299/dsh-evolve/blob/main/CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
-Run2Skill 仅作为开发组织和设计文档颗粒度的参考。本产品的数据、验证、选择及更新机制由本仓库独立实现。MIT License。
+Run2Skill 仅作为开发组织和设计文档颗粒度的参考。本产品的数据、验证、选择及更新机制由本仓库独立实现。MIT License。 [品牌素材与使用说明](https://github.com/wang1299/dsh-evolve/blob/main/docs/branding.md)。
