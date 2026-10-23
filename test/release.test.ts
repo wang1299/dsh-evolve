@@ -11,6 +11,7 @@ async function workDir(prefix: string): Promise<string> { await mkdir('.probe-wo
 
 test('release manifest, lock root, public bin and private file exclusions agree', async () => {
   const p = JSON.parse(await readFile('package.json', 'utf8')); validateManifest(p); assert.equal(packageName, p.name);
+  assert.equal(p.repository.url, 'git+https://github.com/wang1299/dsh-reforge.git');
   const lock = JSON.parse(await readFile('package-lock.json', 'utf8'));
   assert.equal(lock.name, p.name); assert.equal(lock.version, p.version);
   assert.equal(lock.packages[''].name, p.name); assert.equal(lock.packages[''].version, p.version);
