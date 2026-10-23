@@ -1,4 +1,6 @@
-# DSH-Evolve 产品需求 v0.2
+# DSH-Reforge 产品需求 v0.2
+
+T033（2026-10-23）：产品更名为 DSH-Reforge，包/CLI 为 `dsh-reforge@0.1.0-alpha.1`。发行候选与兼容身份见 [ADR035](decisions/035-reforge-first-release.md)，安装见 [指南](installation.md)，公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。SQLite 当前 v9；下文早期版本及阶段状态按历史快照理解。来源验证和未来收益仍分开。
 
 > 核心体验：**“这个问题我上次纠正过，这次 Agent 能自己注意到。”**
 

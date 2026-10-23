@@ -25,7 +25,7 @@ export class WorkspaceSnapshots {
   }
   private environment(): NodeJS.ProcessEnv { return { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key))),
     GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null',
-    GIT_AUTHOR_NAME: 'DSH-Evolve', GIT_AUTHOR_EMAIL: 'local@example.invalid', GIT_COMMITTER_NAME: 'DSH-Evolve', GIT_COMMITTER_EMAIL: 'local@example.invalid' }; }
+    GIT_AUTHOR_NAME: 'DSH-Reforge', GIT_AUTHOR_EMAIL: 'local@example.invalid', GIT_COMMITTER_NAME: 'DSH-Reforge', GIT_COMMITTER_EMAIL: 'local@example.invalid' }; }
   private command(args: string[], input?: Buffer | string): Buffer {
     return execFileSync('git', ['--git-dir=' + resolve(this.directory), ...args], { input, maxBuffer: 12 * 1024 * 1024, windowsHide: true,
       env: this.environment() });

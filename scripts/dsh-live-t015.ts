@@ -73,7 +73,7 @@ async function prepare(hostRoot: string, dshHome: string, archive: string): Prom
   writeFileSync(join(work, 'installation.log'), install);
   writeFileSync(join(dshHome, 'profiles', plan.profile, 'cordis.patch.yml'), JSON.stringify(basePatch(plan), null, 2));
   const profileDir = join(dshHome, 'profiles', plan.profile);
-  const installed = join(profileDir, 'node_modules/dsh-evolve/dist/src');
+  const installed = join(profileDir, 'node_modules/dsh-reforge/dist/src');
   const files = [configPath, archive, join(profileDir, 'cordis.yml'), join(profileDir, 'cordis.patch.yml'),
     join(profileDir, 'package.json'), join(profileDir, 'pnpm-lock.yaml'), bin,
     join(hostRoot, 'node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js'),

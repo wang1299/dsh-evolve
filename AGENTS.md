@@ -1,4 +1,4 @@
-# DSH-Evolve development rules
+# DSH-Reforge development rules
 
 - Product requirements live in `docs/product.md`. The user authorized Run2Skill as a reference for development workflow and requirements/architecture documentation granularity (ADR-012); do not copy its product or implementation.
 - Keep all work inside this repository. Never stage the parent repository or sibling directories.

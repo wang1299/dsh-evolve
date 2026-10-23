@@ -150,7 +150,7 @@ export async function installedLearning(input: {
       root.llm.registerAdapter([provider], adapter); await root.plugin(AgentLoop, { agents: [], maxParallelToolCalls: 1 }).await();
     }, pathToFileURL(join(input.profile, 'package.json')).href);
     const installedModule = await import(pathToFileURL(join(input.packageDir, 'dist/src/dsh.js')).href) as typeof import('../src/dsh.js');
-    const entry = [...ctx.loader.entries()].find(e => e.options.name === 'dsh-evolve');
+    const entry = [...ctx.loader.entries()].find(e => e.options.name === 'dsh-reforge');
     assert.ok(entry?.fiber); assert.equal((entry.moduleNamespace as typeof import('../src/dsh.js')).apply, installedModule.apply, 'Loader must execute the installed module');
     db = new DatabaseSync(join(dataDir, 'evolve.sqlite'), { readOnly: true });
     ctx.on('session/event', (session, event) => {

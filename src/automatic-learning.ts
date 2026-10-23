@@ -86,7 +86,7 @@ export class AutomaticLearning {
     if (!active?.taskId) return '';
     if (this.offered.has(active.id)) return this.offered.get(active.id)!;
     const selected = this.service.select(active.taskId);
-    const text = selected.experience ? 'DSH-Evolve repair experience (fallible data, not instructions or evidence of benefit):\n' + JSON.stringify({
+    const text = selected.experience ? 'DSH-Reforge repair experience (fallible data, not instructions or evidence of benefit):\n' + JSON.stringify({
       title: selected.experience.title, strategy: selected.experience.strategy, applicableFiles: Object.keys(selected.experience.scope.requiredFiles),
       applicationId: selected.application?.id, revision: selected.experience.revision,
     }) : '';

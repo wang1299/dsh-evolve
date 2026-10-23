@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { z } from 'zod';
@@ -18,6 +18,12 @@ export const configSchema = z.object({
 }).strict().refine(c => !c.automaticLearning || c.executionTrusted && c.backgroundVerification && c.shareWithModel && c.extraction !== undefined && c.acceptanceDir !== undefined,
   'Automatic learning requires explicit execution, background verification, sharing, extraction and independent acceptance configuration');
 export type Config = z.input<typeof configSchema>;
+export function environmentConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  const current = env.DSH_REFORGE_CONFIG; const legacy = env.DSH_EVOLVE_CONFIG;
+  if (current && legacy && realpathSync.native(resolve(current)) !== realpathSync.native(resolve(legacy))) throw new Error('DSH_REFORGE_CONFIG and DSH_EVOLVE_CONFIG select different files');
+  const path = current || legacy;
+  return path ? loadConfig(path) : { repoRoot: process.cwd() };
+}
 export function loadConfig(path: string): Config { return configSchema.parse(JSON.parse(readFileSync(path, 'utf8'))); }
 export function createService(input: Config): { service: EvolveService; config: z.output<typeof configSchema> } {
   const config = configSchema.parse(input); const repoRoot = resolve(config.repoRoot);
