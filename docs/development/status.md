@@ -1,5 +1,7 @@
 # 本轮实现与验证状态
 
+T039：根据用户“像后台信息”的实际反馈，共享页面改为问题、已有中文提醒、修复前后检查及后续参考的阅读路径，原文/测试明细/管理渐进展开。只读投影不翻译或修改旧经验，不把参考记录说成采用或收益；记录、授权和数据契约保持。实际检查、P2 进度入口复现修复、独立合成宿主与最终评审/CI/交付见 [T039验收](T039-acceptance.md) 和 [Issue #91](https://github.com/wang1299/dsh-reforge/issues/91)。原私人冻结包不自动升级，未公开发行新版。
+
 T038：同一 GitHub 仓库已改名为 `wang1299/dsh-reforge`（ID 1424260867），origin 与目录申请地址已同步。当前源码统一身份并清理外部对照材料，兼容旧配置/消息/用量指纹并保留 SQLite 和授权。实际检查、独立审查、CI 和合并结果见 [T038 验收](T038-acceptance.md) / [Issue #85](https://github.com/wang1299/dsh-reforge/issues/85)。当前源码未重新公开发行；以下保留历史状态。
 
 T037：采用用户选定的第二轮 E「精密金属」主视觉为 v3，同步中英文 README 和品牌说明；图外中文标语、徽章/许可/导航的居中排版保持。旧素材及独立 Logo 保留，检查、稳定 SHA 独立评审、当前头 CI 和公开回读见 [T037](../tasks/T037-precision-metal-hero.md) 及 [Issue #86](https://github.com/wang1299/dsh-reforge/issues/86)。仅更新品牌材料，未重新发布包或 Release；以下保留历史状态。
