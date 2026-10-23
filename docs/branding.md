@@ -1,13 +1,14 @@
 # DSH-Reforge 品牌素材
 
-2026-10-23。T035 / [Issue #80](https://github.com/wang1299/dsh-reforge/issues/80) 制作原始 Logo 与米白主视觉；T036 / [Issue #83](https://github.com/wang1299/dsh-reforge/issues/83) 按用户最终要求采用深色主视觉，图内只保留产品名和短英文，图下显示中文标语。当前首页使用 v2，旧 v1 和独立 Logo 保留。素材通过内置 imagegen 生成或编辑；没有使用 API Key 或 CLI 回退，也未复制其他插件或 DeepSeek 官方标志。
+2026-10-23。T035 / [Issue #80](https://github.com/wang1299/dsh-reforge/issues/80) 制作原始 Logo 与米白主视觉；T036 / [Issue #83](https://github.com/wang1299/dsh-reforge/issues/83) 改为纯英文深色主视觉及图外中文标语；T037 / [Issue #86](https://github.com/wang1299/dsh-reforge/issues/86) 采用用户选定的第二轮 E「精密金属」版。当前首页使用 v3，旧 v1/v2 和独立 Logo 保留。素材通过内置 imagegen 生成或编辑；没有使用 API Key 或 CLI 回退，也未复制其他插件或 DeepSeek 官方标志。
 
 ## 素材
 
 | 文件 | 规格 | 用途 |
 |---|---|---|
 | [透明 Logo](assets/dsh-reforge-logo-v1.png) | 1254×1254，RGBA PNG，530698 字节 | 项目标志、介绍页和宣传材料 |
-| [当前首页主视觉 v2](assets/dsh-reforge-hero-v2.png) | 1983×793，RGB PNG，1683027 字节 | 中英文 GitHub README 深色宽幅横图 |
+| [当前首页主视觉 v3](assets/dsh-reforge-hero-v3.png) | 1983×793，RGB PNG，1869934 字节 | 中英文 GitHub README 精密金属宽幅横图 |
+| [历史首页主视觉 v2](assets/dsh-reforge-hero-v2.png) | 1983×793，RGB PNG，1683027 字节 | 深色锻造旧版，保留原文件 |
 | [历史首页主视觉 v1](assets/dsh-reforge-hero-v1.png) | 1983×793，RGB PNG，1419460 字节 | 米白底旧版，保留原文件 |
 
 <p align="center">
@@ -15,14 +16,14 @@
 </p>
 
 <p align="center">
-  <img src="assets/dsh-reforge-hero-v2.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
+  <img src="assets/dsh-reforge-hero-v3.png" alt="DSH-Reforge — Fix. Verify. Reforge." width="1000" />
 </p>
 
 <p align="center"><strong>修复有据，经验可循。</strong></p>
 
 ## 设计与使用
 
-标志由交叠的 R 形带状结构构成，以石墨黑与铜橙表达“重铸”。当前 v2 采用深色锻造构图、铜橙光线与立体 R；旧 v1 采用米白底和淡工程网格。主视觉是品牌插画，不是实际 UI 截图、验收证据或收益证明。
+标志由交叠的 R 形带状结构构成，以石墨黑与铜橙表达“重铸”。当前 v3 采用精密金属构图：左侧拉丝石墨黑/铜橙 R，右侧白色产品名和铜橙短标语，深色背景与克制反射。旧 v2 为右侧立体 R 的锻造构图，v1 为米白底和淡工程网格。主视觉是品牌插画，不是实际 UI 截图、验收证据或收益证明。
 
 当前图内仅有两项文字：
 
@@ -38,10 +39,32 @@
 ## 文件摘要
 
 - Logo SHA256: `b918ac0764d36ac6c9fb6f0975cbc8bfad80f8786d74b3139c1c87c1f462c7f0`
+- Hero v3 SHA256: `3af5982e96bd6c3b019dab5e76a145f8dfb2aecfb8812662d06cc97f9073ef58`
 - Hero v2 SHA256: `53b94f31c4c06cb2bf1ea562b86f40bbf33eaed6335fb6cbb95bcfafcad45bc5`
 - Hero v1 SHA256: `b014db603ff842edb4b6c661fa41393257543e308472317e6bee0a6647520360`
 
-## 当前 v2 编辑提示词
+## 当前 v3 生成提示词
+
+原始 Logo 作为品牌标志参考，使用下列实际提示词生成第二轮 E 备选。用户选图附件与 E 原图解码后的像素完全一致；仓库采用较小的原始生成 PNG，未重新生成、裁切或修改图像。
+
+<details>
+<summary>精密金属 v3 · ads-marketing · 内置 imagegen · 不透明背景</summary>
+
+```text
+Use case: ads-marketing.
+Asset type: a finished wide GitHub README homepage hero banner for the DSH-Reforge open-source community plugin. Generate a single full-bleed landscape banner, aspect ratio 5:2 (target 1920 by 768), with generous 6% safe margins.
+Input image 1 is ONLY the existing brand-mark reference: preserve its recognizable interlocking geometric R silhouette, graphite upper arch and left stem, copper-orange crossing band and diagonal leg, and small detached copper diamond. Render it in the requested medium without inventing a different logo.
+The image must contain ONLY these two exact text strings, in tasteful, exceptionally legible sans-serif typography:
+"DSH-Reforge"
+"Fix. Verify. Reforge."
+Render the name with exactly that capitalization and hyphen, on ONE line. The short slogan must appear directly beneath it, large enough to read in a GitHub README at 840px width. Do not put any Chinese, captions, labels, tiny footer, additional words, pseudo-code, badges, official DeepSeek logos, watermarks, or performance claims inside this image. The Chinese slogan will be placed outside the image later.
+Polished, restrained, memorable professional developer-tool branding; not a game poster, not crypto art, not a UI screenshot. Text may not overlap the logo.
+Art direction: PRECISION INDUSTRIAL PRODUCT PHOTOGRAPHY, a quiet slate-charcoal studio, an actual sculptural R emblem in finely brushed graphite titanium with satin copper-orange inlays and bevels, standing on the LEFT 35% of the scene. Use a very shallow plinth and precise soft top-left studio light, honest fine metal grain, controlled warm reflections, elegant depth, crisp original R silhouette, no dramatic orange aura. Keep the RIGHT 60% calm and dark, with the exact product name in large warm-white type and exact slogan beneath in muted copper. A horizontal camera composition, clear hierarchy, premium physical craft, generous empty space. Background subtly grades from slate #24282e to charcoal #111316. No flames, sparks, smoke, hard diagonal light beams, circuitry or excessive texture.
+```
+
+</details>
+
+## 历史 v2 编辑提示词
 
 以用户选定的深色主视觉为基础进行文字编辑，下面保留最终版本的实际提示词。
 

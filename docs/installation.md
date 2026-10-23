@@ -105,7 +105,7 @@ dsh web --profile web
 
 ## 6. 从首发包升级到当前源码
 
-本节适用于 T037 后的开发源码，不表示 npm 首发包已经更新。先停止所有旧服务和面板，确认没有后台学习任务；备份 profile、原配置、SQLite 及私有快照。
+本节适用于 T038 后的开发源码，不表示 npm 首发包已经更新。先停止所有旧服务和面板，确认没有后台学习任务；备份 profile、原配置、SQLite 及私有快照。
 
 在原 profile 移除旧插件依赖，再安装经过检查的新 tgz；沿用原配置的绝对路径和同一 dataDir。若 profile 的自定义 patch 曾使用 `id: dsh-evolve` 覆盖配置，只把该行改为 `id: dsh-reforge`，保持整份 config（包括 dataDir、grantId、maxCalls）不变。不要新增第二份行或同时启用新旧 ID；若存在多行，停机核对后再启动。默认数据路径和 SQLite 文件名不变，无需搬迁。
 

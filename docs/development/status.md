@@ -1,6 +1,8 @@
 # 本轮实现与验证状态
 
-T037：同一 GitHub 仓库已改名为 `wang1299/dsh-reforge`（ID 1424260867），origin 与目录申请地址已同步。当前源码统一身份并清理外部对照材料，兼容旧配置/消息/用量指纹并保留 SQLite 和授权。实际检查、独立审查、CI 和合并结果见 [T037 验收](T037-acceptance.md) / [Issue #85](https://github.com/wang1299/dsh-reforge/issues/85)。当前源码未重新公开发行；以下保留历史状态。
+T038：同一 GitHub 仓库已改名为 `wang1299/dsh-reforge`（ID 1424260867），origin 与目录申请地址已同步。当前源码统一身份并清理外部对照材料，兼容旧配置/消息/用量指纹并保留 SQLite 和授权。实际检查、独立审查、CI 和合并结果见 [T038 验收](T038-acceptance.md) / [Issue #85](https://github.com/wang1299/dsh-reforge/issues/85)。当前源码未重新公开发行；以下保留历史状态。
+
+T037：采用用户选定的第二轮 E「精密金属」主视觉为 v3，同步中英文 README 和品牌说明；图外中文标语、徽章/许可/导航的居中排版保持。旧素材及独立 Logo 保留，检查、稳定 SHA 独立评审、当前头 CI 和公开回读见 [T037](../tasks/T037-precision-metal-hero.md) 及 [Issue #86](https://github.com/wang1299/dsh-reforge/issues/86)。仅更新品牌材料，未重新发布包或 Release；以下保留历史状态。
 
 T036：按用户最终要求，深色主视觉内仅保留产品名和“Fix. Verify. Reforge.”，图下中文“修复有据，经验可循。”及徽章/导航均居中；两份 README 改用新 v2，旧 v1 和独立 Logo 保留。素材与实际编辑提示词见[品牌说明](../branding.md)，检查、独立稳定SHA审查、CI、合并及公开图像回读以 [T036](../tasks/T036-dark-hero-slogan.md) 和 [Issue #83](https://github.com/wang1299/dsh-reforge/issues/83) 为准。不改产品或已发行制品；以下保留历史状态。
 
