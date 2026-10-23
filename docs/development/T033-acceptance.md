@@ -1,6 +1,6 @@
 # T033：DSH-Reforge 首次发行验收
 
-2026-10-23；Issue [#75](https://github.com/wang1299/dsh-reforge/issues/75)，基线 `608ee05e5059d9ac5a43f20ea31e696da274db7b`。ADR035 于实现前提交。用户明确授权包名 dsh-reforge、npm 与 GitHub Release；npm 已由本人登录，实际账号核对为 wang129。仓库仍为 wang1299/dsh-reforge。
+2026-10-23；Issue [#75](https://github.com/wang1299/dsh-reforge/issues/75)，基线 `608ee05e5059d9ac5a43f20ea31e696da274db7b`。ADR035 于实现前提交。用户明确授权包名 dsh-reforge、npm 与 GitHub Release；npm 已由本人登录，实际账号核对为 wang129。首发时沿用原代码仓库；T037 后浏览地址为 wang1299/dsh-reforge，首发包元数据保留发布时身份。
 
 ## 范围与复现
 

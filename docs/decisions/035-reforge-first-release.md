@@ -6,7 +6,7 @@
 
 ## 包与兼容身份
 
-公开npm包和CLI改为`dsh-reforge`，品牌DSH-Reforge，首版`0.1.0-alpha.1`、npm `alpha`标签及同版本GitHub prerelease，不称稳定版。代码/Release沿用`wang1299/dsh-reforge`仓库，保留贡献与评审历史。补repository/bugs/homepage/license/公开发行元数据，白名单只包含产品编译输出、patch、README/LICENSE/CHANGELOG和安装指南。
+公开npm包和CLI改为`dsh-reforge`，品牌DSH-Reforge，首版`0.1.0-alpha.1`、npm `alpha`标签及同版本GitHub prerelease，不称稳定版。当时的代码/Release 沿用原仓库，保留贡献与评审历史。T037 后浏览地址为 `wang1299/dsh-reforge`，冻结首发包的 repository 字段仍保留发布时身份。补repository/bugs/homepage/license/公开发行元数据，白名单只包含产品编译输出、patch、README/LICENSE/CHANGELOG和安装指南。
 
 DSH patch行ID保持`dsh-evolve`，模块name指向新包；公开client loader包ID及plugins.bundle.config键改为新包名。已有`evolve_`工具、内部workflow/context/source kind、原生RPC端点、main/settings/action槽位ID、usage指纹、SQLite v9与默认`.dsh/evolve/<repoId>/evolve.sqlite`保持，防止历史来源/预算/会话断裂。新`DSH_REFORGE_CONFIG`与旧`DSH_EVOLVE_CONFIG`都可用；双变量原生realpath不一致时拒绝，显式input配置仍为最高优先。
 

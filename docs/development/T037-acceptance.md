@@ -25,7 +25,7 @@
 ## 检查
 
 - 迁移测试使用合成仓库、官方 profile 组合器、真实 SQLite v9：同一 config/dataDir 的经验1、应用1、反馈0、耗尽 grant1/1 与 unknown 提炼记录；重新打开后逐表逐行比较，并验证不会调用模型重放。
-- 完整 check、compat、demo、实际打包/白名单/安装与脚本模型学习演练：执行结果待本轮检查完成后补记。
+- 完整 check、compat、demo、实际打包/白名单/安装与脚本模型学习演练的命令、计数、摘要及实际结果记录于 [Issue #85](https://github.com/wang1299/dsh-reforge/issues/85) 和 [PR #88](https://github.com/wang1299/dsh-reforge/pull/88)；未通过的步骤不算完成。
 - 稳定 SHA 独立只读审查、当前头 Windows/Linux CI、规则与合并：以 Issue #85 和关联 PR 的最终记录为准，不提前当作已完成。
 
 当前真实体验环境继续使用原冻结包，本轮未修改其数据库、快照、profile、凭据、预算或 grant，未触发任何付费模型任务。合成验证不代表真实模型质量或未来任务收益。
