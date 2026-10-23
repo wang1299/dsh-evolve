@@ -1,5 +1,7 @@
 # 本轮实现与验证状态
 
+T036：按用户最终要求，深色主视觉内仅保留产品名和“Fix. Verify. Reforge.”，图下中文“修复有据，经验可循。”及徽章/导航均居中；两份 README 改用新 v2，旧 v1 和独立 Logo 保留。素材与实际编辑提示词见[品牌说明](../branding.md)，检查、独立稳定SHA审查、CI、合并及公开图像回读以 [T036](../tasks/T036-dark-hero-slogan.md) 和 [Issue #83](https://github.com/wang1299/dsh-evolve/issues/83) 为准。不改产品或已发行制品；以下保留历史状态。
+
 T035：制作原创透明 PNG Logo 和首页宽幅主视觉，接入中英文 README，最终素材及提示词见[品牌说明](../branding.md)。图像检查、打包、独立稳定 SHA 审查与双平台 CI/合并结果见 [T035](../tasks/T035-brand-assets.md) 及 [Issue #80](https://github.com/wang1299/dsh-evolve/issues/80)。只补品牌材料，不改产品、发行白名单、已发布制品或私人学习环境；以下保留历史状态。
 
 T034：按用户要求核对 Run2Skill 固定快照中的公开文档、logo、截图、GIF 和视频入口；补齐本仓库双语首页、准确中英文介绍与仓库 About/topics。逐项已有/缺口及实际远端检查、评审、CI 和合并以 [T034 记录](T034-public-materials.md) 与 [Issue #78](https://github.com/wang1299/dsh-evolve/issues/78) 为准。只改公开材料，不改产品或已发布制品，不调用模型或上传私人图片。以下保留历史状态。
