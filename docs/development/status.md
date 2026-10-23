@@ -1,5 +1,7 @@
 # 本轮实现与验证状态
 
+T035：制作原创透明 PNG Logo 和首页宽幅主视觉，接入中英文 README，最终素材及提示词见[品牌说明](../branding.md)。图像检查、打包、独立稳定 SHA 审查与双平台 CI/合并结果见 [T035](../tasks/T035-brand-assets.md) 及 [Issue #80](https://github.com/wang1299/dsh-evolve/issues/80)。只补品牌材料，不改产品、发行白名单、已发布制品或私人学习环境；以下保留历史状态。
+
 T034：按用户要求核对 Run2Skill 固定快照中的公开文档、logo、截图、GIF 和视频入口；补齐本仓库双语首页、准确中英文介绍与仓库 About/topics。逐项已有/缺口及实际远端检查、评审、CI 和合并以 [T034 记录](T034-public-materials.md) 与 [Issue #78](https://github.com/wang1299/dsh-evolve/issues/78) 为准。只改公开材料，不改产品或已发布制品，不调用模型或上传私人图片。以下保留历史状态。
 
 T033：更名 dsh-reforge 并准备0.1.0-alpha.1首个alpha发行；旧数据/预算/工具保留。npm账号已由本人登录并核对为wang129。实际检查、评审、合并与发行结果见[T033验收](T033-acceptance.md)及[Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)，不以本地包或合并当作已发布。以下保留历史状态。

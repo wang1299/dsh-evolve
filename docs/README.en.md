@@ -1,5 +1,9 @@
 # DSH-Reforge
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/wang1299/dsh-evolve/main/docs/assets/dsh-reforge-hero-v1.png" alt="DSH-Reforge: traceable experience from verified fixes" width="1000" />
+</p>
+
 [中文](../README.md) · [English](README.en.md) · [Installation guide (Chinese)](installation.md) · [Compatibility (Chinese)](compatibility.md)
 
 [![npm alpha](https://img.shields.io/npm/v/dsh-reforge/alpha?label=npm%20alpha)](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)
@@ -85,4 +89,4 @@ The demo uses synthetic cases only. Follow its configuration path and run `node 
 
 [Product requirements (Chinese)](product.md) · [Architecture (Chinese)](architecture.md) · [Roadmap (Chinese)](roadmap.md) · [Contributing (Chinese)](../CONTRIBUTING.md) · [Changelog (Chinese)](../CHANGELOG.md)
 
-Run2Skill is a reference for development organization and documentation granularity only. This repository implements its own data, verification, selection, and update mechanisms. MIT License.
+Run2Skill is a reference for development organization and documentation granularity only. This repository implements its own data, verification, selection, and update mechanisms. MIT License. [Brand assets and usage notes (Chinese)](branding.md).
