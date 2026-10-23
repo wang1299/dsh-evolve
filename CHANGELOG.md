@@ -1,8 +1,8 @@
 # 更新记录
 
-## 0.1.0-alpha.1 — 首个公开发行候选
+## 0.1.0-alpha.1 — 2026-10-23 实验性 alpha
 
-品牌改为 DSH-Reforge，npm 包及 CLI 为 `dsh-reforge`。本条记录随源码准备；实际公开结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75) 与对应 npm/GitHub 版本。
+品牌改为 DSH-Reforge，npm 包及 CLI 为 `dsh-reforge`。npm `alpha` 已公开并通过完整性和实际安装验证；GitHub 附件与首跑 checkout 失败后的恢复结果见 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75) 与对应 npm/GitHub 版本。发行包仍固定原已合并树，不随恢复工作流或文档重新打包。
 
 - 正常对话的受限 Python 修复片段、私有快照、来源验证、单次自动候选提炼及独立再验。
 - 适用条件、代码/依赖约束、可弃权检索、应用记录、反馈及经验版本管理。

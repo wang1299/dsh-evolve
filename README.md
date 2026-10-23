@@ -4,7 +4,7 @@
 
 > “这个问题我上次纠正过，这次 Agent 能自己注意到。”
 
-**实验性 alpha：`dsh-reforge@0.1.0-alpha.1`。** 本提交准备首次发行；是否已公开，以 [npm 版本页](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1) 和 [GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 的实际状态为准。T033 的检查与发行结果记录在 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码仓库保留原地址 `wang1299/dsh-evolve`。
+**实验性 alpha：`dsh-reforge@0.1.0-alpha.1`。** 已于 2026-10-23 发布至 npm `alpha`，公开下载与安装检查通过。见 [npm 版本页](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)；[GitHub Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 的最终附件与恢复结果记录在 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码仓库保留原地址 `wang1299/dsh-evolve`。
 
 ## 能做什么
 
@@ -20,7 +20,7 @@
 
 需要 **Node.js ≥24.10、DSH 0.2.0-rc.2**。修复验证还需要 Git、Python ≥3.10 和 pytest；CI 固定 pytest 9.1.1。只承诺该 DSH 版本，不适用于 DeepSeek 官方聊天网页。
 
-公开版本实际发布后，在自己的 DSH 环境安装：
+在自己的 DSH 环境安装准确版本：
 
 ```sh
 dsh plugin --profile web add dsh-reforge@0.1.0-alpha.1
