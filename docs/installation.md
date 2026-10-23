@@ -1,6 +1,6 @@
 # 安装与首次使用
 
-包名 `dsh-reforge`，品牌 DSH-Reforge。首版候选 `0.1.0-alpha.1`；公开发行状态见 [npm](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)、[Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 和 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。不把源码或本机 tgz 当作已公开发布。
+包名 `dsh-reforge`，品牌 DSH-Reforge。首个实验性版本 `0.1.0-alpha.1` 已发布至 npm `alpha` 并通过公开安装；发行附件与最终结果见 [npm](https://www.npmjs.com/package/dsh-reforge/v/0.1.0-alpha.1)、[Release](https://github.com/wang1299/dsh-evolve/releases/tag/v0.1.0-alpha.1) 和 [Issue #75](https://github.com/wang1299/dsh-evolve/issues/75)。源码、本机 tgz 与远端公开结果分别核验。
 
 ## 1. 准备环境和配置
 
@@ -26,13 +26,13 @@ $env:DSH_REFORGE_CONFIG = 'D:\my-local-config\reforge.json'
 
 ## 2. 安装并打开
 
-公开版本实际存在后，在已安装固定版本 DSH 的终端执行：
+在已安装固定版本 DSH 的终端执行：
 
 ```sh
 dsh plugin --profile web add dsh-reforge@0.1.0-alpha.1
 ```
 
-发布前可从本仓库运行 `npm ci --ignore-scripts`、`npm run build`、`npm pack`，将上面的包规格替换为生成 tgz 的绝对路径。不要安装名为 `dsh-evolve` 的 registry 包，它属于其他项目。
+从源码试装时，可运行 `npm ci --ignore-scripts`、`npm run build`、`npm pack`，将上面的包规格替换为生成 tgz 的绝对路径。本机重建包不能代替已发布版本的完整性证明。不要安装名为 `dsh-evolve` 的 registry 包，它属于其他项目。
 
 停止旧 DSH 服务，使用同一个 profile 启动：
 
